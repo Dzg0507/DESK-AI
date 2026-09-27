@@ -1,7 +1,7 @@
 {
-  "versionCode": 10,
-  "versionName": "2.0",
-  "changelog": "DeskAI v2.0: Major upgrade! Interactive [/] Command Deck matrix bundling Settings, 3D Video Studio, Memory Vault, and Tasks. Overhauled futuristic mission briefing welcome message.",
+  "versionCode": 11,
+  "versionName": "2.1",
+  "changelog": "DeskAI v2.1: Full AlwaysOnAgent Handoff Alignment. Connected live Task Queue with process abort & retry controls, empty /cancel aborts running task, and purged obsolete APK server fallbacks.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 23450031
+  "fileSizeBytes": 23482805
 }

@@ -137,6 +137,17 @@ class AlwaysOnAgentClient {
                         if (curr.startsWith("data:")) {
                             val json = JSONObject(curr.removePrefix("data:").trim())
                             val stats = json.optJSONObject("stats")
+                            val tasksArray = json.optJSONArray("tasks")
+                            val parsedTasks = mutableListOf<AgentTaskItem>()
+                            if (tasksArray != null) {
+                                for (i in 0 until tasksArray.length()) {
+                                    val tObj = tasksArray.getJSONObject(i)
+                                    parsedTasks.add(parseTaskJson(tObj))
+                                }
+                            }
+                            val activeTaskObj = json.optJSONObject("active_task")
+                            val parsedActive = if (activeTaskObj != null) parseTaskJson(activeTaskObj) else null
+
                             return@executeWithFailover DaemonStats(
                                 daemonStatus = json.optString("daemon_status", "idle"),
                                 overallPhase = json.optString("overall_phase", "idle"),
@@ -146,7 +157,9 @@ class AlwaysOnAgentClient {
                                 tasksInProgress = stats?.optInt("tasks_in_progress") ?: 0,
                                 tasksBacklog = stats?.optInt("tasks_backlog") ?: 0,
                                 tasksFailed = stats?.optInt("tasks_failed") ?: 0,
-                                totalHeartbeats = stats?.optInt("total_heartbeats") ?: 0
+                                totalHeartbeats = stats?.optInt("total_heartbeats") ?: 0,
+                                tasks = parsedTasks,
+                                activeTask = parsedActive
                             )
                         }
                     }
@@ -271,6 +284,71 @@ class AlwaysOnAgentClient {
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    suspend fun abortRunningTask(config: BridgeConfig): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                val emptyBody = "{}".toRequestBody(jsonMediaType)
+                val req = addAuth(
+                    Request.Builder()
+                        .url("$baseUrl/api/tasks/cancel")
+                        .post(emptyBody),
+                    config
+                ).build()
+
+                httpClient.newCall(req).execute().use { resp ->
+                    val body = resp.body?.string() ?: ""
+                    if (resp.isSuccessful) {
+                        Result.success(body)
+                    } else {
+                        Result.failure(Exception("HTTP ${resp.code}: $body"))
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun fetchTasks(config: BridgeConfig, limit: Int = 50): List<AgentTaskItem> = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                val req = addAuth(Request.Builder().url("$baseUrl/api/tasks?limit=$limit"), config).build()
+                httpClient.newCall(req).execute().use { resp ->
+                    if (!resp.isSuccessful) return@executeWithFailover emptyList()
+                    val body = resp.body?.string() ?: return@executeWithFailover emptyList()
+                    val array = if (body.trim().startsWith("[")) {
+                        JSONArray(body)
+                    } else {
+                        JSONObject(body).optJSONArray("tasks") ?: JSONArray()
+                    }
+                    val list = mutableListOf<AgentTaskItem>()
+                    for (i in 0 until array.length()) {
+                        list.add(parseTaskJson(array.getJSONObject(i)))
+                    }
+                    list
+                }
+            }
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    private fun parseTaskJson(item: JSONObject): AgentTaskItem {
+        return AgentTaskItem(
+            id = item.optString("id", item.optString("task_id", "")),
+            title = item.optString("title", item.optString("prompt", "Task")),
+            prompt = item.optString("prompt", item.optString("title", "")),
+            phase = item.optString("phase", "backlog"),
+            engine = item.optString("engine", "auto"),
+            priority = item.optString("priority", "medium"),
+            startedAt = item.optString("started_at", "").ifBlank { null },
+            completedAt = item.optString("completed_at", "").ifBlank { null },
+            outputSummary = item.optString("output_summary", "").ifBlank { null },
+            lastError = item.optString("last_error", "").ifBlank { null },
+            workerPid = if (item.has("worker_pid") && !item.isNull("worker_pid")) item.optInt("worker_pid") else null
+        )
     }
 
     suspend fun retryTask(config: BridgeConfig, taskId: String): Result<String> = withContext(Dispatchers.IO) {
@@ -703,11 +781,18 @@ class AlwaysOnAgentClient {
                     val res = cancelTask(config, arg)
                     onChunk(if (res.isSuccess) "🛑 **Task Cancelled:** `[$arg]`" else "⚠️ ${res.exceptionOrNull()?.message}")
                 } else {
-                    onChunk("""
-                        🛑 **Task Cancellation:**
-                        Please specify task ID: `/cancel <task_id>`
-                        You can also tap the Abort button directly from the **Tasks** panel!
-                    """.trimIndent())
+                    onChunk("⏹️ Aborting currently executing mission on host PC...")
+                    val res = abortRunningTask(config)
+                    if (res.isSuccess) {
+                        val body = res.getOrNull() ?: ""
+                        if (body.contains("\"idle\"") || body.contains("idle")) {
+                            onChunk("ℹ️ **Daemon status: Idle.** No task was currently executing on your computer.")
+                        } else {
+                            onChunk("🛑 **Active Task Aborted!** Process tree terminated on computer.")
+                        }
+                    } else {
+                        onChunk("⚠️ Failed to abort running task: ${res.exceptionOrNull()?.message}")
+                    }
                 }
             }
 

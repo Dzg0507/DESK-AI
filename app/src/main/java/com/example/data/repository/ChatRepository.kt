@@ -135,6 +135,16 @@ class ChatRepository(
         agentClient.cancelTask(config, taskId)
     }
 
+    suspend fun abortRunningTask(): Result<String> = withContext(Dispatchers.IO) {
+        val config = getActiveConfig()
+        agentClient.abortRunningTask(config)
+    }
+
+    suspend fun fetchTasks(limit: Int = 50): List<AgentTaskItem> = withContext(Dispatchers.IO) {
+        val config = getActiveConfig()
+        agentClient.fetchTasks(config, limit)
+    }
+
     suspend fun retryTask(taskId: String): Result<String> = withContext(Dispatchers.IO) {
         val config = getActiveConfig()
         agentClient.retryTask(config, taskId)

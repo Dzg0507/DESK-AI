@@ -54,8 +54,12 @@ import kotlinx.coroutines.launch
 @Composable
 fun TasksSheet(
     onDismiss: () -> Unit,
+    liveTasks: List<AgentTaskItem> = emptyList(),
+    activeTask: AgentTaskItem? = null,
+    onRefreshTasks: suspend () -> List<AgentTaskItem> = { emptyList() },
     onDispatchTask: suspend (title: String, prompt: String, engine: String) -> Result<String>,
     onCancelTask: suspend (taskId: String) -> Result<String>,
+    onAbortRunningTask: suspend () -> Result<String>,
     onRetryTask: suspend (taskId: String) -> Result<String>
 ) {
     val scope = rememberCoroutineScope()
@@ -63,31 +67,30 @@ fun TasksSheet(
     var taskTitle by remember { mutableStateOf("") }
     var taskPrompt by remember { mutableStateOf("") }
     var engine by remember { mutableStateOf("auto") }
+    var isRefreshing by remember { mutableStateOf(false) }
 
-    // Mock initial tasks if backend is offline, or real tasks
-    var tasks by remember {
-        mutableStateOf(
-            listOf(
-                AgentTaskItem(
-                    id = "task-012",
-                    title = "Render 3D Card Flip Video",
-                    prompt = "Render 3D card flip video with quote: 'Daily Affirmation'",
-                    phase = "completed",
-                    engine = "media_pipeline",
-                    completedAt = "10:14:22",
-                    outputSummary = "Video render successful. Saved to output_videos/vibe_check_012.mp4."
-                ),
-                AgentTaskItem(
-                    id = "task-011",
-                    title = "Audit system authentication",
-                    prompt = "Audit authentication middleware and check for token leaks",
-                    phase = "completed",
-                    engine = "cloud",
-                    completedAt = "09:48:10",
-                    outputSummary = "Audit complete. No secret leakage identified in state.db."
-                )
-            )
-        )
+    // Start with live SSE tasks if present, otherwise empty
+    var tasks by remember { mutableStateOf(liveTasks) }
+
+    // Keep tasks in sync with incoming SSE updates
+    LaunchedEffect(liveTasks) {
+        if (liveTasks.isNotEmpty()) {
+            tasks = liveTasks
+        }
+    }
+
+    // Refresh from GET /api/tasks?limit=50 upon opening
+    LaunchedEffect(Unit) {
+        isRefreshing = true
+        try {
+            val fetched = onRefreshTasks()
+            if (fetched.isNotEmpty()) {
+                tasks = fetched
+            }
+        } catch (_: Exception) {}
+        finally {
+            isRefreshing = false
+        }
     }
 
     Dialog(onDismissRequest = onDismiss) {
@@ -122,12 +125,99 @@ fun TasksSheet(
                             color = Color.White
                         )
                     }
-                    IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
-                        Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = Color(0xFF94A3B8))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(
+                            onClick = {
+                                scope.launch {
+                                    isRefreshing = true
+                                    try {
+                                        val f = onRefreshTasks()
+                                        if (f.isNotEmpty()) tasks = f
+                                    } catch (_: Exception) {}
+                                    finally {
+                                        isRefreshing = false
+                                    }
+                                }
+                            },
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            if (isRefreshing) {
+                                CircularProgressIndicator(modifier = Modifier.size(16.dp), color = ElectricCyan, strokeWidth = 2.dp)
+                            } else {
+                                Icon(imageVector = Icons.Default.Refresh, contentDescription = "Refresh", tint = ElectricCyan, modifier = Modifier.size(18.dp))
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(4.dp))
+                        IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
+                            Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = Color(0xFF94A3B8))
+                        }
                     }
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
+
+                // Active Running Task Banner
+                val runningTask = activeTask ?: tasks.firstOrNull { it.phase == "in_progress" }
+                if (runningTask != null) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color(0xFF1E293B))
+                            .border(1.dp, Color(0xFFF59E0B), RoundedCornerShape(10.dp))
+                            .padding(10.dp)
+                    ) {
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    CircularProgressIndicator(modifier = Modifier.size(14.dp), color = Color(0xFFF59E0B), strokeWidth = 2.dp)
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "LIVE ACTIVE TASK",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFFF59E0B),
+                                        fontFamily = FontFamily.Monospace
+                                    )
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .background(RoseError.copy(alpha = 0.2f))
+                                        .border(1.dp, RoseError.copy(alpha = 0.5f), RoundedCornerShape(4.dp))
+                                        .clickable {
+                                            scope.launch {
+                                                onAbortRunningTask()
+                                                val f = onRefreshTasks()
+                                                if (f.isNotEmpty()) tasks = f
+                                            }
+                                        }
+                                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                                ) {
+                                    Text(
+                                        text = "ABORT PROCESS ⏹",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = RoseError,
+                                        fontFamily = FontFamily.Monospace
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = runningTask.title,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.White
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                }
 
                 // Toggle Quick Dispatch Form
                 Box(

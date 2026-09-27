@@ -4,7 +4,20 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-09-27
+**Last Updated:** 2026-09-27 (Build 11 Verified on Disk)
+
+---
+
+## 0. Sync Check & Confirmation (Build 11 / v2.1)
+
+**DeskAI Side Confirmation:**
+We verified the exact state on disk before pushing:
+- `app/build.gradle.kts`: `versionCode = 11`, `versionName = "2.1"` ✅
+- `web_dist/version.json`: `versionCode = 11`, `versionName = "2.1"`, `fileSizeBytes = 23482805` ✅
+- `TasksSheet.kt`: Mock tasks `task-012` and `task-011` are completely removed. Connected to live SSE `tasks` / `activeTask`, `GET /api/tasks?limit=50`, and `POST /api/tasks/cancel` (Abort Process) ✅
+- `AlwaysOnAgentClient.kt`: Bare `/cancel` calls `POST /api/tasks/cancel` with `{}` to abort the running task, and SSE stream parsing extracts both `tasks` and `active_task` from `/api/stream` ✅
+- `AppUpdaterDialog.kt`: Removed dead PC server APK fallbacks; GitHub releases are sole source ✅
+- Binaries: `DeskAI.apk` and `web_dist/DeskAI.apk` updated to the freshly compiled 23.4 MB v2.1 build ✅
 
 ---
 

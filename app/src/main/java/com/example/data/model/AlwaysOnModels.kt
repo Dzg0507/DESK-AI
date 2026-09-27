@@ -11,7 +11,9 @@ data class DaemonStats(
     val tasksFailed: Int = 0,
     val totalHeartbeats: Int = 0,
     val cpuPercent: Double = 0.0,
-    val ramPercent: Double = 0.0
+    val ramPercent: Double = 0.0,
+    val tasks: List<AgentTaskItem> = emptyList(),
+    val activeTask: AgentTaskItem? = null
 )
 
 data class AgentTaskItem(

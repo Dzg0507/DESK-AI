@@ -131,19 +131,11 @@ fun AppUpdaterDialog(
                     val githubMain = "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk"
                     val githubMaster = "https://raw.githubusercontent.com/Dzg0507/Desk-ai/master/DeskAI.apk"
                     val candidateUrls = mutableListOf<String>()
-                    if (targetUrl.startsWith("https://raw.githubusercontent.com")) {
+                    if (targetUrl.startsWith("http")) {
                         candidateUrls.add(targetUrl)
                     }
-                    candidateUrls.add(githubMain)
-                    candidateUrls.add(githubMaster)
-                    if (targetUrl.isNotBlank() && !candidateUrls.contains(targetUrl)) {
-                        candidateUrls.add(targetUrl)
-                    }
-                    val cleanBase = serverBaseUrl.trimEnd('/')
-                    if (cleanBase.isNotBlank()) {
-                        if (!candidateUrls.contains("$cleanBase/DeskAI.apk")) candidateUrls.add("$cleanBase/DeskAI.apk")
-                        if (!candidateUrls.contains("$cleanBase/static/DeskAI.apk")) candidateUrls.add("$cleanBase/static/DeskAI.apk")
-                    }
+                    if (!candidateUrls.contains(githubMain)) candidateUrls.add(githubMain)
+                    if (!candidateUrls.contains(githubMaster)) candidateUrls.add(githubMaster)
 
                     var successfulResponse: okhttp3.Response? = null
                     var usedUrl = targetUrl

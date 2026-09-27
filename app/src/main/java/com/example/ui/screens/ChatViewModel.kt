@@ -258,6 +258,14 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         return repository.cancelTask(taskId)
     }
 
+    suspend fun abortRunningTask(): Result<String> {
+        return repository.abortRunningTask()
+    }
+
+    suspend fun fetchTasks(limit: Int = 50): List<com.example.data.model.AgentTaskItem> {
+        return repository.fetchTasks(limit)
+    }
+
     suspend fun retryTask(taskId: String): Result<String> {
         return repository.retryTask(taskId)
     }

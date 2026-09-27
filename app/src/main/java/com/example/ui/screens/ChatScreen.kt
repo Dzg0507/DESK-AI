@@ -465,8 +465,12 @@ fun ChatScreen(
     if (showTasksSheet) {
         TasksSheet(
             onDismiss = { showTasksSheet = false },
+            liveTasks = daemonStats.tasks,
+            activeTask = daemonStats.activeTask,
+            onRefreshTasks = { viewModel.fetchTasks(50) },
             onDispatchTask = { title, prompt, eng -> viewModel.dispatchTask(title, prompt, eng) },
             onCancelTask = { taskId -> viewModel.cancelTask(taskId) },
+            onAbortRunningTask = { viewModel.abortRunningTask() },
             onRetryTask = { taskId -> viewModel.retryTask(taskId) }
         )
     }
