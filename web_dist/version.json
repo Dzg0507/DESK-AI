@@ -1,7 +1,7 @@
 {
-  "versionCode": 4,
-  "versionName": "1.3",
-  "changelog": "DeskAI v1.3: Real-time OTA updates, permanent dual-layer credential persistence (survives all updates and schema migrations), and instant background sync.",
+  "versionCode": 5,
+  "versionName": "1.4",
+  "changelog": "DeskAI v1.4: Dual-layer permanent credential persistence, smart default LAN routing, and live OTA installer improvements.",
   "downloadUrl": "DeskAI.apk",
-  "fileSizeBytes": 23634324
+  "fileSizeBytes": 23400656
 }
