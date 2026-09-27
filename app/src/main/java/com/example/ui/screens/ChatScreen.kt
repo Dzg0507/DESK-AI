@@ -85,6 +85,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun ChatScreen(
     viewModel: ChatViewModel = viewModel(),
+    openTaskId: String? = null,
+    onClearOpenTaskId: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val currentSession by viewModel.currentSession.collectAsStateWithLifecycle()
@@ -149,6 +151,13 @@ fun ChatScreen(
     var showCommandPalette by remember { mutableStateOf(false) }
     var showAgentWorkSheet by remember { mutableStateOf(false) }
     var showMaintenanceSheet by remember { mutableStateOf(false) }
+
+    // Open Tasks Sheet directly if tapped from push notification
+    LaunchedEffect(openTaskId) {
+        if (!openTaskId.isNullOrBlank()) {
+            showTasksSheet = true
+        }
+    }
 
     // Auto-scroll to bottom when new messages arrive
     LaunchedEffect(messages.size, messages.lastOrNull()?.content) {
@@ -370,8 +379,8 @@ fun ChatScreen(
                             items(messages, key = { it.id }) { message ->
                                 MessageBubble(
                                     message = message,
-                                    onRunProposal = { viewModel.runProposal(it) },
-                                    onDismissProposal = { viewModel.dismissProposal(it) },
+                                    onRunProposal = { msg, prop -> viewModel.runProposal(msg, prop) },
+                                    onDismissProposal = { msg, prop -> viewModel.dismissProposal(msg, prop) },
                                     onDeleteMessage = { viewModel.deleteMessage(it) },
                                     onRegenerate = { viewModel.sendMessage("Please retry: ${it.content.take(60)}") },
                                     onSpeak = { viewModel.speak(it) },
@@ -468,7 +477,11 @@ fun ChatScreen(
     // Tasks Sheet
     if (showTasksSheet) {
         TasksSheet(
-            onDismiss = { showTasksSheet = false },
+            onDismiss = {
+                showTasksSheet = false
+                onClearOpenTaskId()
+            },
+            initialTaskId = openTaskId,
             liveTasks = daemonStats.tasks,
             activeTask = daemonStats.activeTask,
             onRefreshTasks = { viewModel.fetchTasks(50) },

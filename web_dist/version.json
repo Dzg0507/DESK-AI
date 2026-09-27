@@ -1,7 +1,7 @@
 {
-  "versionCode": 12,
-  "versionName": "2.2",
-  "changelog": "DeskAI v2.2 (Build 12): Full Firebase Cloud Messaging integration (POST_NOTIFICATIONS, DeskAIMessagingService, Tasks & Alerts channels) + Phase 2 Endpoints.",
+  "versionCode": 13,
+  "versionName": "2.2.1",
+  "changelog": "DeskAI v2.2.1 (Build 13): Multi-proposal cards support, local proposal fallback fix, notification deep link to task, and full FCM push updates.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24377523
+  "fileSizeBytes": 23837359
 }

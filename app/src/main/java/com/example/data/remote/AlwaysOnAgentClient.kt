@@ -40,7 +40,12 @@ class AlwaysOnAgentClient {
 
     private val jsonMediaType = "application/json; charset=utf-8".toMediaType()
 
-    var lastReceivedProposal: TaskProposal? = null
+    var lastReceivedProposals: List<TaskProposal> = emptyList()
+    var lastReceivedProposal: TaskProposal?
+        get() = lastReceivedProposals.firstOrNull()
+        set(value) {
+            lastReceivedProposals = if (value != null) listOf(value) else emptyList()
+        }
 
     private fun addAuth(builder: Request.Builder, config: BridgeConfig): Request.Builder {
         if (config.apiKey.isNotBlank()) {
@@ -1304,22 +1309,32 @@ class AlwaysOnAgentClient {
                                 }
                             }
 
-                            // Structured proposals from agent Phase 2
+                            // Structured proposals from agent Phase 2 (supports multiple suggestions)
                             val proposalsArray = json.optJSONArray("proposals")
+                            val parsedProposals = mutableListOf<TaskProposal>()
                             if (proposalsArray != null && proposalsArray.length() > 0) {
-                                val firstProp = proposalsArray.getJSONObject(0)
-                                val propId = firstProp.optString("id")
-                                val propInstr = firstProp.optString("instruction")
-                                val propReason = firstProp.optString("reason", "")
-                                val propProj = if (firstProp.has("project") && !firstProp.isNull("project")) firstProp.optString("project") else null
-                                lastReceivedProposal = TaskProposal(
-                                    id = propId,
-                                    token = propId,
-                                    instruction = propInstr,
-                                    reason = propReason,
-                                    project = propProj
-                                )
+                                for (i in 0 until proposalsArray.length()) {
+                                    val propObj = proposalsArray.getJSONObject(i)
+                                    val propId = propObj.optString("id")
+                                    val propInstr = propObj.optString("instruction")
+                                    val propReason = propObj.optString("reason", "")
+                                    val propProj = if (propObj.has("project") && !propObj.isNull("project")) propObj.optString("project") else null
+                                    if (propInstr.isNotBlank()) {
+                                        parsedProposals.add(
+                                            TaskProposal(
+                                                id = propId,
+                                                token = propId,
+                                                instruction = propInstr,
+                                                reason = propReason,
+                                                project = propProj,
+                                                isLocal = false,
+                                                state = "pending"
+                                            )
+                                        )
+                                    }
+                                }
                             }
+                            lastReceivedProposals = parsedProposals
 
                             onChunk(text)
                         } catch (_: Exception) {

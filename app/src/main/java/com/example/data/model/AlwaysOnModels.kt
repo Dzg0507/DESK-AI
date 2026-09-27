@@ -61,7 +61,9 @@ data class TaskProposal(
     val instruction: String,
     val reason: String = "",
     val project: String? = null,
-    val expired: Boolean = false
+    val expired: Boolean = false,
+    val isLocal: Boolean = false,
+    val state: String = "pending"
 )
 
 data class AgentWorkProject(

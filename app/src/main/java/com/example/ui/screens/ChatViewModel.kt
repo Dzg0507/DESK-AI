@@ -9,6 +9,7 @@ import com.example.data.model.BridgeConfig
 import com.example.data.model.ChatMessage
 import com.example.data.model.ChatSession
 import com.example.data.model.DaemonStats
+import com.example.data.model.TaskProposal
 import com.example.data.model.VideoItem
 import com.example.data.repository.ChatRepository
 import kotlinx.coroutines.Job
@@ -213,15 +214,25 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun runProposal(message: ChatMessage) {
-        val instruction = message.proposalInstruction ?: return
+    fun runProposal(message: ChatMessage, targetProposal: TaskProposal? = null) {
+        val prop = targetProposal ?: message.getProposals().firstOrNull() ?: TaskProposal(
+            id = message.proposalToken ?: "",
+            token = message.proposalToken ?: "",
+            instruction = message.proposalInstruction ?: return,
+            project = message.proposalProject,
+            isLocal = message.proposalToken.isNullOrBlank() || message.proposalToken.startsWith("local_"),
+            state = message.proposalState ?: "pending"
+        )
+        val instruction = prop.instruction
+        val targetId = if (prop.id.isNotBlank()) prop.id else prop.token
+
         viewModelScope.launch {
-            val proposalId = message.proposalToken
-            if (!proposalId.isNullOrBlank()) {
-                val res = repository.runProposal(proposalId)
+            // Only call agent /api/proposals/... if it's NOT local and has a real agent id
+            if (!prop.isLocal && targetId.isNotBlank() && !targetId.startsWith("local_")) {
+                val res = repository.runProposal(targetId)
                 if (res.isSuccess) {
                     val tid = res.getOrNull() ?: "running"
-                    repository.updateMessage(message.copy(proposalState = "run"))
+                    repository.updateMessage(message.withUpdatedProposal(targetId, "run"))
                     val confirmMessage = ChatMessage(
                         sessionId = message.sessionId,
                         role = "assistant",
@@ -231,7 +242,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     repository.insertMessage(confirmMessage)
                     return@launch
                 } else if (res.exceptionOrNull()?.message?.contains("EXPIRED") == true) {
-                    repository.updateMessage(message.copy(proposalState = "expired"))
+                    repository.updateMessage(message.withUpdatedProposal(targetId, "expired"))
                     val expiredMsg = ChatMessage(
                         sessionId = message.sessionId,
                         role = "assistant",
@@ -244,9 +255,9 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
 
-            // Fallback: Dispatch as task to computer's worker pool
-            repository.updateMessage(message.copy(proposalState = "run"))
-            val projectPrefix = if (!message.proposalProject.isNullOrBlank()) "[${message.proposalProject}] " else ""
+            // Local proposal or direct fallback: Dispatch as task to computer's worker pool!
+            repository.updateMessage(message.withUpdatedProposal(targetId, "run"))
+            val projectPrefix = if (!prop.project.isNullOrBlank()) "[${prop.project}] " else ""
             val fullTitle = "$projectPrefix$instruction".take(50)
             val res = repository.createTask(fullTitle, instruction)
             if (res.isSuccess) {
@@ -271,13 +282,14 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun dismissProposal(message: ChatMessage) {
+    fun dismissProposal(message: ChatMessage, targetProposal: TaskProposal? = null) {
+        val prop = targetProposal ?: message.getProposals().firstOrNull() ?: return
+        val targetId = if (prop.id.isNotBlank()) prop.id else prop.token
         viewModelScope.launch {
-            val proposalId = message.proposalToken
-            if (!proposalId.isNullOrBlank()) {
-                repository.dismissProposal(proposalId)
+            if (!prop.isLocal && targetId.isNotBlank() && !targetId.startsWith("local_")) {
+                repository.dismissProposal(targetId)
             }
-            repository.updateMessage(message.copy(proposalState = "dismissed"))
+            repository.updateMessage(message.withUpdatedProposal(targetId, "dismissed"))
         }
     }
 

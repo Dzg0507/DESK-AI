@@ -379,8 +379,19 @@ class ChatRepository(
         // Check if this message warrants a suggested task proposal card
         val trimmed = userText.trim().lowercase()
         val isActionable = trimmed.contains("write a") || trimmed.contains("create a") || trimmed.contains("build a") || trimmed.contains("implement")
-        val proposalInstruction = if (isActionable) userText.trim() else null
-        val proposalToken = if (isActionable) UUID.randomUUID().toString().take(8) else null
+        val initialProposals = if (isActionable) {
+            listOf(
+                TaskProposal(
+                    id = "local_${UUID.randomUUID().toString().take(8)}",
+                    token = "",
+                    instruction = userText.trim(),
+                    isLocal = true,
+                    state = "pending"
+                )
+            )
+        } else {
+            emptyList()
+        }
 
         val assistantMessage = ChatMessage(
             id = assistantId,
@@ -388,10 +399,11 @@ class ChatRepository(
             role = "assistant",
             content = "",
             status = "sending",
-            modelUsed = "AlwaysOnAgent v2.1",
-            proposalToken = proposalToken,
-            proposalInstruction = proposalInstruction,
-            proposalState = if (isActionable) "pending" else null
+            modelUsed = "AlwaysOnAgent v2.2.1",
+            proposalToken = null, // Only agent-issued tokens go here
+            proposalInstruction = if (isActionable) userText.trim() else null,
+            proposalState = if (isActionable) "pending" else null,
+            proposalsJson = if (initialProposals.isNotEmpty()) ChatMessage.serializeProposals(initialProposals) else null
         )
         chatDao.insertMessage(assistantMessage)
 
@@ -407,33 +419,53 @@ class ChatRepository(
             }
 
             val latency = System.currentTimeMillis() - startTime
-            val structuredProp = agentClient.lastReceivedProposal
-            agentClient.lastReceivedProposal = null
+            val structuredProps = agentClient.lastReceivedProposals
+            agentClient.lastReceivedProposals = emptyList()
 
-            val finalInstruction = structuredProp?.instruction
-                ?: com.example.util.ProposalExtractor.extractInstruction(currentText)
-                ?: if (isActionable) userText.trim() else null
-
-            val finalProject = structuredProp?.project
-                ?: com.example.util.ProposalExtractor.extractProject(currentText)
-
-            val propId = structuredProp?.id
-            val finalToken: String? = if (!propId.isNullOrBlank()) {
-                propId
-            } else if (!finalInstruction.isNullOrBlank()) {
-                UUID.randomUUID().toString().take(8)
+            val finalProposals: List<TaskProposal> = if (structuredProps.isNotEmpty()) {
+                // Agent-issued structured proposals (preserves all proposals from agent)
+                structuredProps
             } else {
-                null
+                // Text fallback heuristics (marked as local so they go straight to createTask)
+                val textInstructions = com.example.util.ProposalExtractor.extractAllInstructions(currentText)
+                val textProject = com.example.util.ProposalExtractor.extractProject(currentText)
+                if (textInstructions.isNotEmpty()) {
+                    textInstructions.map { instr ->
+                        TaskProposal(
+                            id = "local_${UUID.randomUUID().toString().take(8)}",
+                            token = "",
+                            instruction = instr,
+                            project = textProject,
+                            isLocal = true,
+                            state = "pending"
+                        )
+                    }
+                } else if (isActionable) {
+                    listOf(
+                        TaskProposal(
+                            id = "local_${UUID.randomUUID().toString().take(8)}",
+                            token = "",
+                            instruction = userText.trim(),
+                            project = null,
+                            isLocal = true,
+                            state = "pending"
+                        )
+                    )
+                } else {
+                    emptyList()
+                }
             }
 
+            val firstProp = finalProposals.firstOrNull()
             val finalAssistantMessage = assistantMessage.copy(
                 content = currentText.ifBlank { "Task processed." },
                 status = "sent",
                 latencyMs = latency,
-                proposalInstruction = finalInstruction,
-                proposalProject = finalProject,
-                proposalToken = finalToken,
-                proposalState = if (!finalInstruction.isNullOrBlank()) "pending" else null
+                proposalsJson = if (finalProposals.isNotEmpty()) ChatMessage.serializeProposals(finalProposals) else null,
+                proposalInstruction = firstProp?.instruction,
+                proposalProject = firstProp?.project,
+                proposalToken = if (firstProp != null && !firstProp.isLocal) firstProp.id else null,
+                proposalState = if (firstProp != null) firstProp.state else null
             )
             chatDao.updateMessage(finalAssistantMessage)
 

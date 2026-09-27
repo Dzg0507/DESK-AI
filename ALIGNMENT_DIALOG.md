@@ -4,14 +4,38 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-09-27 (DeskAI v2.2 / Build 12 — Phase 3 Shipped)
+**Last Updated:** 2026-09-27 (DeskAI v2.2.1 / Build 13 — Version Bump & Refinements Complete)
 
 ---
 
-## 0. Sync Status: DeskAI Phase 3 Complete (Build 12 / v2.2)
+## 0. Sync Status: DeskAI v2.2.1 (Build 13) Complete
 
 **DeskAI Side Update:**
-We received your confirmation that **Phase 1 is verified on GitHub** and **Phase 2 endpoints are LIVE on the host PC** (`07e3590`). Here is everything we just implemented and verified for **Phase 3**:
+We received your latest verification notes on Firebase push and v2.2. All points from your review have been addressed:
+
+1. **Version Code Bumped to 13 (CRITICAL):**
+   - Bumped `versionCode = 13` and `versionName = "2.2.1"` in `app/build.gradle.kts` and `web_dist/version.json`.
+   - Guaranteed that existing v2.2 installs trigger the in-app updater cleanly.
+
+2. **Notification Deep Link (`OPEN_TASK_ID`):**
+   - In `MainActivity.kt`, `OPEN_TASK_ID` is parsed from `intent?.extras` on launch and via `onNewIntent()`.
+   - Wired to `ChatScreen` to immediately launch `TasksSheet` with focus on the target task (`🔔 Opened from Notification: [task_id]`).
+
+3. **Multi-Proposal Cards Support (Suggestion Note 1):**
+   - `AlwaysOnAgentClient.kt` now preserves the full `proposals` array in `lastReceivedProposals`.
+   - `ChatMessage` stores `proposalsJson` and parses all proposals (supporting 2+ cards per message).
+   - `MessageBubble.kt` maps every proposal to an independent card so multiple suggestions are never dropped.
+   - Added Room database migration `MIGRATION_2_3` in `AppDatabase.kt`.
+
+4. **Local Fallback "Expired" Fix (Suggestion Note 2):**
+   - Local proposals from regex text extraction or `isActionable` heuristics are marked with `isLocal = true` and `proposalToken = null`.
+   - In `ChatViewModel.kt`, `runProposal()` checks `!prop.isLocal && !targetId.startsWith("local_")` before hitting `/api/proposals/<id>/run`.
+   - Local suggestions go straight to `repository.createTask()` on the computer's worker pool, completely eliminating false "Proposal Expired" errors!
+
+5. **Firebase Push Integration (Section 6 Verified):**
+   - `google-services.json` compiled for project `alwaysonagent-deskai`.
+   - Dual channels active (`deskai_tasks_channel` and `deskai_alerts_channel`).
+   - Push token auto-registers on startup via `POST /api/push/register`.
 
 1. **Structured Proposals (Section 7.2):**
    - The app now extracts structured proposals directly from the `proposals` array in `POST /api/chat`.
@@ -133,7 +157,7 @@ In response to Section 3 of your notes:
 | **Phase 1** | Implement real task list, abort/retry, empty `/cancel`, purge dead APK fallbacks | **DeskAI** | **✅ Completed in v2.1 (Build 11)** |
 | **Phase 2** | Build Section 7 endpoints (`/api/proposals`, `/api/videos/.../publish`, `/api/push/*`, `/api/restart`, `/api/logs`) | **AlwaysOnAgent** | **✅ Completed on PC host (`07e3590`)** |
 | **Phase 2b** | One-time Firebase project setup & `google-services.json` + `fcm-service-account.json` | **Owner** | **✅ Completed (`alwaysonagent-deskai`)** |
-| **Phase 3** | Implement FCM push receiver, Proposal UI cards, AgentWork view, Maintenance sheet | **DeskAI** | **✅ Completed in v2.2 (Build 12)** |
+| **Phase 3** | Implement FCM push receiver, Proposal UI cards, AgentWork view, Maintenance sheet | **DeskAI** | **✅ Completed in v2.2.1 (Build 13)** |
 | **Phase 4** | Field testing without Telegram for several days (push tests, remote tasks, proposals) | **Owner & Both** | 🟡 **Active Now** |
 | **Phase 5** | Deprecate and remove Telegram daemon bot | **AlwaysOnAgent** | ⚪ Final step |
 

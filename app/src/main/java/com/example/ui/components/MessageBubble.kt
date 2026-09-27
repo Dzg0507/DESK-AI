@@ -59,6 +59,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.ChatMessage
+import com.example.data.model.TaskProposal
 import com.example.ui.theme.AssistantBubbleBackground
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldConnected
@@ -71,8 +72,8 @@ import java.util.Locale
 @Composable
 fun MessageBubble(
     message: ChatMessage,
-    onRunProposal: (ChatMessage) -> Unit = {},
-    onDismissProposal: (ChatMessage) -> Unit = {},
+    onRunProposal: (ChatMessage, TaskProposal) -> Unit = { _, _ -> },
+    onDismissProposal: (ChatMessage, TaskProposal) -> Unit = { _, _ -> },
     onDeleteMessage: (ChatMessage) -> Unit = {},
     onRegenerate: (ChatMessage) -> Unit = {},
     onSpeak: (String) -> Unit = {},
@@ -262,27 +263,37 @@ fun MessageBubble(
                         }
                     }
 
-                    // Interactive Proposal Cards matching AlwaysOnAgent & Telegram
-                    val proposals = remember(message.content, message.proposalInstruction) {
-                        if (!message.proposalInstruction.isNullOrBlank()) {
-                            listOf(message.proposalInstruction)
+                    // Interactive Proposal Cards matching AlwaysOnAgent & Telegram (supports multiple proposals)
+                    val proposals = remember(message.content, message.proposalsJson, message.proposalInstruction, message.proposalState) {
+                        val fromJson = message.getProposals()
+                        if (fromJson.isNotEmpty()) {
+                            fromJson
                         } else {
-                            com.example.util.ProposalExtractor.extractAllInstructions(message.content)
+                            val extracted = com.example.util.ProposalExtractor.extractAllInstructions(message.content)
+                            val proj = message.proposalProject ?: com.example.util.ProposalExtractor.extractProject(message.content)
+                            extracted.map { instr ->
+                                TaskProposal(
+                                    id = "local_${instr.hashCode()}",
+                                    token = "",
+                                    instruction = instr,
+                                    project = proj,
+                                    isLocal = true,
+                                    state = message.proposalState ?: "pending"
+                                )
+                            }
                         }
                     }
-                    val effectiveProject = message.proposalProject 
-                        ?: com.example.util.ProposalExtractor.extractProject(message.content)
 
                     if (proposals.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(10.dp))
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            proposals.forEach { proposalInstr ->
+                            proposals.forEach { proposal ->
                                 ProposalCard(
-                                    instruction = proposalInstr,
-                                    project = effectiveProject,
-                                    state = message.proposalState ?: "pending",
-                                    onRun = { onRunProposal(message.copy(proposalInstruction = proposalInstr, proposalProject = effectiveProject)) },
-                                    onDismiss = { onDismissProposal(message.copy(proposalInstruction = proposalInstr, proposalProject = effectiveProject)) }
+                                    instruction = proposal.instruction,
+                                    project = proposal.project,
+                                    state = proposal.state,
+                                    onRun = { onRunProposal(message, proposal) },
+                                    onDismiss = { onDismissProposal(message, proposal) }
                                 )
                             }
                         }

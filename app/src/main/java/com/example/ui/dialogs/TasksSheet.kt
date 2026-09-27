@@ -54,6 +54,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun TasksSheet(
     onDismiss: () -> Unit,
+    initialTaskId: String? = null,
     liveTasks: List<AgentTaskItem> = emptyList(),
     activeTask: AgentTaskItem? = null,
     onRefreshTasks: suspend () -> List<AgentTaskItem> = { emptyList() },
@@ -155,6 +156,22 @@ fun TasksSheet(
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
+
+                if (!initialTaskId.isNullOrBlank()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(Color(0xFF0369A1).copy(alpha = 0.25f))
+                            .border(1.dp, Color(0xFF0284C7).copy(alpha = 0.4f), RoundedCornerShape(6.dp))
+                            .padding(horizontal = 8.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("🔔 Opened from Notification: ", fontSize = 11.sp, color = Color(0xFF7DD3FC))
+                        Text(initialTaskId, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
 
                 // Active Running Task Banner
                 val runningTask = activeTask ?: tasks.firstOrNull { it.phase == "in_progress" }
