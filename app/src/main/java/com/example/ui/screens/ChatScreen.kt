@@ -119,7 +119,8 @@ fun ChatScreen(
                     checkUrls.add("$cleanBase/version.json")
                     checkUrls.add("$cleanBase/static/version.json")
                 }
-                checkUrls.add("https://ais-dev-q3rsvd2z4tkbdyypw443cl-695475584713.us-east1.run.app/version.json")
+                checkUrls.add("https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/web_dist/version.json")
+                checkUrls.add("https://raw.githubusercontent.com/Dzg0507/Desk-ai/master/web_dist/version.json")
                 for (u in checkUrls) {
                     try {
                         val req = okhttp3.Request.Builder().url(u).build()

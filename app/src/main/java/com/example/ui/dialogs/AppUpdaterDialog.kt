@@ -135,8 +135,10 @@ fun AppUpdaterDialog(
                         if (!candidateUrls.contains("$cleanBase/static/DeskAI.apk")) candidateUrls.add("$cleanBase/static/DeskAI.apk")
                         if (!candidateUrls.contains("$cleanBase/DeskAI-update.apk")) candidateUrls.add("$cleanBase/DeskAI-update.apk")
                     }
-                    val cloudFallback = "https://ais-dev-q3rsvd2z4tkbdyypw443cl-695475584713.us-east1.run.app/DeskAI.apk"
-                    if (!candidateUrls.contains(cloudFallback)) candidateUrls.add(cloudFallback)
+                    val githubMain = "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk"
+                    val githubMaster = "https://raw.githubusercontent.com/Dzg0507/Desk-ai/master/DeskAI.apk"
+                    if (!candidateUrls.contains(githubMain)) candidateUrls.add(githubMain)
+                    if (!candidateUrls.contains(githubMaster)) candidateUrls.add(githubMaster)
 
                     var successfulResponse: okhttp3.Response? = null
                     var usedUrl = targetUrl
@@ -273,10 +275,10 @@ fun AppUpdaterDialog(
                         versionUrls.add("$cleanBase/version.json")
                         versionUrls.add("$cleanBase/static/version.json")
                     }
-                    val cloudVersionUrl = "https://ais-dev-q3rsvd2z4tkbdyypw443cl-695475584713.us-east1.run.app/version.json"
-                    if (!versionUrls.contains(cloudVersionUrl)) {
-                        versionUrls.add(cloudVersionUrl)
-                    }
+                    val githubVMain = "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/web_dist/version.json"
+                    val githubVMaster = "https://raw.githubusercontent.com/Dzg0507/Desk-ai/master/web_dist/version.json"
+                    versionUrls.add(githubVMain)
+                    versionUrls.add(githubVMaster)
 
                     var parsedJson: JSONObject? = null
                     for (vUrl in versionUrls) {
