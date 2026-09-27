@@ -1,0 +1,6 @@
+{
+  "name": "DeskAI",
+  "description": "Personal AI assistant chat interface connecting directly to your computer",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
