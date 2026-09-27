@@ -1,7 +1,7 @@
 {
-  "versionCode": 6,
-  "versionName": "1.5",
-  "changelog": "DeskAI v1.5: Fix WebHUD authentication headers on update requests, Android PackageInstaller permission routing, and credential retention.",
-  "downloadUrl": "DeskAI.apk",
-  "fileSizeBytes": 23400887
+  "versionCode": 7,
+  "versionName": "1.6",
+  "changelog": "DeskAI v1.6: Fixed updater download source to fetch direct GitHub releases instead of stale local PC folder files.",
+  "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
+  "fileSizeBytes": 23400885
 }

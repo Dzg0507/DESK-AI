@@ -128,17 +128,22 @@ fun AppUpdaterDialog(
                         .readTimeout(90, TimeUnit.SECONDS)
                         .build()
 
-                    val candidateUrls = mutableListOf(targetUrl)
+                    val githubMain = "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk"
+                    val githubMaster = "https://raw.githubusercontent.com/Dzg0507/Desk-ai/master/DeskAI.apk"
+                    val candidateUrls = mutableListOf<String>()
+                    if (targetUrl.startsWith("https://raw.githubusercontent.com")) {
+                        candidateUrls.add(targetUrl)
+                    }
+                    candidateUrls.add(githubMain)
+                    candidateUrls.add(githubMaster)
+                    if (targetUrl.isNotBlank() && !candidateUrls.contains(targetUrl)) {
+                        candidateUrls.add(targetUrl)
+                    }
                     val cleanBase = serverBaseUrl.trimEnd('/')
                     if (cleanBase.isNotBlank()) {
                         if (!candidateUrls.contains("$cleanBase/DeskAI.apk")) candidateUrls.add("$cleanBase/DeskAI.apk")
                         if (!candidateUrls.contains("$cleanBase/static/DeskAI.apk")) candidateUrls.add("$cleanBase/static/DeskAI.apk")
-                        if (!candidateUrls.contains("$cleanBase/DeskAI-update.apk")) candidateUrls.add("$cleanBase/DeskAI-update.apk")
                     }
-                    val githubMain = "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk"
-                    val githubMaster = "https://raw.githubusercontent.com/Dzg0507/Desk-ai/master/DeskAI.apk"
-                    if (!candidateUrls.contains(githubMain)) candidateUrls.add(githubMain)
-                    if (!candidateUrls.contains(githubMaster)) candidateUrls.add(githubMaster)
 
                     var successfulResponse: okhttp3.Response? = null
                     var usedUrl = targetUrl
@@ -333,8 +338,8 @@ fun AppUpdaterDialog(
                             if (dlUrl.isNotBlank()) {
                                 if (dlUrl.startsWith("http")) {
                                     downloadUrl = dlUrl
-                                } else if (cleanBase.isNotBlank()) {
-                                    downloadUrl = "$cleanBase/$dlUrl"
+                                } else {
+                                    downloadUrl = "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/$dlUrl"
                                 }
                             }
 
