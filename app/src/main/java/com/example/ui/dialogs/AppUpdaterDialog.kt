@@ -194,7 +194,7 @@ fun AppUpdaterDialog(
                         statusMessage = if (length > 0) "Downloading update ($mbSize)..." else "Downloading update..."
                     }
 
-                    val apkDir = File(context.getExternalFilesDir(null) ?: context.filesDir, "apks").apply { mkdirs() }
+                    val apkDir = File(context.cacheDir, "apks").apply { mkdirs() }
                     val apkFile = File(apkDir, "DeskAI-update.apk")
                     if (apkFile.exists()) apkFile.delete()
 
@@ -219,6 +219,7 @@ fun AppUpdaterDialog(
                     outputStream.flush()
                     outputStream.close()
                     inputStream.close()
+                    try { apkFile.setReadable(true, false) } catch (_: Exception) {}
 
                     if (totalRead < 1000000L) {
                         withContext(Dispatchers.Main) {
@@ -858,7 +859,6 @@ private fun launchInstaller(context: Context, apkFile: File) {
             setDataAndType(apkUri, "application/vnd.android.package-archive")
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         }
 
         val resolveList = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
