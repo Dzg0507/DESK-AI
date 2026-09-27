@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "bridge_config")
 data class BridgeConfig(
     @PrimaryKey val id: Int = 1,
-    val serverUrl: String = "http://10.0.2.2:8080", // Home / Local LAN URL
+    val serverUrl: String = "http://192.168.12.153:8080", // Home / Local LAN URL
     val remoteUrl: String = "",                     // Away-from-home URL (Tailscale, Cloudflare, Ngrok)
     val useRemoteWhenAway: Boolean = true,
     val protocol: String = BridgeProtocol.ALWAYSON_AGENT.name,
@@ -32,7 +32,7 @@ data class BridgeConfig(
         } else if (remoteUrl.isNotBlank()) {
             remoteUrl.trim().removeSuffix("/")
         } else {
-            "http://10.0.2.2:8080"
+            "http://192.168.12.153:8080"
         }
     }
 

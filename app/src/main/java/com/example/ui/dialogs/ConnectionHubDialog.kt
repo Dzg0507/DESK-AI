@@ -67,9 +67,26 @@ fun ConnectionHubDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
-    var localUrl by remember { mutableStateOf(config.serverUrl.replace("192.168.12.2.246", "192.168.12.246")) }
-    var remoteUrl by remember { mutableStateOf(config.remoteUrl) }
-    var token by remember { mutableStateOf(config.apiKey) }
+    val prefs = remember { context.getSharedPreferences("desk_ai_credentials", Context.MODE_PRIVATE) }
+    var localUrl by remember {
+        val savedServer = prefs.getString("server_url", null)
+        val initial = if (config.serverUrl.isNotBlank() && config.serverUrl != "http://10.0.2.2:8080") {
+            config.serverUrl
+        } else {
+            savedServer ?: "http://192.168.12.153:8080"
+        }
+        mutableStateOf(initial.replace("192.168.12.2.246", "192.168.12.246"))
+    }
+    var remoteUrl by remember {
+        val savedRemote = prefs.getString("remote_url", null)
+        val initial = if (config.remoteUrl.isNotBlank()) config.remoteUrl else (savedRemote ?: "")
+        mutableStateOf(initial)
+    }
+    var token by remember {
+        val savedToken = prefs.getString("api_key", null)
+        val initial = if (config.apiKey.isNotBlank()) config.apiKey else (savedToken ?: "")
+        mutableStateOf(initial)
+    }
     var selectedProtocol by remember { mutableStateOf(config.protocol) }
     var engine by remember { mutableStateOf(config.selectedModel) }
 
@@ -492,6 +509,15 @@ fun ConnectionHubDialog(
                         .clickable {
                             val normalizedLocal = BridgeConfig.normalizeUrl(localUrl)
                             val normalizedRemote = if (remoteUrl.isNotBlank()) BridgeConfig.normalizeUrl(remoteUrl) else ""
+                            try {
+                                prefs.edit()
+                                    .putString("server_url", normalizedLocal)
+                                    .putString("remote_url", normalizedRemote)
+                                    .putString("api_key", token.trim())
+                                    .putString("selected_model", engine)
+                                    .putString("protocol", selectedProtocol)
+                                    .apply()
+                            } catch (_: Exception) {}
                             onSaveConfig(
                                 config.copy(
                                     serverUrl = normalizedLocal,

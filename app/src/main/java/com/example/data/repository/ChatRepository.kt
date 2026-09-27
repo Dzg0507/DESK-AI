@@ -1,5 +1,7 @@
 package com.example.data.repository
 
+import android.content.Context
+
 import com.example.data.local.AppDatabase
 import com.example.data.model.AgentTaskItem
 import com.example.data.model.BridgeConfig
@@ -18,6 +20,7 @@ import kotlinx.coroutines.withContext
 import java.util.UUID
 
 class ChatRepository(
+    private val context: Context? = null,
     private val database: AppDatabase,
     private val agentClient: AlwaysOnAgentClient = AlwaysOnAgentClient()
 ) {
@@ -27,17 +30,72 @@ class ChatRepository(
     val allSessions: Flow<List<ChatSession>> = chatDao.getAllSessions()
 
     val bridgeConfig: Flow<BridgeConfig> = configDao.getConfig().map { config ->
-        config ?: BridgeConfig()
+        val prefs = context?.getSharedPreferences("desk_ai_credentials", Context.MODE_PRIVATE)
+        val savedKey = prefs?.getString("api_key", null)
+        val savedServer = prefs?.getString("server_url", null)
+        val savedRemote = prefs?.getString("remote_url", null)
+
+        if (config == null) {
+            BridgeConfig(
+                serverUrl = savedServer ?: "http://192.168.12.153:8080",
+                remoteUrl = savedRemote ?: "",
+                apiKey = savedKey ?: ""
+            )
+        } else if (config.apiKey.isBlank() && !savedKey.isNullOrBlank()) {
+            config.copy(
+                apiKey = savedKey,
+                serverUrl = if (config.serverUrl.isBlank() && !savedServer.isNullOrBlank()) savedServer else config.serverUrl,
+                remoteUrl = if (config.remoteUrl.isBlank() && !savedRemote.isNullOrBlank()) savedRemote else config.remoteUrl
+            )
+        } else {
+            config
+        }
     }
 
     suspend fun getActiveConfig(): BridgeConfig = withContext(Dispatchers.IO) {
-        configDao.getConfigSync() ?: BridgeConfig().also {
-            configDao.saveConfig(it)
+        val inDb = configDao.getConfigSync()
+        val prefs = context?.getSharedPreferences("desk_ai_credentials", Context.MODE_PRIVATE)
+        val savedKey = prefs?.getString("api_key", null)
+        val savedServer = prefs?.getString("server_url", null)
+        val savedRemote = prefs?.getString("remote_url", null)
+        val savedModel = prefs?.getString("selected_model", null)
+        val savedProtocol = prefs?.getString("protocol", null)
+
+        if (inDb == null) {
+            BridgeConfig(
+                serverUrl = savedServer ?: "http://192.168.12.153:8080",
+                remoteUrl = savedRemote ?: "",
+                apiKey = savedKey ?: "",
+                selectedModel = savedModel ?: "auto",
+                protocol = savedProtocol ?: BridgeConfig().protocol
+            ).also { configDao.saveConfig(it) }
+        } else if (inDb.apiKey.isBlank() && !savedKey.isNullOrBlank()) {
+            val restored = inDb.copy(
+                apiKey = savedKey,
+                serverUrl = if (inDb.serverUrl.isBlank() && !savedServer.isNullOrBlank()) savedServer else inDb.serverUrl,
+                remoteUrl = if (inDb.remoteUrl.isBlank() && !savedRemote.isNullOrBlank()) savedRemote else inDb.remoteUrl
+            )
+            configDao.saveConfig(restored)
+            restored
+        } else {
+            inDb
         }
     }
 
     suspend fun saveConfig(config: BridgeConfig) = withContext(Dispatchers.IO) {
         configDao.saveConfig(config)
+        context?.let { ctx ->
+            try {
+                val prefs = ctx.getSharedPreferences("desk_ai_credentials", Context.MODE_PRIVATE)
+                prefs.edit()
+                    .putString("server_url", config.serverUrl)
+                    .putString("remote_url", config.remoteUrl)
+                    .putString("api_key", config.apiKey)
+                    .putString("selected_model", config.selectedModel)
+                    .putString("protocol", config.protocol)
+                    .apply()
+            } catch (_: Exception) {}
+        }
     }
 
     suspend fun testPing(): Triple<Boolean, Long, String> = withContext(Dispatchers.IO) {

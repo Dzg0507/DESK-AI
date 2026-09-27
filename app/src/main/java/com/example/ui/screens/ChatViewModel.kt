@@ -23,7 +23,7 @@ import java.util.Locale
 
 class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repository = ChatRepository(AppDatabase.getDatabase(application))
+    private val repository = ChatRepository(application, AppDatabase.getDatabase(application))
 
     val allSessions: StateFlow<List<ChatSession>> = repository.allSessions
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())

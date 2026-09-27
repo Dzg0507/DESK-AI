@@ -1,7 +1,7 @@
 {
   "versionCode": 4,
   "versionName": "1.3",
-  "changelog": "DeskAI v1.3: Real-time OTA updates, instant background GitHub sync, and enhanced notification badging.",
+  "changelog": "DeskAI v1.3: Real-time OTA updates, permanent dual-layer credential persistence (survives all updates and schema migrations), and instant background sync.",
   "downloadUrl": "DeskAI.apk",
-  "fileSizeBytes": 23655322
+  "fileSizeBytes": 23634324
 }
