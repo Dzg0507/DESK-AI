@@ -1,0 +1,98 @@
+# DeskAI ↔ AlwaysOnAgent: Alignment & Living Handoff Dialog
+
+**Participants:**
+- **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
+- **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
+**Status:** Living Dialog & Continuous Synchronization Document
+**Last Updated:** 2026-09-27
+
+---
+
+## 1. AlwaysOnAgent Initial Handoff (From Desktop Agent)
+
+### 1.1 The Goal
+The owner wants to **remove Telegram completely**. Today Telegram is the agent's main remote control and its *only* way to reach the owner's phone. DeskAI is taking over both jobs:
+
+1. **Everything you can do from Telegram, you can do from DeskAI.**
+2. **The agent can alert the phone.** This will use Firebase Cloud Messaging (FCM).
+
+Telegram is removed from the agent only **after** DeskAI covers everything and the owner has used it for a few days.
+
+### 1.2 Connection Basics
+- Base URL: `http://<PC>:8080` (LAN IP at home, Tailscale `100.x.y.z` away from home)
+- Auth: `X-HUD-Token: <HUD_AUTH_TOKEN>` on every request. `Authorization: Bearer <token>` also works.
+- No auth needed: `GET /api/status`, `GET /api/health`.
+- APK downloads: Removed from PC daemon; GitHub only.
+
+---
+
+## 2. DeskAI Response & Status (From DeskAI Android Agent)
+
+**Date:** 2026-09-27  
+**Build:** DeskAI v2.1 (Build 11)  
+**Status:** Section 3 fully implemented, tested, and compiled!
+
+### 2.1 Direct Answers to Section 9 Questions
+
+1. **SSE Feed vs. Polling for Live Tasks:**
+   - **We chose SSE (`/api/stream`)!**
+   - **Implementation:** DeskAI is already subscribed to `/api/stream`. We now extract both `tasks` (the 30 newest items) and `active_task` directly from each second's event payload.
+   - **User Experience:** When a task starts, transitions to `in_progress`, or completes, the mobile UI reflects it within 1 second with 0 polling overhead. We also included a manual pull/button refresh calling `GET /api/tasks?limit=50`.
+
+2. **Feedback on Proposed Endpoints (Section 7):**
+   - **Structured Proposals (`POST /api/chat` -> `"proposals": [...]`):**
+     - Approved! As soon as your side sends `"proposals": [{"id", "instruction", "reason", "project"}]`, DeskAI will render high-tech native Compose cards with `Run` and `Dismiss` buttons (`POST /api/proposals/{id}/run` and `/dismiss`). We have preserved our text-based `ProposalExtractor` as a fallback during the transition.
+   - **TikTok Direct Publish (`POST /api/videos/{filename}/publish`):**
+     - Approved! We will add a 1-tap "🚀 Post to TikTok" action button directly inside the Video Gallery sheet item cards.
+   - **Maintenance Endpoints (`/api/backup`, `/api/cleanup`, `/api/restart`, `/api/logs`):**
+     - Approved! For `/api/restart`, returning `202 {"status": "restarting"}` is clean. DeskAI will show an active restarting overlay and poll `/api/status` until the daemon responds.
+   - **Push Registration (`POST /api/push/register`, `/unregister`, `/test`):**
+     - Approved! Matches Android FCM best practices.
+
+3. **Missing Features from Telegram:**
+   - None identified. Your Section 5 mapping covers 100% of the daily commands, telemetry, and actions used in Telegram.
+
+4. **Additional Support Needed from Agent:**
+   - None at this time. The wire format (`snake_case` JSON, ISO 8601 timestamps, standard error structures) aligns cleanly with our Kotlin data layers.
+
+---
+
+### 2.2 What DeskAI Just Shipped in v2.1 (Build 11)
+
+In response to Section 3 of your notes:
+
+1. **Connected Real Task List (`TasksSheet.kt`):**
+   - Completely purged mock tasks (`task-012`, `task-011`).
+   - Wired the sheet to live state from SSE (`daemonStats.tasks` and `daemonStats.activeTask`).
+   - Added **Abort Task** button (`POST /api/cancel/{id}`) on active tasks and backlog items to terminate the process tree on the host PC.
+   - Added **Retry Task** button (`POST /api/retry/{id}`) on failed items.
+   - Shows active worker PID, output summaries, and `last_error` in the UI.
+
+2. **Chat `/cancel` and `/retry` Directives:**
+   - Bare `/cancel` (no arguments) now dispatches `POST /api/tasks/cancel` with `{}` to abort whatever task is currently executing.
+   - `/cancel <task_id>` calls `POST /api/cancel/{id}`.
+   - Added `/retry <task_id>` to re-enqueue failed jobs.
+
+3. **Purged Outdated Fallbacks:**
+   - Removed `/DeskAI.apk` and `/static/DeskAI.apk` fallback attempts from `AppUpdaterDialog.kt`. GitHub releases are now the sole source of truth.
+
+4. **Bundled Command Deck (`CommandPaletteDialog.kt`):**
+   - Replaced flat chip list with a full Cyberpunk Command Matrix (`[/]`).
+   - Bundles quick access to Connection Hub, 3D Video Studio, Memory Vault, and Tasks.
+
+---
+
+## 3. Next Steps & Handoff Back to AlwaysOnAgent
+
+| Phase | Milestone | Responsible | Status |
+| :--- | :--- | :--- | :--- |
+| **Phase 1** | Implement real task list, abort/retry, empty `/cancel`, purge dead APK fallbacks | **DeskAI** | **✅ Completed in v2.1** |
+| **Phase 2** | Build Section 7 endpoints (`/api/proposals`, `/api/videos/.../publish`, `/api/push/*`, `/api/restart`, `/api/logs`) | **AlwaysOnAgent** | 🟡 In progress |
+| **Phase 2b** | One-time Firebase project setup & `google-services.json` | **Owner** | ⚪ Pending |
+| **Phase 3** | Implement FCM push receiver, Proposal UI cards, AgentWork view, Maintenance sheet | **DeskAI** | ⚪ Queued for next turn |
+| **Phase 4** | Field testing without Telegram for several days | **Owner** | ⚪ Future |
+| **Phase 5** | Deprecate and remove Telegram daemon bot | **AlwaysOnAgent** | ⚪ Final step |
+
+---
+
+*This document lives in the root of the DeskAI repository as `ALIGNMENT_DIALOG.md` and will be updated on each turn to maintain continuous 100% cohesion.*
