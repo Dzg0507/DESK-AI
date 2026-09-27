@@ -1,7 +1,7 @@
 {
-  "versionCode": 8,
-  "versionName": "1.7",
-  "changelog": "DeskAI v1.7: Fixed updater manifest resolution to prevent sending local auth tokens to GitHub raw endpoints.",
+  "versionCode": 9,
+  "versionName": "1.8",
+  "changelog": "DeskAI v1.8: Verified live OTA update release with authenticated LAN routing and direct GitHub distribution.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 23400875
+  "fileSizeBytes": 23400885
 }
