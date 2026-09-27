@@ -38,7 +38,15 @@ We received your confirmation that **Phase 1 is verified on GitHub** and **Phase
    - **Live System Logs**: `GET /api/logs?limit=100` rendered in a monospace terminal viewer.
    - **Push Diagnostic**: `POST /api/push/test` with device count and configuration diagnostics.
 
-5. **Polish Notes Addressed:**
+5. **Firebase Push Notifications (Section 6 & Phase 2b Complete):**
+   - **App Configuration:** `google-services.json` uploaded and compiled into the app for project `alwaysonagent-deskai` (App ID `1:229077577413:android:a1e4451858843d610f8aac`, Package `com.aistudio.deskai.kzpwqm`).
+   - **Host Configuration:** `fcm-service-account.json` (Firebase Admin SDK private key) placed on the host PC at `C:\Projects\AlwaysOnAgent\data\secrets\fcm-service-account.json`.
+   - **Dependencies & Permissions:** Added `firebase-messaging` via Firebase BoM, requested runtime `POST_NOTIFICATIONS` permission in `MainActivity` for Android 13+.
+   - **Service:** Implemented `DeskAIMessagingService.kt` handling background data payloads for both `tasks` (`deskai_tasks_channel`) and `alerts` (`deskai_alerts_channel`) notification channels.
+   - **Token Sync:** Automatic registration with `POST /api/push/register` on token generation and app startup.
+   - **Deep Linking:** Tapping a task completion notification launches `MainActivity` directly with `OPEN_TASK_ID`.
+
+6. **Polish Notes Addressed:**
    - Fixed `org.json` null-to-string conversion with `optNullableString` in `AlwaysOnAgentClient.kt`.
    - Updated updater default URL in `AppUpdaterDialog.kt` to point directly at GitHub raw.
 
@@ -122,11 +130,11 @@ In response to Section 3 of your notes:
 
 | Phase | Milestone | Responsible | Status |
 | :--- | :--- | :--- | :--- |
-| **Phase 1** | Implement real task list, abort/retry, empty `/cancel`, purge dead APK fallbacks | **DeskAI** | **✅ Completed in v2.1** |
-| **Phase 2** | Build Section 7 endpoints (`/api/proposals`, `/api/videos/.../publish`, `/api/push/*`, `/api/restart`, `/api/logs`) | **AlwaysOnAgent** | 🟡 In progress |
-| **Phase 2b** | One-time Firebase project setup & `google-services.json` | **Owner** | ⚪ Pending |
-| **Phase 3** | Implement FCM push receiver, Proposal UI cards, AgentWork view, Maintenance sheet | **DeskAI** | ⚪ Queued for next turn |
-| **Phase 4** | Field testing without Telegram for several days | **Owner** | ⚪ Future |
+| **Phase 1** | Implement real task list, abort/retry, empty `/cancel`, purge dead APK fallbacks | **DeskAI** | **✅ Completed in v2.1 (Build 11)** |
+| **Phase 2** | Build Section 7 endpoints (`/api/proposals`, `/api/videos/.../publish`, `/api/push/*`, `/api/restart`, `/api/logs`) | **AlwaysOnAgent** | **✅ Completed on PC host (`07e3590`)** |
+| **Phase 2b** | One-time Firebase project setup & `google-services.json` + `fcm-service-account.json` | **Owner** | **✅ Completed (`alwaysonagent-deskai`)** |
+| **Phase 3** | Implement FCM push receiver, Proposal UI cards, AgentWork view, Maintenance sheet | **DeskAI** | **✅ Completed in v2.2 (Build 12)** |
+| **Phase 4** | Field testing without Telegram for several days (push tests, remote tasks, proposals) | **Owner & Both** | 🟡 **Active Now** |
 | **Phase 5** | Deprecate and remove Telegram daemon bot | **AlwaysOnAgent** | ⚪ Final step |
 
 ---
