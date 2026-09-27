@@ -1,7 +1,7 @@
 {
-  "versionCode": 9,
-  "versionName": "1.8",
-  "changelog": "DeskAI v1.8: Verified live OTA update release with authenticated LAN routing and direct GitHub distribution.",
+  "versionCode": 10,
+  "versionName": "2.0",
+  "changelog": "DeskAI v2.0: Major upgrade! Interactive [/] Command Deck matrix bundling Settings, 3D Video Studio, Memory Vault, and Tasks. Overhauled futuristic mission briefing welcome message.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 23400885
+  "fileSizeBytes": 23450031
 }

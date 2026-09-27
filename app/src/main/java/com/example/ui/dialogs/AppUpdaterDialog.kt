@@ -283,15 +283,11 @@ fun AppUpdaterDialog(
                         .readTimeout(8, TimeUnit.SECONDS)
                         .build()
 
+                    val now = System.currentTimeMillis()
                     val versionUrls = mutableListOf(
-                        "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/web_dist/version.json",
-                        "https://raw.githubusercontent.com/Dzg0507/Desk-ai/master/web_dist/version.json"
+                        "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/web_dist/version.json?t=$now",
+                        "https://raw.githubusercontent.com/Dzg0507/Desk-ai/master/web_dist/version.json?t=$now"
                     )
-                    val cleanBase = serverBaseUrl.trimEnd('/')
-                    if (cleanBase.isNotBlank()) {
-                        versionUrls.add("$cleanBase/version.json")
-                        versionUrls.add("$cleanBase/static/version.json")
-                    }
 
                     var parsedJson: JSONObject? = null
                     for (rawVUrl in versionUrls) {

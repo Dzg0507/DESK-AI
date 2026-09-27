@@ -802,19 +802,29 @@ class AlwaysOnAgentClient {
                 """.trimIndent())
             }
 
-            "/help" -> {
+            "/help", "/start", "/briefing" -> {
                 onChunk("""
-                    🤖 **DeskAI AlwaysOnAgent Commands**
-                    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                    # 🛰️ DeskAI × AlwaysOnAgent (v2.1)
+                    ### Autonomous Computer Companion & Mobile Mission Control
+                    
+                    • **Tap `[/]` on the input bar** to open the **Command Deck** with all workstation hubs:
+                      - ⚙️ **Connection Hub** (Network routing & credentials)
+                      - 🎬 **3D Video Studio** (Watch 3D card-flip TikToks)
+                      - 🧠 **Memory Vault** (SQLite associative knowledge)
+                      - 📋 **Mission Tasks** (Active tasks & worker backlog)
+                      - 🔄 **In-App Updater** (Direct GitHub OTA updates)
+                    
+                    ### ⚡ Interactive Slash Directives:
                     • `/status` - Current daemon state, pulse & tasks
                     • `/wake` - Wake daemon from standby (0% -> Active)
                     • `/standby` - Standby mode (0% CPU/GPU)
                     • `/video [quote]` - Render 3D Card Flip Video
                     • `/tiktok [quote]` - Render & Auto-post to TikTok
+                    • `/image [prompt]` - AI Image generation
                     • `/engine <auto|antigravity|cloud|ollama>` - Select execution engine
                     • `/memory` - Inspect stored facts & profile
                     • `/remember <fact>` - Save permanent memory
-                    • `/forget <#id>` - Erase memory
+                    • `/forget <#id>` - Erase memory fact
                     • `/cancel <id>` - Abort running task
                     • `/retry <id>` - Retry failed task
                     • `/hud` - Mission Control link

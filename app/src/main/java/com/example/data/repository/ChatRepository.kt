@@ -217,7 +217,51 @@ class ChatRepository(
 
     suspend fun ensureDefaultSession(): ChatSession = withContext(Dispatchers.IO) {
         val existing = chatDao.getAllSessions().firstOrNull()?.firstOrNull()
+        val welcomeContent = """
+        # 🛰️ DeskAI × AlwaysOnAgent (v2.1)
+        ### Autonomous Computer Companion & Mobile Mission Control
+        
+        Welcome to your workstation's neural bridge. You have full command over your computer, background worker pool, and automation pipelines directly from your phone.
+        
+        ---
+        
+        ### 🎛️ Command Deck & Workstation Hubs
+        Tap **`[/]`** on the input bar or select **`[/] COMMAND DECK`** above to pop open the command matrix:
+        • ⚙️ **Connection Hub:** Network routing (`192.168.12.153:8080`), Remote Tailscale, & `HUD_AUTH_TOKEN`.
+        • 🎬 **3D Video Studio:** Stream rendered 3D card-flip TikToks directly on your phone.
+        • 🧠 **Memory Vault:** Browse and search your personal knowledge stored in SQLite WAL.
+        • 📋 **Mission Tasks:** Inspect real-time worker queues, active tasks, and execution logs.
+        • 🔄 **In-App Updater:** Download fresh OTA releases with 1 tap.
+        
+        ---
+        
+        ### ⚡ Quick Slash Directives
+        • `/status` — Live host CPU, RAM, daemon pulse & task counts
+        • `/wake` / `/standby` — Awaken daemon or toggle zero-power sleep mode
+        • `/video [quote]` — Render 3D motion card-flip animation
+        • `/tiktok [quote]` — Render & auto-publish to @Thevibecheckproject
+        • `/remember [fact]` — Permanently record a memory fact
+        • `/engine [auto|cloud|ollama]` — Switch execution backend
+        
+        ---
+        
+        💡 **Pro Tip:** Type any natural language task or question (e.g., *"Summarize my unread emails"* or *"Write a Python script to backup databases"*). Tapping **▶️ Run it** on any proposal will execute it live on your computer!
+        """.trimIndent()
+
         if (existing != null) {
+            val existingMessages = chatDao.getMessagesForSession(existing.id).firstOrNull()
+            if (existingMessages.isNullOrEmpty()) {
+                val welcome = ChatMessage(
+                    sessionId = existing.id,
+                    role = "assistant",
+                    content = welcomeContent,
+                    modelUsed = "AlwaysOnAgent Bridge",
+                    latencyMs = 8L
+                )
+                chatDao.insertMessage(welcome)
+            } else if (existingMessages.size == 1 && existingMessages.first().content.contains("Command Center")) {
+                chatDao.updateMessage(existingMessages.first().copy(content = welcomeContent))
+            }
             existing
         } else {
             val session = ChatSession(
@@ -225,22 +269,10 @@ class ChatRepository(
                 systemPrompt = "You are AlwaysOnAgent (v2.1), an autonomous AI worker and desktop assistant."
             )
             chatDao.insertSession(session)
-            // Welcome message tailored for AlwaysOnAgent
             val welcome = ChatMessage(
                 sessionId = session.id,
                 role = "assistant",
-                content = """
-                🤖 **AlwaysOnAgent (v2.1) Command Center**
-                
-                Connected to your computer's autonomous AI worker!
-                
-                • Use `/status` to inspect daemon status, CPU/RAM, and task counts.
-                • Use `/video` or `/tiktok` to render and publish 3D card flip videos.
-                • Use `/wake` or `/standby` to ignite or sleep the background daemon.
-                • Use `/memory` to view what I know about you, or `/remember <fact>`.
-                
-                Type any instruction to chat or tap a quick action below!
-                """.trimIndent(),
+                content = welcomeContent,
                 modelUsed = "AlwaysOnAgent Bridge",
                 latencyMs = 8L
             )

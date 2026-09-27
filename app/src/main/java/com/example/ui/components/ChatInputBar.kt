@@ -62,6 +62,7 @@ fun ChatInputBar(
     onSend: () -> Unit,
     isStreaming: Boolean,
     onStopStreaming: () -> Unit,
+    onOpenCommandPalette: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val quickCommands = remember {
@@ -73,10 +74,9 @@ fun ChatInputBar(
             "🚀 /tiktok",
             "🧠 /memory",
             "📋 /tasks",
-            "📜 /logs",
-            "🧹 /clean",
-            "💾 /backup",
-            "⚙️ /engine"
+            "⚙️ /engine",
+            "🎨 /image",
+            "ℹ️ /help"
         )
     }
 
@@ -109,8 +109,35 @@ fun ChatInputBar(
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState())
                 .padding(horizontal = 10.dp, vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            // Prominent Command Deck Pop-out Launcher Chip
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(ElectricCyan.copy(alpha = 0.16f))
+                    .border(1.dp, ElectricCyan.copy(alpha = 0.7f), RoundedCornerShape(12.dp))
+                    .clickable { onOpenCommandPalette() }
+                    .padding(horizontal = 10.dp, vertical = 4.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "[/] COMMAND DECK",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = ElectricCyan,
+                        fontFamily = FontFamily.Monospace
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "• Hubs & Actions",
+                        fontSize = 10.sp,
+                        color = Color.White
+                    )
+                }
+            }
+
             quickCommands.forEach { cmd ->
                 val pureCommand = cmd.substringAfter(" ")
                 Box(
@@ -143,6 +170,30 @@ fun ChatInputBar(
                 .padding(horizontal = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Dedicated Command Deck Button [/]
+            IconButton(
+                onClick = onOpenCommandPalette,
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(if (text.startsWith("/")) ElectricCyan.copy(alpha = 0.2f) else Color(0xFF1E293B))
+                    .border(
+                        1.dp,
+                        if (text.startsWith("/")) ElectricCyan else Color(0xFF334155),
+                        CircleShape
+                    )
+            ) {
+                Text(
+                    text = "/",
+                    color = if (text.startsWith("/")) ElectricCyan else Color(0xFF94A3B8),
+                    fontWeight = FontWeight.Black,
+                    fontSize = 18.sp,
+                    fontFamily = FontFamily.Monospace
+                )
+            }
+
+            Spacer(modifier = Modifier.width(6.dp))
+
             // Voice Mic Button
             IconButton(
                 onClick = {

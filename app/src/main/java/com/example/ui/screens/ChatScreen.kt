@@ -73,6 +73,7 @@ import com.example.ui.components.MessageBubble
 import com.example.ui.components.SessionDrawerContent
 import com.example.ui.dialogs.ConnectionHubDialog
 import com.example.ui.dialogs.AppUpdaterDialog
+import com.example.ui.dialogs.CommandPaletteDialog
 import com.example.ui.dialogs.MediaGallerySheet
 import com.example.ui.dialogs.MemorySheet
 import com.example.ui.dialogs.TasksSheet
@@ -145,6 +146,7 @@ fun ChatScreen(
     var showTasksSheet by remember { mutableStateOf(false) }
     var showMemorySheet by remember { mutableStateOf(false) }
     var showMediaSheet by remember { mutableStateOf(false) }
+    var showCommandPalette by remember { mutableStateOf(false) }
 
     // Auto-scroll to bottom when new messages arrive
     LaunchedEffect(messages.size, messages.lastOrNull()?.content) {
@@ -404,17 +406,40 @@ fun ChatScreen(
                         }
                     }
 
-                    // Chat Input Bar with Quick Commands & Voice Dictation
+                    // Chat Input Bar with Quick Commands, Voice Dictation & Command Deck
                     ChatInputBar(
                         text = inputText,
                         onTextChange = { viewModel.onInputTextChange(it) },
                         onSend = { viewModel.sendMessage() },
                         isStreaming = isStreaming,
-                        onStopStreaming = { viewModel.stopStreaming() }
+                        onStopStreaming = { viewModel.stopStreaming() },
+                        onOpenCommandPalette = { showCommandPalette = true }
                     )
                 }
             }
         }
+    }
+
+    // Interactive Command Deck & Bundled Views Hub
+    if (showCommandPalette) {
+        CommandPaletteDialog(
+            serverUrl = config.getResolvedUrl(),
+            isConnected = isConnected,
+            daemonStatus = daemonStats.daemonStatus,
+            hasUpdateAvailable = hasUpdateAvailable,
+            onOpenSettings = { showConnectionDialog = true },
+            onOpenMedia = { showMediaSheet = true },
+            onOpenMemory = { showMemorySheet = true },
+            onOpenTasks = { showTasksSheet = true },
+            onOpenUpdater = { showUpdaterDialog = true },
+            onSelectCommandTemplate = { template ->
+                viewModel.onInputTextChange(template)
+            },
+            onExecuteCommand = { cmd ->
+                viewModel.sendMessage(cmd)
+            },
+            onDismiss = { showCommandPalette = false }
+        )
     }
 
     // Connection Hub Dialog
