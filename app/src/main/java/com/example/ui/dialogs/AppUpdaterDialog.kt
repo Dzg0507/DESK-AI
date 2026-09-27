@@ -150,7 +150,8 @@ fun AppUpdaterDialog(
 
                     for (rawUrl in candidateUrls) {
                         try {
-                            val url = if (authToken.isNotBlank() && !rawUrl.contains("github") && !rawUrl.contains("token=")) {
+                            val isLocal = !rawUrl.contains("github")
+                            val url = if (authToken.isNotBlank() && isLocal && !rawUrl.contains("token=")) {
                                 if (rawUrl.contains("?")) "$rawUrl&token=${authToken.trim()}" else "$rawUrl?token=${authToken.trim()}"
                             } else {
                                 rawUrl
@@ -159,7 +160,8 @@ fun AppUpdaterDialog(
                                 statusMessage = "Connecting: " + url.take(38) + "..."
                             }
                             val reqBuilder = Request.Builder().url(url)
-                            if (authToken.isNotBlank()) {
+                            reqBuilder.header("User-Agent", "DeskAI-Android")
+                            if (authToken.isNotBlank() && isLocal) {
                                 reqBuilder.addHeader("X-HUD-Token", authToken.trim())
                                 reqBuilder.addHeader("Cookie", "hud_token=${authToken.trim()}")
                                 reqBuilder.addHeader("Authorization", "Bearer " + authToken.trim())
@@ -281,27 +283,28 @@ fun AppUpdaterDialog(
                         .readTimeout(8, TimeUnit.SECONDS)
                         .build()
 
+                    val versionUrls = mutableListOf(
+                        "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/web_dist/version.json",
+                        "https://raw.githubusercontent.com/Dzg0507/Desk-ai/master/web_dist/version.json"
+                    )
                     val cleanBase = serverBaseUrl.trimEnd('/')
-                    val versionUrls = mutableListOf<String>()
                     if (cleanBase.isNotBlank()) {
                         versionUrls.add("$cleanBase/version.json")
                         versionUrls.add("$cleanBase/static/version.json")
                     }
-                    val githubVMain = "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/web_dist/version.json"
-                    val githubVMaster = "https://raw.githubusercontent.com/Dzg0507/Desk-ai/master/web_dist/version.json"
-                    versionUrls.add(githubVMain)
-                    versionUrls.add(githubVMaster)
 
                     var parsedJson: JSONObject? = null
                     for (rawVUrl in versionUrls) {
                         try {
-                            val vUrl = if (authToken.isNotBlank() && !rawVUrl.contains("github") && !rawVUrl.contains("token=")) {
+                            val isLocal = !rawVUrl.contains("github")
+                            val vUrl = if (authToken.isNotBlank() && isLocal && !rawVUrl.contains("token=")) {
                                 if (rawVUrl.contains("?")) "$rawVUrl&token=${authToken.trim()}" else "$rawVUrl?token=${authToken.trim()}"
                             } else {
                                 rawVUrl
                             }
                             val reqBuilder = Request.Builder().url(vUrl)
-                            if (authToken.isNotBlank()) {
+                            reqBuilder.header("User-Agent", "DeskAI-Android")
+                            if (authToken.isNotBlank() && isLocal) {
                                 reqBuilder.addHeader("X-HUD-Token", authToken.trim())
                                 reqBuilder.addHeader("Cookie", "hud_token=${authToken.trim()}")
                                 reqBuilder.addHeader("Authorization", "Bearer " + authToken.trim())

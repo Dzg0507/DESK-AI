@@ -1,7 +1,7 @@
 {
-  "versionCode": 7,
-  "versionName": "1.6",
-  "changelog": "DeskAI v1.6: Fixed updater download source to fetch direct GitHub releases instead of stale local PC folder files.",
+  "versionCode": 8,
+  "versionName": "1.7",
+  "changelog": "DeskAI v1.7: Fixed updater manifest resolution to prevent sending local auth tokens to GitHub raw endpoints.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 23400885
+  "fileSizeBytes": 23400875
 }
