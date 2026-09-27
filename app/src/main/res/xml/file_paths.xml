@@ -3,7 +3,9 @@
     <cache-path name="cached_images" path="images/" />
     <cache-path name="cached_videos" path="videos/" />
     <cache-path name="cached_apks" path="apks/" />
+    <cache-path name="cache_root" path="." />
     <files-path name="internal_files" path="." />
     <external-path name="external_files" path="." />
     <external-files-path name="external_download_apks" path="." />
+    <external-cache-path name="external_cache" path="." />
 </paths>

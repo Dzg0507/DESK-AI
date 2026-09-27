@@ -143,14 +143,20 @@ fun AppUpdaterDialog(
                     var successfulResponse: okhttp3.Response? = null
                     var usedUrl = targetUrl
 
-                    for (url in candidateUrls) {
+                    for (rawUrl in candidateUrls) {
                         try {
+                            val url = if (authToken.isNotBlank() && !rawUrl.contains("github") && !rawUrl.contains("token=")) {
+                                if (rawUrl.contains("?")) "$rawUrl&token=${authToken.trim()}" else "$rawUrl?token=${authToken.trim()}"
+                            } else {
+                                rawUrl
+                            }
                             withContext(Dispatchers.Main) {
                                 statusMessage = "Connecting: " + url.take(38) + "..."
                             }
                             val reqBuilder = Request.Builder().url(url)
                             if (authToken.isNotBlank()) {
                                 reqBuilder.addHeader("X-HUD-Token", authToken.trim())
+                                reqBuilder.addHeader("Cookie", "hud_token=${authToken.trim()}")
                                 reqBuilder.addHeader("Authorization", "Bearer " + authToken.trim())
                             }
                             val resp = client.newCall(reqBuilder.build()).execute()
@@ -282,9 +288,20 @@ fun AppUpdaterDialog(
                     versionUrls.add(githubVMaster)
 
                     var parsedJson: JSONObject? = null
-                    for (vUrl in versionUrls) {
+                    for (rawVUrl in versionUrls) {
                         try {
-                            val req = Request.Builder().url(vUrl).build()
+                            val vUrl = if (authToken.isNotBlank() && !rawVUrl.contains("github") && !rawVUrl.contains("token=")) {
+                                if (rawVUrl.contains("?")) "$rawVUrl&token=${authToken.trim()}" else "$rawVUrl?token=${authToken.trim()}"
+                            } else {
+                                rawVUrl
+                            }
+                            val reqBuilder = Request.Builder().url(vUrl)
+                            if (authToken.isNotBlank()) {
+                                reqBuilder.addHeader("X-HUD-Token", authToken.trim())
+                                reqBuilder.addHeader("Cookie", "hud_token=${authToken.trim()}")
+                                reqBuilder.addHeader("Authorization", "Bearer " + authToken.trim())
+                            }
+                            val req = reqBuilder.build()
                             val resp = client.newCall(req).execute()
                             if (resp.isSuccessful && resp.body != null) {
                                 val bodyStr = resp.body!!.string().trim()
@@ -849,7 +866,6 @@ private fun launchInstaller(context: Context, apkFile: File) {
             Toast.makeText(context, "Error: APK file incomplete (" + apkFile.length() + " bytes)", Toast.LENGTH_LONG).show()
             return
         }
-
         val apkUri = FileProvider.getUriForFile(
             context,
             context.packageName + ".fileprovider",
@@ -861,15 +877,32 @@ private fun launchInstaller(context: Context, apkFile: File) {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
 
+        val standardInstallers = listOf(
+            "com.google.android.packageinstaller",
+            "com.android.packageinstaller",
+            "com.samsung.android.packageinstaller",
+            "com.miui.packageinstaller",
+            "com.coloros.packageinstaller",
+            "com.oppo.packageinstaller"
+        )
+        for (pkg in standardInstallers) {
+            try {
+                context.grantUriPermission(pkg, apkUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            } catch (_: Exception) {}
+        }
+
+        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) PackageManager.MATCH_UNINSTALLED_PACKAGES else 0
         val resolveList = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.packageManager.queryIntentActivities(installIntent, PackageManager.ResolveInfoFlags.of(PackageManager.MATCH_DEFAULT_ONLY.toLong()))
+            context.packageManager.queryIntentActivities(installIntent, PackageManager.ResolveInfoFlags.of(flags.toLong()))
         } else {
             @Suppress("DEPRECATION")
-            context.packageManager.queryIntentActivities(installIntent, PackageManager.MATCH_DEFAULT_ONLY)
+            context.packageManager.queryIntentActivities(installIntent, flags)
         }
         for (resolveInfo in resolveList) {
-            val pkg = resolveInfo.activityInfo.packageName
-            context.grantUriPermission(pkg, apkUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            try {
+                val pkg = resolveInfo.activityInfo.packageName
+                context.grantUriPermission(pkg, apkUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            } catch (_: Exception) {}
         }
 
         context.startActivity(installIntent)
