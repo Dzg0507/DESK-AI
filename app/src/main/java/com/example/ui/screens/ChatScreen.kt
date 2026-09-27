@@ -147,6 +147,8 @@ fun ChatScreen(
     var showMemorySheet by remember { mutableStateOf(false) }
     var showMediaSheet by remember { mutableStateOf(false) }
     var showCommandPalette by remember { mutableStateOf(false) }
+    var showAgentWorkSheet by remember { mutableStateOf(false) }
+    var showMaintenanceSheet by remember { mutableStateOf(false) }
 
     // Auto-scroll to bottom when new messages arrive
     LaunchedEffect(messages.size, messages.lastOrNull()?.content) {
@@ -432,6 +434,8 @@ fun ChatScreen(
             onOpenMemory = { showMemorySheet = true },
             onOpenTasks = { showTasksSheet = true },
             onOpenUpdater = { showUpdaterDialog = true },
+            onOpenAgentWork = { showAgentWorkSheet = true },
+            onOpenMaintenance = { showMaintenanceSheet = true },
             onSelectCommandTemplate = { template ->
                 viewModel.onInputTextChange(template)
             },
@@ -491,7 +495,29 @@ fun ChatScreen(
             onFetchVideos = { viewModel.fetchVideos() },
             onDownloadVideo = { url, file, onProg -> viewModel.downloadVideo(url, file, onProg) },
             onTriggerRender = { quote -> viewModel.triggerMedia("video", quote) },
-            onTriggerTikTok = { quote -> viewModel.triggerMedia("tiktok", quote) }
+            onTriggerTikTok = { quote -> viewModel.triggerMedia("tiktok", quote) },
+            onPublishExistingVideo = { filename -> viewModel.publishVideoToTikTok(filename) }
+        )
+    }
+
+    // AgentWork Project Hub (Section 7.3)
+    if (showAgentWorkSheet) {
+        com.example.ui.dialogs.AgentWorkSheet(
+            onDismiss = { showAgentWorkSheet = false },
+            onFetchProjects = { viewModel.fetchAgentWorkProjects() },
+            onDispatchJob = { project, instruction -> viewModel.dispatchAgentWorkJob(project, instruction) }
+        )
+    }
+
+    // System Maintenance & Logs (Section 7.5)
+    if (showMaintenanceSheet) {
+        com.example.ui.dialogs.MaintenanceSheet(
+            onDismiss = { showMaintenanceSheet = false },
+            onRunBackup = { viewModel.runBackup() },
+            onRunCleanup = { viewModel.runCleanup() },
+            onRestartAgent = { viewModel.restartAgent() },
+            onFetchLogs = { limit -> viewModel.fetchSystemLogs(limit) },
+            onTestPush = { viewModel.testPush() }
         )
     }
 }

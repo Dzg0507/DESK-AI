@@ -93,9 +93,8 @@ fun AppUpdaterDialog(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    val defaultUpdateUrl = remember(serverBaseUrl) {
-        val base = serverBaseUrl.trimEnd('/')
-        if (base.isNotBlank()) "$base/DeskAI.apk" else "http://10.0.2.2:8080/DeskAI.apk"
+    val defaultUpdateUrl = remember {
+        "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk"
     }
 
     var downloadUrl by remember { mutableStateOf(defaultUpdateUrl) }

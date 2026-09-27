@@ -56,8 +56,29 @@ data class VideoItem(
 )
 
 data class TaskProposal(
-    val token: String,
+    val id: String = "",
+    val token: String = "",
     val instruction: String,
     val reason: String = "",
-    val project: String? = null
+    val project: String? = null,
+    val expired: Boolean = false
+)
+
+data class AgentWorkProject(
+    val name: String,
+    val description: String = "",
+    val repo: String = ""
+)
+
+data class SystemLogEntry(
+    val id: String = "",
+    val timestamp: String = "",
+    val level: String = "INFO",
+    val message: String = ""
+)
+
+data class PushRegistrationResult(
+    val status: String = "ok",
+    val pushReady: Boolean = false,
+    val message: String = ""
 )

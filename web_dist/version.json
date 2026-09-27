@@ -1,7 +1,7 @@
 {
-  "versionCode": 11,
-  "versionName": "2.1",
-  "changelog": "DeskAI v2.1: Full AlwaysOnAgent Handoff Alignment. Connected live Task Queue with process abort & retry controls, empty /cancel aborts running task, and purged obsolete APK server fallbacks.",
+  "versionCode": 12,
+  "versionName": "2.2",
+  "changelog": "DeskAI v2.2: Phase 2 Endpoints Full Integration! Structured Proposal cards with Run/Dismiss, AgentWork project hub, 1-tap direct TikTok publishing from Video Gallery, and System Maintenance (Backup, Cleanup, Restart, Logs & Push Test).",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 23482805
+  "fileSizeBytes": 23564724
 }

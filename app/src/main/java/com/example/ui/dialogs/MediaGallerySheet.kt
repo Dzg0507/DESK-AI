@@ -72,7 +72,8 @@ fun MediaGallerySheet(
     onFetchVideos: suspend () -> List<VideoItem>,
     onDownloadVideo: suspend (url: String, destinationFile: File, onProgress: (Long, Long) -> Unit) -> Result<File>,
     onTriggerRender: suspend (quote: String?) -> Result<String>,
-    onTriggerTikTok: suspend (quote: String?) -> Result<String>
+    onTriggerTikTok: suspend (quote: String?) -> Result<String>,
+    onPublishExistingVideo: suspend (filename: String) -> Result<String> = { Result.success("published") }
 ) {
     val scope = rememberCoroutineScope()
     var customQuote by remember { mutableStateOf("") }
@@ -359,21 +360,23 @@ fun MediaGallerySheet(
                                             )
                                         }
 
-                                        // TikTok button
+                                        // 🚀 Direct TikTok Publish Button (Section 7.4)
                                         Box(
                                             modifier = Modifier
                                                 .clip(RoundedCornerShape(6.dp))
-                                                .background(ElectricCyan.copy(alpha = 0.15f))
+                                                .background(Color(0xFF0284C7).copy(alpha = 0.25f))
+                                                .border(1.dp, Color(0xFF0284C7).copy(alpha = 0.5f), RoundedCornerShape(6.dp))
                                                 .clickable {
                                                     scope.launch {
-                                                        val res = onTriggerTikTok(null)
-                                                        statusMessage = if (res.isSuccess) "🚀 TikTok upload task dispatched" else "⚠️ Error"
+                                                        statusMessage = "Publishing ${video.filename} to TikTok..."
+                                                        val res = onPublishExistingVideo(video.filename)
+                                                        statusMessage = if (res.isSuccess) "🚀 Posted to TikTok: ${video.filename} (${res.getOrNull()})" else "⚠️ ${res.exceptionOrNull()?.message}"
                                                     }
                                                 }
                                                 .padding(horizontal = 8.dp, vertical = 6.dp)
                                         ) {
                                             Text(
-                                                text = "TikTok",
+                                                text = "🚀 Post TikTok",
                                                 fontSize = 11.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 color = Color(0xFF38BDF8)

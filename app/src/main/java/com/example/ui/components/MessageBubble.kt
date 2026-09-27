@@ -435,7 +435,7 @@ fun ProposalCard(
             Spacer(modifier = Modifier.height(8.dp))
 
             when (state) {
-                "run" -> {
+                "run", "running" -> {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.Check,
@@ -445,12 +445,20 @@ fun ProposalCard(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "Dispatched to worker pool",
+                            text = "Dispatched to worker pool 🚀",
                             fontSize = 11.sp,
                             color = EmeraldConnected,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
+                }
+                "expired" -> {
+                    Text(
+                        text = "This suggestion expired (agent restarted)",
+                        fontSize = 11.sp,
+                        color = RoseError,
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                    )
                 }
                 "dismissed" -> {
                     Text(

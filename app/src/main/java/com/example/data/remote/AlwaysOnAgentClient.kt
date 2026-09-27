@@ -1,12 +1,16 @@
 package com.example.data.remote
 
 import com.example.data.model.AgentTaskItem
+import com.example.data.model.AgentWorkProject
 import com.example.data.model.BridgeConfig
 import com.example.data.model.BridgeProtocol
 import com.example.data.model.ChatMessage
 import com.example.data.model.DaemonStats
 import com.example.data.model.MemoryFactItem
 import com.example.data.model.MemoryOverview
+import com.example.data.model.PushRegistrationResult
+import com.example.data.model.SystemLogEntry
+import com.example.data.model.TaskProposal
 import com.example.data.model.VideoItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -35,6 +39,8 @@ class AlwaysOnAgentClient {
         .build()
 
     private val jsonMediaType = "application/json; charset=utf-8".toMediaType()
+
+    var lastReceivedProposal: TaskProposal? = null
 
     private fun addAuth(builder: Request.Builder, config: BridgeConfig): Request.Builder {
         if (config.apiKey.isNotBlank()) {
@@ -336,17 +342,23 @@ class AlwaysOnAgentClient {
     }
 
     private fun parseTaskJson(item: JSONObject): AgentTaskItem {
+        fun optNullableString(key: String): String? {
+            if (!item.has(key) || item.isNull(key)) return null
+            val str = item.optString(key, "").trim()
+            return if (str.isEmpty() || str.equals("null", ignoreCase = true)) null else str
+        }
+
         return AgentTaskItem(
-            id = item.optString("id", item.optString("task_id", "")),
-            title = item.optString("title", item.optString("prompt", "Task")),
-            prompt = item.optString("prompt", item.optString("title", "")),
-            phase = item.optString("phase", "backlog"),
-            engine = item.optString("engine", "auto"),
-            priority = item.optString("priority", "medium"),
-            startedAt = item.optString("started_at", "").ifBlank { null },
-            completedAt = item.optString("completed_at", "").ifBlank { null },
-            outputSummary = item.optString("output_summary", "").ifBlank { null },
-            lastError = item.optString("last_error", "").ifBlank { null },
+            id = optNullableString("id") ?: optNullableString("task_id") ?: "",
+            title = optNullableString("title") ?: optNullableString("prompt") ?: "Task",
+            prompt = optNullableString("prompt") ?: optNullableString("title") ?: "",
+            phase = optNullableString("phase") ?: "backlog",
+            engine = optNullableString("engine") ?: "auto",
+            priority = optNullableString("priority") ?: "medium",
+            startedAt = optNullableString("started_at"),
+            completedAt = optNullableString("completed_at"),
+            outputSummary = optNullableString("output_summary"),
+            lastError = optNullableString("last_error"),
             workerPid = if (item.has("worker_pid") && !item.isNull("worker_pid")) item.optInt("worker_pid") else null
         )
     }
@@ -366,6 +378,281 @@ class AlwaysOnAgentClient {
                     val body = resp.body?.string() ?: ""
                     if (resp.isSuccessful) {
                         Result.success("Task #$taskId requeued to backlog")
+                    } else {
+                        Result.failure(Exception("HTTP ${resp.code}: $body"))
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun publishVideoToTikTok(config: BridgeConfig, filename: String): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                val emptyBody = "".toRequestBody(jsonMediaType)
+                val req = addAuth(
+                    Request.Builder()
+                        .url("$baseUrl/api/videos/$filename/publish")
+                        .post(emptyBody),
+                    config
+                ).build()
+
+                httpClient.newCall(req).execute().use { resp ->
+                    val body = resp.body?.string() ?: ""
+                    if (resp.isSuccessful) {
+                        val json = JSONObject(body)
+                        Result.success(json.optString("task_id", "tiktok_published"))
+                    } else {
+                        Result.failure(Exception("HTTP ${resp.code}: $body"))
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun runProposal(config: BridgeConfig, proposalId: String): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                val emptyBody = "".toRequestBody(jsonMediaType)
+                val req = addAuth(
+                    Request.Builder()
+                        .url("$baseUrl/api/proposals/$proposalId/run")
+                        .post(emptyBody),
+                    config
+                ).build()
+
+                httpClient.newCall(req).execute().use { resp ->
+                    val body = resp.body?.string() ?: ""
+                    if (resp.isSuccessful) {
+                        val json = JSONObject(body)
+                        Result.success(json.optString("task_id", "proposal_running"))
+                    } else if (resp.code == 404) {
+                        Result.failure(Exception("EXPIRED: This proposal expired because the agent restarted."))
+                    } else {
+                        Result.failure(Exception("HTTP ${resp.code}: $body"))
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun dismissProposal(config: BridgeConfig, proposalId: String): Result<Boolean> = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                val emptyBody = "".toRequestBody(jsonMediaType)
+                val req = addAuth(
+                    Request.Builder()
+                        .url("$baseUrl/api/proposals/$proposalId/dismiss")
+                        .post(emptyBody),
+                    config
+                ).build()
+
+                httpClient.newCall(req).execute().use { resp ->
+                    if (resp.isSuccessful) {
+                        Result.success(true)
+                    } else {
+                        Result.failure(Exception("HTTP ${resp.code}"))
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getAgentWorkProjects(config: BridgeConfig): List<AgentWorkProject> = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                val req = addAuth(Request.Builder().url("$baseUrl/api/agentwork/projects"), config).build()
+                httpClient.newCall(req).execute().use { resp ->
+                    if (!resp.isSuccessful) return@executeWithFailover emptyList()
+                    val body = resp.body?.string() ?: return@executeWithFailover emptyList()
+                    val array = JSONArray(body)
+                    val list = mutableListOf<AgentWorkProject>()
+                    for (i in 0 until array.length()) {
+                        val obj = array.getJSONObject(i)
+                        list.add(
+                            AgentWorkProject(
+                                name = obj.optString("name", "Project"),
+                                description = obj.optString("description", ""),
+                                repo = obj.optString("repo", "")
+                            )
+                        )
+                    }
+                    list
+                }
+            }
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    suspend fun dispatchAgentWorkJob(config: BridgeConfig, project: String, instruction: String): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                val payload = JSONObject().apply {
+                    put("project", project)
+                    put("instruction", instruction)
+                }
+                val req = addAuth(
+                    Request.Builder()
+                        .url("$baseUrl/api/agentwork/jobs")
+                        .post(payload.toString().toRequestBody(jsonMediaType)),
+                    config
+                ).build()
+
+                httpClient.newCall(req).execute().use { resp ->
+                    val body = resp.body?.string() ?: ""
+                    if (resp.isSuccessful) {
+                        val json = JSONObject(body)
+                        Result.success(json.optString("task_id", "agentwork_dispatched"))
+                    } else {
+                        Result.failure(Exception("HTTP ${resp.code}: $body"))
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun runBackup(config: BridgeConfig): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                val emptyBody = "".toRequestBody(jsonMediaType)
+                val req = addAuth(Request.Builder().url("$baseUrl/api/backup").post(emptyBody), config).build()
+                httpClient.newCall(req).execute().use { resp ->
+                    val body = resp.body?.string() ?: ""
+                    if (resp.isSuccessful) {
+                        val json = JSONObject(body)
+                        Result.success(json.optString("message", "Backup completed successfully"))
+                    } else {
+                        Result.failure(Exception("HTTP ${resp.code}: $body"))
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun runCleanup(config: BridgeConfig): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                val emptyBody = "".toRequestBody(jsonMediaType)
+                val req = addAuth(Request.Builder().url("$baseUrl/api/cleanup").post(emptyBody), config).build()
+                httpClient.newCall(req).execute().use { resp ->
+                    val body = resp.body?.string() ?: ""
+                    if (resp.isSuccessful) {
+                        val json = JSONObject(body)
+                        Result.success(json.optString("message", "System cleanup completed"))
+                    } else {
+                        Result.failure(Exception("HTTP ${resp.code}: $body"))
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun restartAgent(config: BridgeConfig): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                val emptyBody = "".toRequestBody(jsonMediaType)
+                val req = addAuth(Request.Builder().url("$baseUrl/api/restart").post(emptyBody), config).build()
+                httpClient.newCall(req).execute().use { resp ->
+                    val body = resp.body?.string() ?: ""
+                    if (resp.isSuccessful || resp.code == 202) {
+                        Result.success("Agent restarting... Standby for re-connection.")
+                    } else {
+                        Result.failure(Exception("HTTP ${resp.code}: $body"))
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getSystemLogs(config: BridgeConfig, limit: Int = 100): List<SystemLogEntry> = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                val req = addAuth(Request.Builder().url("$baseUrl/api/logs?limit=$limit"), config).build()
+                httpClient.newCall(req).execute().use { resp ->
+                    if (!resp.isSuccessful) return@executeWithFailover emptyList()
+                    val body = resp.body?.string() ?: return@executeWithFailover emptyList()
+                    val array = JSONArray(body)
+                    val list = mutableListOf<SystemLogEntry>()
+                    for (i in 0 until array.length()) {
+                        val obj = array.getJSONObject(i)
+                        list.add(
+                            SystemLogEntry(
+                                id = obj.optString("id", i.toString()),
+                                timestamp = obj.optString("timestamp", ""),
+                                level = obj.optString("level", "INFO"),
+                                message = obj.optString("message", "")
+                            )
+                        )
+                    }
+                    list
+                }
+            }
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    suspend fun registerPushToken(config: BridgeConfig, token: String, deviceName: String = "Android Device"): PushRegistrationResult = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                val payload = JSONObject().apply {
+                    put("token", token)
+                    put("device_name", deviceName)
+                }
+                val req = addAuth(
+                    Request.Builder()
+                        .url("$baseUrl/api/push/register")
+                        .post(payload.toString().toRequestBody(jsonMediaType)),
+                    config
+                ).build()
+                httpClient.newCall(req).execute().use { resp ->
+                    val body = resp.body?.string() ?: ""
+                    val json = if (body.isNotBlank()) JSONObject(body) else JSONObject()
+                    PushRegistrationResult(
+                        status = json.optString("status", if (resp.isSuccessful) "ok" else "error"),
+                        pushReady = json.optBoolean("push_ready", false),
+                        message = json.optString("message", "")
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            PushRegistrationResult(status = "error", pushReady = false, message = e.message ?: "")
+        }
+    }
+
+    suspend fun testPush(config: BridgeConfig): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                val emptyBody = "".toRequestBody(jsonMediaType)
+                val req = addAuth(Request.Builder().url("$baseUrl/api/push/test").post(emptyBody), config).build()
+                httpClient.newCall(req).execute().use { resp ->
+                    val body = resp.body?.string() ?: ""
+                    if (resp.isSuccessful) {
+                        val json = JSONObject(body)
+                        val status = json.optString("status")
+                        when (status) {
+                            "sent" -> Result.success("Push delivered to ${json.optInt("devices", 1)} device(s)!")
+                            "not_configured" -> Result.success("Firebase key pending on host PC (registered successfully).")
+                            "no_devices" -> Result.failure(Exception("No devices currently registered for push."))
+                            else -> Result.success(body)
+                        }
                     } else {
                         Result.failure(Exception("HTTP ${resp.code}: $body"))
                     }
@@ -1016,6 +1303,24 @@ class AlwaysOnAgentClient {
                                     }
                                 }
                             }
+
+                            // Structured proposals from agent Phase 2
+                            val proposalsArray = json.optJSONArray("proposals")
+                            if (proposalsArray != null && proposalsArray.length() > 0) {
+                                val firstProp = proposalsArray.getJSONObject(0)
+                                val propId = firstProp.optString("id")
+                                val propInstr = firstProp.optString("instruction")
+                                val propReason = firstProp.optString("reason", "")
+                                val propProj = if (firstProp.has("project") && !firstProp.isNull("project")) firstProp.optString("project") else null
+                                lastReceivedProposal = TaskProposal(
+                                    id = propId,
+                                    token = propId,
+                                    instruction = propInstr,
+                                    reason = propReason,
+                                    project = propProj
+                                )
+                            }
+
                             onChunk(text)
                         } catch (_: Exception) {
                             onChunk(body)

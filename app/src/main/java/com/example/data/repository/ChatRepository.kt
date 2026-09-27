@@ -4,11 +4,15 @@ import android.content.Context
 
 import com.example.data.local.AppDatabase
 import com.example.data.model.AgentTaskItem
+import com.example.data.model.AgentWorkProject
 import com.example.data.model.BridgeConfig
 import com.example.data.model.ChatMessage
 import com.example.data.model.ChatSession
 import com.example.data.model.DaemonStats
 import com.example.data.model.MemoryOverview
+import com.example.data.model.PushRegistrationResult
+import com.example.data.model.SystemLogEntry
+import com.example.data.model.TaskProposal
 import com.example.data.model.VideoItem
 import com.example.data.remote.AlwaysOnAgentClient
 import kotlinx.coroutines.Dispatchers
@@ -148,6 +152,61 @@ class ChatRepository(
     suspend fun retryTask(taskId: String): Result<String> = withContext(Dispatchers.IO) {
         val config = getActiveConfig()
         agentClient.retryTask(config, taskId)
+    }
+
+    suspend fun publishVideoToTikTok(filename: String): Result<String> = withContext(Dispatchers.IO) {
+        val config = getActiveConfig()
+        agentClient.publishVideoToTikTok(config, filename)
+    }
+
+    suspend fun runProposal(proposalId: String): Result<String> = withContext(Dispatchers.IO) {
+        val config = getActiveConfig()
+        agentClient.runProposal(config, proposalId)
+    }
+
+    suspend fun dismissProposal(proposalId: String): Result<Boolean> = withContext(Dispatchers.IO) {
+        val config = getActiveConfig()
+        agentClient.dismissProposal(config, proposalId)
+    }
+
+    suspend fun fetchAgentWorkProjects(): List<AgentWorkProject> = withContext(Dispatchers.IO) {
+        val config = getActiveConfig()
+        agentClient.getAgentWorkProjects(config)
+    }
+
+    suspend fun dispatchAgentWorkJob(project: String, instruction: String): Result<String> = withContext(Dispatchers.IO) {
+        val config = getActiveConfig()
+        agentClient.dispatchAgentWorkJob(config, project, instruction)
+    }
+
+    suspend fun runBackup(): Result<String> = withContext(Dispatchers.IO) {
+        val config = getActiveConfig()
+        agentClient.runBackup(config)
+    }
+
+    suspend fun runCleanup(): Result<String> = withContext(Dispatchers.IO) {
+        val config = getActiveConfig()
+        agentClient.runCleanup(config)
+    }
+
+    suspend fun restartAgent(): Result<String> = withContext(Dispatchers.IO) {
+        val config = getActiveConfig()
+        agentClient.restartAgent(config)
+    }
+
+    suspend fun fetchSystemLogs(limit: Int = 100): List<SystemLogEntry> = withContext(Dispatchers.IO) {
+        val config = getActiveConfig()
+        agentClient.getSystemLogs(config, limit)
+    }
+
+    suspend fun registerPushToken(token: String, deviceName: String = "Android Device"): PushRegistrationResult = withContext(Dispatchers.IO) {
+        val config = getActiveConfig()
+        agentClient.registerPushToken(config, token, deviceName)
+    }
+
+    suspend fun testPush(): Result<String> = withContext(Dispatchers.IO) {
+        val config = getActiveConfig()
+        agentClient.testPush(config)
     }
 
     suspend fun triggerMedia(action: String, quote: String?): Result<String> = withContext(Dispatchers.IO) {
@@ -348,11 +407,24 @@ class ChatRepository(
             }
 
             val latency = System.currentTimeMillis() - startTime
-            val extractedInstruction = com.example.util.ProposalExtractor.extractInstruction(currentText)
-            val extractedProject = com.example.util.ProposalExtractor.extractProject(currentText)
-            val finalInstruction = extractedInstruction ?: if (isActionable) userText.trim() else null
-            val finalProject = extractedProject
-            val finalToken = if (!finalInstruction.isNullOrBlank()) UUID.randomUUID().toString().take(8) else null
+            val structuredProp = agentClient.lastReceivedProposal
+            agentClient.lastReceivedProposal = null
+
+            val finalInstruction = structuredProp?.instruction
+                ?: com.example.util.ProposalExtractor.extractInstruction(currentText)
+                ?: if (isActionable) userText.trim() else null
+
+            val finalProject = structuredProp?.project
+                ?: com.example.util.ProposalExtractor.extractProject(currentText)
+
+            val propId = structuredProp?.id
+            val finalToken: String? = if (!propId.isNullOrBlank()) {
+                propId
+            } else if (!finalInstruction.isNullOrBlank()) {
+                UUID.randomUUID().toString().take(8)
+            } else {
+                null
+            }
 
             val finalAssistantMessage = assistantMessage.copy(
                 content = currentText.ifBlank { "Task processed." },

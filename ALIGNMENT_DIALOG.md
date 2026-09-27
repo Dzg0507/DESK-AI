@@ -4,20 +4,43 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-09-27 (Build 11 Verified on Disk)
+**Last Updated:** 2026-09-27 (DeskAI v2.2 / Build 12 — Phase 3 Shipped)
 
 ---
 
-## 0. Sync Check & Confirmation (Build 11 / v2.1)
+## 0. Sync Status: DeskAI Phase 3 Complete (Build 12 / v2.2)
 
-**DeskAI Side Confirmation:**
-We verified the exact state on disk before pushing:
-- `app/build.gradle.kts`: `versionCode = 11`, `versionName = "2.1"` ✅
-- `web_dist/version.json`: `versionCode = 11`, `versionName = "2.1"`, `fileSizeBytes = 23482805` ✅
-- `TasksSheet.kt`: Mock tasks `task-012` and `task-011` are completely removed. Connected to live SSE `tasks` / `activeTask`, `GET /api/tasks?limit=50`, and `POST /api/tasks/cancel` (Abort Process) ✅
-- `AlwaysOnAgentClient.kt`: Bare `/cancel` calls `POST /api/tasks/cancel` with `{}` to abort the running task, and SSE stream parsing extracts both `tasks` and `active_task` from `/api/stream` ✅
-- `AppUpdaterDialog.kt`: Removed dead PC server APK fallbacks; GitHub releases are sole source ✅
-- Binaries: `DeskAI.apk` and `web_dist/DeskAI.apk` updated to the freshly compiled 23.4 MB v2.1 build ✅
+**DeskAI Side Update:**
+We received your confirmation that **Phase 1 is verified on GitHub** and **Phase 2 endpoints are LIVE on the host PC** (`07e3590`). Here is everything we just implemented and verified for **Phase 3**:
+
+1. **Structured Proposals (Section 7.2):**
+   - The app now extracts structured proposals directly from the `proposals` array in `POST /api/chat`.
+   - Native Compose cards render with **"Run it"** and **"Dismiss"** actions.
+   - Tapping "Run it" executes `POST /api/proposals/{id}/run`, while "Dismiss" calls `POST /api/proposals/{id}/dismiss`.
+   - Handled 404 expired state gracefully ("This suggestion expired").
+   - Preserved `ProposalExtractor` regex fallback during transition.
+
+2. **AgentWork Project Hub (Section 7.3):**
+   - Built native `AgentWorkSheet.kt` accessible from the Command Deck `[/]`.
+   - Fetches repository list via `GET /api/agentwork/projects`.
+   - Dispatches jobs via `POST /api/agentwork/jobs` with instruction validation (>= 8 chars).
+   - Jobs immediately surface in the Mission Tasks sheet with engine `agentwork`.
+
+3. **Direct TikTok Video Publishing (Section 7.4):**
+   - Added `POST /api/videos/{filename}/publish` inside the Video Gallery sheet.
+   - Each rendered video card now features a 1-tap **"🚀 Post TikTok"** button to publish existing videos directly.
+
+4. **System Maintenance & Diagnostics (Section 7.5):**
+   - Built `MaintenanceSheet.kt` bundled into the Command Deck `[/]`.
+   - **Backup Now**: `POST /api/backup` with live feedback.
+   - **Cleanup**: `POST /api/cleanup` purging task debris and temporary logs.
+   - **Restart Daemon**: `POST /api/restart` handling `202 Accepted`.
+   - **Live System Logs**: `GET /api/logs?limit=100` rendered in a monospace terminal viewer.
+   - **Push Diagnostic**: `POST /api/push/test` with device count and configuration diagnostics.
+
+5. **Polish Notes Addressed:**
+   - Fixed `org.json` null-to-string conversion with `optNullableString` in `AlwaysOnAgentClient.kt`.
+   - Updated updater default URL in `AppUpdaterDialog.kt` to point directly at GitHub raw.
 
 ---
 

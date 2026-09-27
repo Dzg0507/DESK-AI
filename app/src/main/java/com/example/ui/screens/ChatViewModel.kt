@@ -216,9 +216,36 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     fun runProposal(message: ChatMessage) {
         val instruction = message.proposalInstruction ?: return
         viewModelScope.launch {
-            // Mark proposal as run
+            val proposalId = message.proposalToken
+            if (!proposalId.isNullOrBlank()) {
+                val res = repository.runProposal(proposalId)
+                if (res.isSuccess) {
+                    val tid = res.getOrNull() ?: "running"
+                    repository.updateMessage(message.copy(proposalState = "run"))
+                    val confirmMessage = ChatMessage(
+                        sessionId = message.sessionId,
+                        role = "assistant",
+                        content = "🚀 **Proposal Started on Host!**\n\n• **Task ID:** `[$tid]`\n• **Instruction:** \"$instruction\"\n\nExecuting on your computer. View in the **Tasks** panel.",
+                        modelUsed = "AlwaysOnAgent Bridge"
+                    )
+                    repository.insertMessage(confirmMessage)
+                    return@launch
+                } else if (res.exceptionOrNull()?.message?.contains("EXPIRED") == true) {
+                    repository.updateMessage(message.copy(proposalState = "expired"))
+                    val expiredMsg = ChatMessage(
+                        sessionId = message.sessionId,
+                        role = "assistant",
+                        content = "⚠️ **Proposal Expired:** This suggestion expired because the desktop agent restarted.",
+                        status = "error",
+                        modelUsed = "AlwaysOnAgent Bridge"
+                    )
+                    repository.insertMessage(expiredMsg)
+                    return@launch
+                }
+            }
+
+            // Fallback: Dispatch as task to computer's worker pool
             repository.updateMessage(message.copy(proposalState = "run"))
-            // Dispatch as task to computer's worker pool
             val projectPrefix = if (!message.proposalProject.isNullOrBlank()) "[${message.proposalProject}] " else ""
             val fullTitle = "$projectPrefix$instruction".take(50)
             val res = repository.createTask(fullTitle, instruction)
@@ -246,8 +273,44 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     fun dismissProposal(message: ChatMessage) {
         viewModelScope.launch {
+            val proposalId = message.proposalToken
+            if (!proposalId.isNullOrBlank()) {
+                repository.dismissProposal(proposalId)
+            }
             repository.updateMessage(message.copy(proposalState = "dismissed"))
         }
+    }
+
+    suspend fun publishVideoToTikTok(filename: String): Result<String> {
+        return repository.publishVideoToTikTok(filename)
+    }
+
+    suspend fun fetchAgentWorkProjects(): List<com.example.data.model.AgentWorkProject> {
+        return repository.fetchAgentWorkProjects()
+    }
+
+    suspend fun dispatchAgentWorkJob(project: String, instruction: String): Result<String> {
+        return repository.dispatchAgentWorkJob(project, instruction)
+    }
+
+    suspend fun runBackup(): Result<String> {
+        return repository.runBackup()
+    }
+
+    suspend fun runCleanup(): Result<String> {
+        return repository.runCleanup()
+    }
+
+    suspend fun restartAgent(): Result<String> {
+        return repository.restartAgent()
+    }
+
+    suspend fun fetchSystemLogs(limit: Int = 100): List<com.example.data.model.SystemLogEntry> {
+        return repository.fetchSystemLogs(limit)
+    }
+
+    suspend fun testPush(): Result<String> {
+        return repository.testPush()
     }
 
     suspend fun dispatchTask(title: String, prompt: String, engine: String): Result<String> {

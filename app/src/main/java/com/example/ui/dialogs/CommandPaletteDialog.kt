@@ -24,6 +24,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.PowerSettingsNew
@@ -84,6 +86,8 @@ fun CommandPaletteDialog(
     onOpenMemory: () -> Unit,
     onOpenTasks: () -> Unit,
     onOpenUpdater: () -> Unit,
+    onOpenAgentWork: () -> Unit = {},
+    onOpenMaintenance: () -> Unit = {},
     onSelectCommandTemplate: (String) -> Unit,
     onExecuteCommand: (String) -> Unit,
     onDismiss: () -> Unit
@@ -491,6 +495,37 @@ fun CommandPaletteDialog(
                                             onClick = {
                                                 onDismiss()
                                                 onOpenTasks()
+                                            }
+                                        )
+                                    }
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        // 5. AgentWork Projects
+                                        WorkstationCard(
+                                            title = "AgentWork",
+                                            subtitle = "Autonomous Code & Git Repos",
+                                            icon = Icons.Default.Build,
+                                            accentColor = Color(0xFF38BDF8),
+                                            modifier = Modifier.weight(1f),
+                                            onClick = {
+                                                onDismiss()
+                                                onOpenAgentWork()
+                                            }
+                                        )
+
+                                        // 6. Maintenance & Logs
+                                        WorkstationCard(
+                                            title = "Maintenance",
+                                            subtitle = "Backup, Restart & System Logs",
+                                            icon = Icons.Default.CleaningServices,
+                                            accentColor = Color(0xFFA855F7),
+                                            modifier = Modifier.weight(1f),
+                                            onClick = {
+                                                onDismiss()
+                                                onOpenMaintenance()
                                             }
                                         )
                                     }
