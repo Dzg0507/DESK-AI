@@ -52,6 +52,7 @@ class AlwaysOnAgentClient {
         }
 
     var lastReceivedQuestion: ChatQuestion? = null
+    var lastReceivedTaskId: String? = null
 
     private fun addAuth(builder: Request.Builder, config: BridgeConfig): Request.Builder {
         if (config.apiKey.isNotBlank()) {
@@ -1047,7 +1048,9 @@ class AlwaysOnAgentClient {
             val title = promptText.take(45)
             val res = createTask(config, title, promptText)
             if (res.isSuccess) {
-                emit("📥 **Task Enqueued in AlwaysOnAgent Worker Pool**\n\n• **ID:** `[${res.getOrNull()}]`\n• **Title:** \"$title\"\n• **Status:** `Queued in Backlog ⏳`\n\nThe background daemon will execute this mission automatically!")
+                val tid = res.getOrNull()
+                lastReceivedTaskId = tid
+                emit("📥 **Task Enqueued in AlwaysOnAgent Worker Pool**\n\n• **ID:** `[$tid]`\n• **Title:** \"$title\"\n• **Status:** `Queued in Backlog ⏳`\n\nThe background daemon will execute this mission automatically!")
             } else {
                 emit("⚠️ Failed to enqueue task on computer: ${res.exceptionOrNull()?.message}")
             }
@@ -1160,15 +1163,9 @@ class AlwaysOnAgentClient {
                 val quote = arg.ifBlank { null }
                 val res = triggerMedia(config, "video", quote)
                 if (res.isSuccess) {
-                    onChunk("""
-                        🎬 **3D Card-Flip Video Render Dispatched!**
-                        
-                        • **Quote:** "${quote ?: "Daily Affirmation"}"
-                        • **Engine:** `Media Pipeline (Render Only)`
-                        • **Task ID:** `[${res.getOrNull()}]`
-                        
-                        ⚡ Executing in background worker pool... Check Media Gallery or Web HUD when complete.
-                    """.trimIndent())
+                    val tid = res.getOrNull()
+                    lastReceivedTaskId = tid
+                    onChunk("🎬 Rendering your video")
                 } else {
                     onChunk("⚠️ Failed to dispatch video render: ${res.exceptionOrNull()?.message}")
                 }
@@ -1178,16 +1175,9 @@ class AlwaysOnAgentClient {
                 val quote = arg.ifBlank { null }
                 val res = triggerMedia(config, "tiktok", quote)
                 if (res.isSuccess) {
-                    onChunk("""
-                        🚀 **TikTok Auto-Post Mission Dispatched!**
-                        
-                        • **Target Account:** `@Thevibecheckproject`
-                        • **Quote:** "${quote ?: "Daily Affirmation"}"
-                        • **Engine:** `Media Pipeline (Render + Auto-Post)`
-                        • **Task ID:** `[${res.getOrNull()}]`
-                        
-                        ⚡ Uploading directly to TikTok upon completion.
-                    """.trimIndent())
+                    val tid = res.getOrNull()
+                    lastReceivedTaskId = tid
+                    onChunk("🚀 Rendering & publishing to TikTok")
                 } else {
                     onChunk("⚠️ Failed to dispatch TikTok post: ${res.exceptionOrNull()?.message}")
                 }
@@ -1204,7 +1194,12 @@ class AlwaysOnAgentClient {
             "/cancel" -> {
                 if (arg.isNotBlank()) {
                     val res = cancelTask(config, arg)
-                    onChunk(if (res.isSuccess) "🛑 **Task Cancelled:** `[$arg]`" else "⚠️ ${res.exceptionOrNull()?.message}")
+                    if (res.isSuccess) {
+                        lastReceivedTaskId = arg
+                        onChunk("🛑 **Task Cancelled:** `[$arg]`")
+                    } else {
+                        onChunk("⚠️ ${res.exceptionOrNull()?.message}")
+                    }
                 } else {
                     onChunk("⏹️ Aborting currently executing mission on host PC...")
                     val res = abortRunningTask(config)
@@ -1224,7 +1219,12 @@ class AlwaysOnAgentClient {
             "/retry" -> {
                 if (arg.isNotBlank()) {
                     val res = retryTask(config, arg)
-                    onChunk(if (res.isSuccess) "🔄 **Task Queued for Retry:** `[$arg]`" else "⚠️ ${res.exceptionOrNull()?.message}")
+                    if (res.isSuccess) {
+                        lastReceivedTaskId = arg
+                        onChunk("🔄 **Task Queued for Retry:** `[$arg]`")
+                    } else {
+                        onChunk("⚠️ ${res.exceptionOrNull()?.message}")
+                    }
                 } else {
                     onChunk("Usage: `/retry <task_id>`")
                 }
@@ -1344,7 +1344,7 @@ class AlwaysOnAgentClient {
             }
 
             else -> {
-                onChunk("Command `$cmd` unrecognized. Type `/help` for list of commands.")
+                executeRealConversation(config, "You are AlwaysOnAgent AI assistant.", emptyList(), cmdText, onChunk)
             }
         }
     }
@@ -1414,6 +1414,16 @@ class AlwaysOnAgentClient {
                                 try {
                                     val json = JSONObject(data)
                                     val chunk = json.optString("chunk", json.optString("delta", json.optString("text", json.optString("response", ""))))
+                                    val tid = if (json.has("task_id") && !json.isNull("task_id")) {
+                                        json.optString("task_id")
+                                    } else if (json.has("taskId") && !json.isNull("taskId")) {
+                                        json.optString("taskId")
+                                    } else {
+                                        json.optJSONObject("task")?.optString("id")
+                                    }
+                                    if (!tid.isNullOrBlank()) {
+                                        lastReceivedTaskId = tid
+                                    }
                                     if (chunk.isNotEmpty()) onChunk(chunk)
                                 } catch (_: Exception) {
                                     if (data.isNotEmpty()) onChunk(data)
@@ -1492,6 +1502,18 @@ class AlwaysOnAgentClient {
                                 )
                             } else {
                                 lastReceivedQuestion = null
+                            }
+
+                            // Read JSON field task_id for chat-created tasks (e.g. /task, /cancel)
+                            val taskId = if (json.has("task_id") && !json.isNull("task_id")) {
+                                json.optString("task_id")
+                            } else if (json.has("taskId") && !json.isNull("taskId")) {
+                                json.optString("taskId")
+                            } else {
+                                json.optJSONObject("task")?.optString("id")
+                            }
+                            if (!taskId.isNullOrBlank()) {
+                                lastReceivedTaskId = taskId
                             }
 
                             onChunk(text)

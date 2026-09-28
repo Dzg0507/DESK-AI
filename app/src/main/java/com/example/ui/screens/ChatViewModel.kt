@@ -384,7 +384,24 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     suspend fun triggerMedia(action: String, quote: String?): Result<String> {
-        return repository.triggerMedia(action, quote)
+        val res = repository.triggerMedia(action, quote)
+        if (res.isSuccess) {
+            val tid = res.getOrNull()
+            val session = _currentSession.value
+            if (session != null && !tid.isNullOrBlank()) {
+                val bubbleText = if (action == "tiktok") "🚀 Rendering & publishing to TikTok" else "🎬 Rendering your video"
+                val assistantMsg = ChatMessage(
+                    sessionId = session.id,
+                    role = "assistant",
+                    content = bubbleText,
+                    status = "sent",
+                    modelUsed = "AlwaysOnAgent Bridge",
+                    linkedTaskId = tid
+                )
+                repository.insertMessage(assistantMsg)
+            }
+        }
+        return res
     }
 
     suspend fun fetchVideos(): List<VideoItem> {

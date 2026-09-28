@@ -75,12 +75,14 @@ fun LiveTaskCard(
     var isCancelling by remember { mutableStateOf(false) }
     var cancelFeedback by remember { mutableStateOf<String?>(null) }
 
-    // Live refresh loop: Poll every 2 seconds while active
+    // Live refresh loop: Poll every 2 seconds while active, stop on 404, backoff on errors
     LaunchedEffect(taskId, isPolling) {
         if (!isPolling) return@LaunchedEffect
+        var consecutiveErrors = 0
         while (isActive && isPolling) {
             val res = onGetTask(taskId)
             if (res.isSuccess) {
+                consecutiveErrors = 0
                 val item = res.getOrNull()
                 if (item != null) {
                     taskItem = item
@@ -90,10 +92,20 @@ fun LiveTaskCard(
                             item.cancelled
                     if (isTerminal) {
                         isPolling = false
+                        break
                     }
                 }
+                delay(2000)
+            } else {
+                val err = res.exceptionOrNull()?.message ?: ""
+                if (err.contains("404")) {
+                    isPolling = false
+                    break
+                }
+                consecutiveErrors++
+                val backoffMs = (2000L * consecutiveErrors).coerceAtMost(10000L)
+                delay(backoffMs)
             }
-            delay(2000)
         }
     }
 
@@ -107,13 +119,15 @@ fun LiveTaskCard(
     }
 
     val item = taskItem
+    val isNotFound = item == null && !isPolling
     val isCancelled = item?.cancelled == true || item?.phase == "cancelled"
     val isCompleted = item?.phase == "completed"
-    val isFailed = item?.phase == "failed" && !isCancelled
+    val isFailed = (item?.phase == "failed" && !isCancelled) || isNotFound
     val isInProgress = item?.phase == "in_progress" && !isCancelled
-    val isBacklog = (item?.phase == "backlog" || item == null) && !isCancelled
+    val isBacklog = (item?.phase == "backlog" || item == null) && !isCancelled && !isNotFound
 
     val phaseColor = when {
+        isNotFound -> Color(0xFF94A3B8)
         isCancelled -> Color(0xFF94A3B8)
         isCompleted -> EmeraldConnected
         isInProgress -> Color(0xFFF59E0B)
@@ -176,6 +190,7 @@ fun LiveTaskCard(
                 ) {
                     Text(
                         text = when {
+                            isNotFound -> "NOT FOUND (404)"
                             isCancelled -> "CANCELLED"
                             isCompleted -> "COMPLETED"
                             isInProgress -> "RUNNING"
@@ -202,6 +217,7 @@ fun LiveTaskCard(
 
             // Status Text (Dynamic server label)
             val statusDisplay = item?.statusText ?: when {
+                isNotFound -> "Task no longer exists on computer (404)."
                 isInProgress -> "Executing on computer worker pool..."
                 isCompleted -> "Mission finished successfully"
                 isCancelled -> "Task was cancelled"
@@ -219,15 +235,24 @@ fun LiveTaskCard(
             if (isInProgress) {
                 val prog = item?.progress
                 if (prog != null) {
-                    // Compute countdown
+                    // Compute countdown using timezone-offset aware parser
                     val parsedUpdateMs = remember(prog.updatedAt) {
                         try {
-                            val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US)
-                            format.timeZone = TimeZone.getDefault()
-                            val cleaned = prog.updatedAt.substringBefore("+").substringBefore("Z")
-                            format.parse(cleaned)?.time ?: System.currentTimeMillis()
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                                java.time.OffsetDateTime.parse(prog.updatedAt).toInstant().toEpochMilli()
+                            } else {
+                                val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.US)
+                                format.parse(prog.updatedAt)?.time ?: System.currentTimeMillis()
+                            }
                         } catch (_: Exception) {
-                            System.currentTimeMillis()
+                            try {
+                                val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US)
+                                format.timeZone = TimeZone.getTimeZone("UTC")
+                                val cleaned = prog.updatedAt.substringBefore("+").substringBefore("Z")
+                                format.parse(cleaned)?.time ?: System.currentTimeMillis()
+                            } catch (_: Exception) {
+                                System.currentTimeMillis()
+                            }
                         }
                     }
                     val elapsedSec = ((currentTimeMs - parsedUpdateMs) / 1000).coerceAtLeast(0)

@@ -523,7 +523,10 @@ fun ChatScreen(
             onDownloadVideo = { url, file, onProg -> viewModel.downloadVideo(url, file, onProg) },
             onTriggerRender = { quote -> viewModel.triggerMedia("video", quote) },
             onTriggerTikTok = { quote -> viewModel.triggerMedia("tiktok", quote) },
-            onPublishExistingVideo = { filename -> viewModel.publishVideoToTikTok(filename) }
+            onPublishExistingVideo = { filename -> viewModel.publishVideoToTikTok(filename) },
+            onGetTask = { tid -> viewModel.getTask(tid) },
+            onCancelTask = { tid -> viewModel.cancelTask(tid) },
+            onRetryTask = { tid -> viewModel.retryTask(tid) }
         )
     }
 

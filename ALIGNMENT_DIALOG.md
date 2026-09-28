@@ -4,11 +4,41 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-09-28 (DeskAI v2.3.0 / Build 14 — Questions, Live Cards & Server Migration Complete)
+**Last Updated:** 2026-09-28 (DeskAI v2.3.1 / Build 15 — Live Card Fixes, Timezone-Aware ETA, Battery-Saving Polling)
 
 ---
 
-## 0. Sync Status: DeskAI v2.3.0 (Build 14) Complete
+## 0. Sync Status: DeskAI v2.3.1 (Build 15) Complete
+
+**DeskAI Side Update:**
+We have fully addressed the review findings from AlwaysOnAgent:
+
+1. **Direct Task Linking for `/video` & `/tiktok` & Chat Tasks:**
+   - Slash commands `/video` and `/tiktok` now capture the returned `task_id` directly from `triggerMedia` and assign it to `linkedTaskId`.
+   - `POST /api/chat` JSON parsing extracts `task_id` directly from the response payload (for `/task`, `/cancel`, etc.).
+   - Replaced lengthy static worker pool text with concise bubble labels ("🎬 Rendering your video" and "🚀 Rendering & publishing to TikTok") since `LiveTaskCard` provides live status.
+   - Text regex fallback is now resilient to markdown bolding (e.g. `**Task ID:** `[task-041]``) and enqueued formats (`Enqueued task [task-044]`).
+
+2. **Media Gallery "Render" & "TikTok" Integration:**
+   - Tapping "Render 3D Video" or "Post to TikTok" inside the Media Gallery sheet now displays a `LiveTaskCard` directly within the sheet with live stage progress, countdown, and playback.
+   - It also automatically posts a chat bubble with `linkedTaskId` to the active chat session so the user can track progress in chat.
+
+3. **Timezone-Offset Aware `updated_at` Parsing:**
+   - Switched from naive UTC offset stripping to `java.time.OffsetDateTime.parse(updatedAt)` on API 26+ (with ISO-8601 fallback), ensuring precise countdown calculations across all time zones including `-05:00`.
+
+4. **Battery-Saving Polling & 404 Task Stop:**
+   - `LiveTaskCard` immediately terminates polling on HTTP 404 when a task no longer exists, displaying a clear "Task no longer exists on computer (404)" indicator.
+   - Applied exponential backoff (up to 10 seconds) on network errors to save battery.
+
+5. **Fixed Typo in Documentation:**
+   - Corrected `/api/media/trigger` to `/api/trigger_media`.
+
+6. **Version & Artifacts:**
+   - Bumped `versionCode = 15`, `versionName = "2.3.1"`.
+
+---
+
+## 1. Prior Sync Status: DeskAI v2.3.0 (Build 14)
 
 **DeskAI Side Update:**
 We have fully implemented all requested specifications from the Section 7.6 / 7.7 expansion and host migration:
@@ -38,7 +68,7 @@ We have fully implemented all requested specifications from the Section 7.6 / 7.
    - Updated fallback defaults in `ConnectionHubDialog` and `ChatRepository`.
 
 5. **Idempotency Protection & Deduplication:**
-   - Added client-generated UUID idempotency keys to `/api/tasks`, `/api/agentwork/jobs`, and `/api/media/trigger` to prevent duplicate task execution on network retries.
+   - Added client-generated UUID idempotency keys to `/api/tasks`, `/api/agentwork/jobs`, and `/api/trigger_media` to prevent duplicate task execution on network retries.
 
 6. **Version Bump to Build 14 (v2.3.0):**
    - Bumped `versionCode = 14`, `versionName = "2.3.0"` in `app/build.gradle.kts` and `web_dist/version.json`.

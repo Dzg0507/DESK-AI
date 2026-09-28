@@ -59,7 +59,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.example.data.model.AgentTaskItem
 import com.example.data.model.VideoItem
+import com.example.ui.components.LiveTaskCard
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldConnected
 import kotlinx.coroutines.launch
@@ -73,11 +75,15 @@ fun MediaGallerySheet(
     onDownloadVideo: suspend (url: String, destinationFile: File, onProgress: (Long, Long) -> Unit) -> Result<File>,
     onTriggerRender: suspend (quote: String?) -> Result<String>,
     onTriggerTikTok: suspend (quote: String?) -> Result<String>,
-    onPublishExistingVideo: suspend (filename: String) -> Result<String> = { Result.success("published") }
+    onPublishExistingVideo: suspend (filename: String) -> Result<String> = { Result.success("published") },
+    onGetTask: (suspend (String) -> Result<AgentTaskItem>)? = null,
+    onCancelTask: (suspend (String) -> Result<String>)? = null,
+    onRetryTask: (suspend (String) -> Result<String>)? = null
 ) {
     val scope = rememberCoroutineScope()
     var customQuote by remember { mutableStateOf("") }
     var statusMessage by remember { mutableStateOf<String?>(null) }
+    var activeRenderTaskId by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var videos by remember { mutableStateOf<List<VideoItem>>(emptyList()) }
     var selectedVideoForPlayback by remember { mutableStateOf<VideoItem?>(null) }
@@ -184,7 +190,13 @@ fun MediaGallerySheet(
                             .clickable {
                                 scope.launch {
                                     val res = onTriggerRender(customQuote.ifBlank { null })
-                                    statusMessage = if (res.isSuccess) "🎬 3D Render Dispatched (${res.getOrNull()})" else "⚠️ Failed"
+                                    if (res.isSuccess) {
+                                        val tid = res.getOrNull()
+                                        activeRenderTaskId = tid
+                                        statusMessage = "🎬 3D Render Dispatched ($tid)"
+                                    } else {
+                                        statusMessage = "⚠️ Failed: ${res.exceptionOrNull()?.message}"
+                                    }
                                     refreshVideos()
                                 }
                             }
@@ -208,7 +220,13 @@ fun MediaGallerySheet(
                             .clickable {
                                 scope.launch {
                                     val res = onTriggerTikTok(customQuote.ifBlank { null })
-                                    statusMessage = if (res.isSuccess) "🚀 TikTok Mission Queued (${res.getOrNull()})" else "⚠️ Failed"
+                                    if (res.isSuccess) {
+                                        val tid = res.getOrNull()
+                                        activeRenderTaskId = tid
+                                        statusMessage = "🚀 TikTok Mission Queued ($tid)"
+                                    } else {
+                                        statusMessage = "⚠️ Failed: ${res.exceptionOrNull()?.message}"
+                                    }
                                 }
                             }
                             .padding(vertical = 10.dp),
@@ -231,6 +249,28 @@ fun MediaGallerySheet(
                         color = EmeraldConnected,
                         fontFamily = FontFamily.Monospace
                     )
+                }
+
+                // Live Task Card inside sheet for active render
+                activeRenderTaskId?.let { tid ->
+                    if (onGetTask != null) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        LiveTaskCard(
+                            taskId = tid,
+                            onGetTask = onGetTask,
+                            onCancelTask = onCancelTask,
+                            onRetryTask = onRetryTask,
+                            onPlayVideo = { url, fn ->
+                                selectedVideoForPlayback = VideoItem(
+                                    filename = fn,
+                                    url = url,
+                                    sizeMb = 0.0,
+                                    createdAt = "Just now"
+                                )
+                                refreshVideos()
+                            }
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(14.dp))

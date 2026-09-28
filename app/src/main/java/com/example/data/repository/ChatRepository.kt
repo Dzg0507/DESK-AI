@@ -446,6 +446,8 @@ class ChatRepository(
             agentClient.lastReceivedProposals = emptyList()
             val receivedQuestion = agentClient.lastReceivedQuestion
             agentClient.lastReceivedQuestion = null
+            val receivedTaskId = agentClient.lastReceivedTaskId
+            agentClient.lastReceivedTaskId = null
 
             val finalProposals: List<TaskProposal> = if (structuredProps.isNotEmpty()) {
                 // Agent-issued structured proposals (preserves all proposals from agent)
@@ -482,8 +484,13 @@ class ChatRepository(
             }
 
             val firstProp = finalProposals.firstOrNull()
-            val detectedTaskId = Regex("""Task ID:\s*`?\[?([a-zA-Z0-9_\-]+)\]?`?""", RegexOption.IGNORE_CASE)
+            // Fallback regex tolerant to markdown bolding (e.g. **Task ID:** `[task-041]`), enqueued formats, or bracketed ids
+            val regexFallbackId = Regex("""(?:Task ID:\**|Enqueued task)\s*`?\[?([a-zA-Z0-9_\-]+)\]?`?""", RegexOption.IGNORE_CASE)
                 .find(currentText)?.groupValues?.get(1)
+                ?: Regex("""\b(task-\d+)\b""", RegexOption.IGNORE_CASE)
+                    .find(currentText)?.groupValues?.get(1)
+
+            val detectedTaskId = receivedTaskId ?: regexFallbackId
 
             val finalAssistantMessage = assistantMessage.copy(
                 content = currentText.ifBlank { "Task processed." },
