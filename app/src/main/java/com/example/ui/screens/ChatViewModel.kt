@@ -5,6 +5,8 @@ import android.speech.tts.TextToSpeech
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.local.AppDatabase
+import com.example.data.model.AgentTaskItem
+import com.example.data.model.AgentWorkProject
 import com.example.data.model.BridgeConfig
 import com.example.data.model.ChatMessage
 import com.example.data.model.ChatSession
@@ -231,27 +233,47 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             if (!prop.isLocal && targetId.isNotBlank() && !targetId.startsWith("local_")) {
                 val res = repository.runProposal(targetId)
                 if (res.isSuccess) {
-                    val tid = res.getOrNull() ?: "running"
+                    val resultString = res.getOrNull() ?: "success"
                     repository.updateMessage(message.withUpdatedProposal(targetId, "run"))
+                    val isAddProject = prop.kind == "add_project"
+                    val confirmContent = if (isAddProject) {
+                        "📁 **Project Registered with AgentWork!**\n\n$resultString\n\nTasks can now target this repository in AgentWork."
+                    } else {
+                        "🚀 **Proposal Started on Host!**\n\n• **Task ID:** `[$resultString]`\n• **Instruction:** \"$instruction\"\n\nExecuting on your computer. View in the **Tasks** panel."
+                    }
                     val confirmMessage = ChatMessage(
                         sessionId = message.sessionId,
                         role = "assistant",
-                        content = "🚀 **Proposal Started on Host!**\n\n• **Task ID:** `[$tid]`\n• **Instruction:** \"$instruction\"\n\nExecuting on your computer. View in the **Tasks** panel.",
-                        modelUsed = "AlwaysOnAgent Bridge"
+                        content = confirmContent,
+                        modelUsed = "AlwaysOnAgent Bridge",
+                        linkedTaskId = if (isAddProject) null else resultString
                     )
                     repository.insertMessage(confirmMessage)
                     return@launch
-                } else if (res.exceptionOrNull()?.message?.contains("EXPIRED") == true) {
-                    repository.updateMessage(message.withUpdatedProposal(targetId, "expired"))
-                    val expiredMsg = ChatMessage(
-                        sessionId = message.sessionId,
-                        role = "assistant",
-                        content = "⚠️ **Proposal Expired:** This suggestion expired because the desktop agent restarted.",
-                        status = "error",
-                        modelUsed = "AlwaysOnAgent Bridge"
-                    )
-                    repository.insertMessage(expiredMsg)
-                    return@launch
+                } else {
+                    val errMsg = res.exceptionOrNull()?.message ?: "Unknown error"
+                    if (errMsg.contains("EXPIRED")) {
+                        repository.updateMessage(message.withUpdatedProposal(targetId, "expired"))
+                        val expiredMsg = ChatMessage(
+                            sessionId = message.sessionId,
+                            role = "assistant",
+                            content = "⚠️ **Proposal Expired:** This suggestion expired because the desktop agent restarted.",
+                            status = "error",
+                            modelUsed = "AlwaysOnAgent Bridge"
+                        )
+                        repository.insertMessage(expiredMsg)
+                        return@launch
+                    } else if (prop.kind == "add_project") {
+                        val failedMsg = ChatMessage(
+                            sessionId = message.sessionId,
+                            role = "assistant",
+                            content = "❌ **Could Not Add Project:** $errMsg",
+                            status = "error",
+                            modelUsed = "AlwaysOnAgent Bridge"
+                        )
+                        repository.insertMessage(failedMsg)
+                        return@launch
+                    }
                 }
             }
 
@@ -266,7 +288,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     sessionId = message.sessionId,
                     role = "assistant",
                     content = "🚀 **Task Dispatched to Worker Pool!**\n\n• **ID:** `[$tid]`\n• **Instruction:** \"$instruction\"\n• **Status:** `Queued in Backlog ⏳`\n\n⚡ Executing on your computer's background worker pool. View live progress in the **Tasks** panel.",
-                    modelUsed = "AlwaysOnAgent Bridge"
+                    modelUsed = "AlwaysOnAgent Bridge",
+                    linkedTaskId = tid
                 )
                 repository.insertMessage(confirmMessage)
             } else {
@@ -280,6 +303,29 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 repository.insertMessage(errMessage)
             }
         }
+    }
+
+    fun answerQuestion(message: ChatMessage, option: String) {
+        viewModelScope.launch {
+            repository.updateMessage(message.withAnsweredQuestion(option))
+        }
+        sendMessage(option)
+    }
+
+    suspend fun getTask(taskId: String): Result<AgentTaskItem> {
+        return repository.getTask(taskId)
+    }
+
+    suspend fun cancelTask(taskId: String): Result<String> {
+        return repository.cancelTask(taskId)
+    }
+
+    suspend fun retryTask(taskId: String): Result<String> {
+        return repository.retryTask(taskId)
+    }
+
+    suspend fun addAgentWorkProject(name: String, repo: String, description: String = ""): Result<AgentWorkProject> {
+        return repository.addAgentWorkProject(name, repo, description)
     }
 
     fun dismissProposal(message: ChatMessage, targetProposal: TaskProposal? = null) {
@@ -329,20 +375,12 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         return repository.createTask(title, prompt, engine)
     }
 
-    suspend fun cancelTask(taskId: String): Result<String> {
-        return repository.cancelTask(taskId)
-    }
-
     suspend fun abortRunningTask(): Result<String> {
         return repository.abortRunningTask()
     }
 
     suspend fun fetchTasks(limit: Int = 50): List<com.example.data.model.AgentTaskItem> {
         return repository.fetchTasks(limit)
-    }
-
-    suspend fun retryTask(taskId: String): Result<String> {
-        return repository.retryTask(taskId)
     }
 
     suspend fun triggerMedia(action: String, quote: String?): Result<String> {

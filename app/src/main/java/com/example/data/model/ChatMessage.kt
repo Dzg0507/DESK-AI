@@ -22,7 +22,8 @@ data class ChatMessage(
     val proposalProject: String? = null,
     val proposalState: String? = null, // "pending", "run", "dismissed"
     val linkedTaskId: String? = null,
-    val proposalsJson: String? = null
+    val proposalsJson: String? = null,
+    val questionJson: String? = null
 ) {
     fun getProposals(): List<TaskProposal> {
         if (!proposalsJson.isNullOrBlank()) {
@@ -39,7 +40,8 @@ data class ChatMessage(
                             reason = obj.optString("reason", ""),
                             project = if (obj.has("project") && !obj.isNull("project")) obj.optString("project") else null,
                             isLocal = obj.optBoolean("isLocal", false),
-                            state = obj.optString("state", "pending")
+                            state = obj.optString("state", "pending"),
+                            kind = obj.optString("kind", "task")
                         )
                     )
                 }
@@ -54,11 +56,43 @@ data class ChatMessage(
                     instruction = proposalInstruction,
                     project = proposalProject,
                     isLocal = proposalToken.isNullOrBlank() || proposalToken.startsWith("local_"),
-                    state = proposalState ?: "pending"
+                    state = proposalState ?: "pending",
+                    kind = "task"
                 )
             )
         }
         return emptyList()
+    }
+
+    fun getQuestion(): ChatQuestion? {
+        if (!questionJson.isNullOrBlank()) {
+            return try {
+                val obj = org.json.JSONObject(questionJson)
+                val optsArr = obj.optJSONArray("options")
+                val opts = mutableListOf<String>()
+                if (optsArr != null) {
+                    for (i in 0 until optsArr.length()) {
+                        opts.add(optsArr.getString(i))
+                    }
+                }
+                ChatQuestion(
+                    id = obj.optString("id"),
+                    text = obj.optString("text"),
+                    options = opts,
+                    allowOther = obj.optBoolean("allowOther", true),
+                    answeredOption = if (obj.has("answeredOption") && !obj.isNull("answeredOption")) obj.optString("answeredOption") else null
+                )
+            } catch (_: Exception) {
+                null
+            }
+        }
+        return null
+    }
+
+    fun withAnsweredQuestion(option: String): ChatMessage {
+        val q = getQuestion() ?: return this
+        val updatedQ = q.copy(answeredOption = option)
+        return copy(questionJson = serializeQuestion(updatedQ))
     }
 
     fun withUpdatedProposal(targetId: String, newState: String): ChatMessage {
@@ -90,9 +124,26 @@ data class ChatMessage(
                 if (p.project != null) obj.put("project", p.project)
                 obj.put("isLocal", p.isLocal)
                 obj.put("state", p.state)
+                obj.put("kind", p.kind)
                 array.put(obj)
             }
             return array.toString()
+        }
+
+        fun serializeQuestion(question: ChatQuestion): String {
+            val obj = org.json.JSONObject()
+            obj.put("id", question.id)
+            obj.put("text", question.text)
+            val optsArr = org.json.JSONArray()
+            for (opt in question.options) {
+                optsArr.put(opt)
+            }
+            obj.put("options", optsArr)
+            obj.put("allowOther", question.allowOther)
+            if (question.answeredOption != null) {
+                obj.put("answeredOption", question.answeredOption)
+            }
+            return obj.toString()
         }
     }
 }

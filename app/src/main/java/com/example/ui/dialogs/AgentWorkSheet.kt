@@ -58,7 +58,8 @@ import kotlinx.coroutines.launch
 fun AgentWorkSheet(
     onDismiss: () -> Unit,
     onFetchProjects: suspend () -> List<AgentWorkProject>,
-    onDispatchJob: suspend (project: String, instruction: String) -> Result<String>
+    onDispatchJob: suspend (project: String, instruction: String) -> Result<String>,
+    onAddProject: (suspend (name: String, repo: String, description: String) -> Result<AgentWorkProject>)? = null
 ) {
     val scope = rememberCoroutineScope()
     var projects by remember { mutableStateOf<List<AgentWorkProject>>(emptyList()) }
@@ -68,6 +69,14 @@ fun AgentWorkSheet(
     var isSubmitting by remember { mutableStateOf(false) }
     var statusMessage by remember { mutableStateOf<String?>(null) }
     var statusSuccess by remember { mutableStateOf(true) }
+
+    // Add Project Dialog State
+    var showAddProject by remember { mutableStateOf(false) }
+    var newProjName by remember { mutableStateOf("") }
+    var newProjRepo by remember { mutableStateOf("") }
+    var newProjDesc by remember { mutableStateOf("") }
+    var isAddingProj by remember { mutableStateOf(false) }
+    var addProjError by remember { mutableStateOf<String?>(null) }
 
     fun refreshProjects() {
         scope.launch {
@@ -162,14 +171,124 @@ fun AgentWorkSheet(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // Project Selector Strip
-                Text(
-                    text = "TARGET REPOSITORY / PROJECT",
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF94A3B8),
-                    letterSpacing = 0.8.sp
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "TARGET REPOSITORY / PROJECT",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF94A3B8),
+                        letterSpacing = 0.8.sp
+                    )
+                    if (onAddProject != null) {
+                        Text(
+                            text = if (showAddProject) "Cancel" else "+ Add Project",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = ElectricCyan,
+                            modifier = Modifier.clickable {
+                                showAddProject = !showAddProject
+                                addProjError = null
+                            }
+                        )
+                    }
+                }
                 Spacer(modifier = Modifier.height(6.dp))
+
+                if (showAddProject) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color(0xFF1E293B))
+                            .border(1.dp, ElectricCyan.copy(alpha = 0.5f), RoundedCornerShape(10.dp))
+                            .padding(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = "Register GitHub Repository with AgentWork",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        OutlinedTextField(
+                            value = newProjName,
+                            onValueChange = { newProjName = it },
+                            placeholder = { Text("Project name (e.g. recipe-app)", color = Color(0xFF64748B), fontSize = 11.sp) },
+                            textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 12.sp),
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        OutlinedTextField(
+                            value = newProjRepo,
+                            onValueChange = { newProjRepo = it },
+                            placeholder = { Text("https://github.com/owner/repo.git", color = Color(0xFF64748B), fontSize = 11.sp) },
+                            textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 12.sp),
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        OutlinedTextField(
+                            value = newProjDesc,
+                            onValueChange = { newProjDesc = it },
+                            placeholder = { Text("Description (e.g. Recipe companion app)", color = Color(0xFF64748B), fontSize = 11.sp) },
+                            textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 12.sp),
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        if (addProjError != null) {
+                            Text(
+                                text = "⚠️ $addProjError",
+                                fontSize = 11.sp,
+                                color = RoseError
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(if (isAddingProj) Color(0xFF475569) else ElectricCyan)
+                                .clickable(enabled = !isAddingProj && newProjName.isNotBlank() && newProjRepo.isNotBlank()) {
+                                    scope.launch {
+                                        isAddingProj = true
+                                        addProjError = null
+                                        val res = onAddProject?.invoke(newProjName.trim(), newProjRepo.trim(), newProjDesc.trim())
+                                        isAddingProj = false
+                                        if (res != null && res.isSuccess) {
+                                            val added = res.getOrNull()
+                                            if (added != null) {
+                                                projects = projects + added
+                                                selectedProject = added
+                                            }
+                                            showAddProject = false
+                                            newProjName = ""
+                                            newProjRepo = ""
+                                            newProjDesc = ""
+                                            statusMessage = "Added project '${added?.name}'! Tasks can now target it."
+                                            statusSuccess = true
+                                        } else {
+                                            addProjError = res?.exceptionOrNull()?.message ?: "Failed to add project"
+                                        }
+                                    }
+                                }
+                                .padding(vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (isAddingProj) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    CircularProgressIndicator(modifier = Modifier.size(14.dp), color = Color.White, strokeWidth = 2.dp)
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("Validating with GitHub...", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
+                            } else {
+                                Text("Register Project Now", color = Color(0xFF0F172A), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(6.dp))
+                }
 
                 if (isLoading) {
                     Row(

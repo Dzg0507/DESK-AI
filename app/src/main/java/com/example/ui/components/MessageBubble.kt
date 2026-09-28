@@ -30,10 +30,12 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.SmartToy
@@ -58,7 +60,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.model.AgentTaskItem
 import com.example.data.model.ChatMessage
+import com.example.data.model.ChatQuestion
 import com.example.data.model.TaskProposal
 import com.example.ui.theme.AssistantBubbleBackground
 import com.example.ui.theme.ElectricCyan
@@ -77,6 +81,12 @@ fun MessageBubble(
     onDeleteMessage: (ChatMessage) -> Unit = {},
     onRegenerate: (ChatMessage) -> Unit = {},
     onSpeak: (String) -> Unit = {},
+    onAnswerQuestion: (ChatMessage, String) -> Unit = { _, _ -> },
+    onFocusInput: () -> Unit = {},
+    onGetTask: (suspend (String) -> Result<AgentTaskItem>)? = null,
+    onCancelTask: (suspend (String) -> Result<String>)? = null,
+    onRetryTask: (suspend (String) -> Result<String>)? = null,
+    onPlayVideo: ((url: String, filename: String) -> Unit)? = null,
     serverBaseUrl: String = "",
     authToken: String = "",
     modifier: Modifier = Modifier
@@ -292,11 +302,35 @@ fun MessageBubble(
                                     instruction = proposal.instruction,
                                     project = proposal.project,
                                     state = proposal.state,
+                                    kind = proposal.kind,
                                     onRun = { onRunProposal(message, proposal) },
                                     onDismiss = { onDismissProposal(message, proposal) }
                                 )
                             }
                         }
+                    }
+
+                    // Section 7.6 Tap-to-answer Multiple Choice Question
+                    val question = remember(message.questionJson) { message.getQuestion() }
+                    if (question != null) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        QuestionChoicesCard(
+                            question = question,
+                            onAnswer = { opt -> onAnswerQuestion(message, opt) },
+                            onFocusOther = onFocusInput
+                        )
+                    }
+
+                    // Section 7.7 Live Task Card (Progress, ETA, Abort, Video Result)
+                    if (!message.linkedTaskId.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        LiveTaskCard(
+                            taskId = message.linkedTaskId,
+                            onGetTask = { tid -> onGetTask?.invoke(tid) ?: Result.failure(Exception("Get task unavailable")) },
+                            onCancelTask = onCancelTask,
+                            onRetryTask = onRetryTask,
+                            onPlayVideo = onPlayVideo
+                        )
                     }
 
                     // Timestamp
@@ -403,27 +437,52 @@ fun ProposalCard(
     instruction: String,
     project: String?,
     state: String,
+    kind: String = "task",
     onRun: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val isAddProject = kind == "add_project"
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
             .background(Color(0xFF0F172A))
-            .border(1.dp, Color(0xFF38BDF8).copy(alpha = 0.4f), RoundedCornerShape(10.dp))
+            .border(1.dp, if (isAddProject) ElectricCyan else Color(0xFF38BDF8).copy(alpha = 0.4f), RoundedCornerShape(10.dp))
             .padding(10.dp)
     ) {
         Column {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = "🧩", fontSize = 14.sp)
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = "Suggested Mission",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = ElectricCyan
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = if (isAddProject) "📁" else "🧩", fontSize = 14.sp)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = if (isAddProject) "Add AgentWork Project" else "Suggested Mission",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = ElectricCyan
+                    )
+                }
+
+                if (isAddProject) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(ElectricCyan.copy(alpha = 0.15f))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = "REPOSITORY",
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = ElectricCyan,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
+                }
             }
 
             if (!project.isNullOrBlank()) {
@@ -456,7 +515,7 @@ fun ProposalCard(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "Dispatched to worker pool 🚀",
+                            text = if (isAddProject) "Project registered in AgentWork ✓" else "Dispatched to worker pool 🚀",
                             fontSize = 11.sp,
                             color = EmeraldConnected,
                             fontWeight = FontWeight.SemiBold
@@ -484,26 +543,26 @@ fun ProposalCard(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        // "▶️ Run it" button
+                        // Action button (Run it or Add project)
                         Box(
                             modifier = Modifier
                                 .weight(1f)
                                 .clip(RoundedCornerShape(6.dp))
-                                .background(Color(0xFF0284C7))
+                                .background(if (isAddProject) Color(0xFF0284C7) else Color(0xFF0284C7))
                                 .clickable { onRun() }
                                 .padding(vertical = 6.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
-                                    imageVector = Icons.Default.PlayArrow,
-                                    contentDescription = "Run",
+                                    imageVector = if (isAddProject) Icons.Default.Add else Icons.Default.PlayArrow,
+                                    contentDescription = if (isAddProject) "Add Project" else "Run",
                                     tint = Color.White,
                                     modifier = Modifier.size(13.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = "Run it",
+                                    text = if (isAddProject) "Add project" else "Run it",
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White
@@ -536,6 +595,142 @@ fun ProposalCard(
                                 )
                             }
                         }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun QuestionChoicesCard(
+    question: ChatQuestion,
+    onAnswer: (String) -> Unit,
+    onFocusOther: () -> Unit
+) {
+    val isAnswered = question.answeredOption != null
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .background(Color(0xFF0F172A))
+            .border(1.dp, Color(0xFF334155), RoundedCornerShape(10.dp))
+            .padding(10.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "CHOICE REQUIRED",
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                color = ElectricCyan,
+                letterSpacing = 0.5.sp
+            )
+            if (isAnswered) {
+                Text(
+                    text = "Answered ✓",
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = EmeraldConnected
+                )
+            }
+        }
+
+        if (question.text.isNotBlank()) {
+            Text(
+                text = question.text,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.White
+            )
+        }
+
+        // Tappable options
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            question.options.forEach { option ->
+                val isSelected = question.answeredOption == option
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(
+                            when {
+                                isSelected -> EmeraldConnected.copy(alpha = 0.25f)
+                                isAnswered -> Color(0xFF1E293B).copy(alpha = 0.5f)
+                                else -> Color(0xFF1E293B)
+                            }
+                        )
+                        .border(
+                            1.dp,
+                            when {
+                                isSelected -> EmeraldConnected
+                                isAnswered -> Color(0xFF334155)
+                                else -> ElectricCyan.copy(alpha = 0.6f)
+                            },
+                            RoundedCornerShape(8.dp)
+                        )
+                        .clickable(enabled = !isAnswered) {
+                            onAnswer(option)
+                        }
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = option,
+                            fontSize = 12.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            color = if (isSelected) EmeraldConnected else if (isAnswered) Color(0xFF94A3B8) else Color.White
+                        )
+                        if (isSelected) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                tint = EmeraldConnected,
+                                modifier = Modifier.size(14.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (question.allowOther) {
+                val isOtherSelected = isAnswered && !question.options.contains(question.answeredOption)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (isOtherSelected) EmeraldConnected.copy(alpha = 0.25f) else Color(0xFF1E293B))
+                        .border(1.dp, if (isOtherSelected) EmeraldConnected else Color(0xFF475569), RoundedCornerShape(8.dp))
+                        .clickable(enabled = !isAnswered) {
+                            onFocusOther()
+                        }
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = if (isOtherSelected) "Other: ${question.answeredOption}" else "Other… (Type answer)",
+                            fontSize = 12.sp,
+                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                            color = if (isOtherSelected) EmeraldConnected else Color(0xFF94A3B8)
+                        )
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = null,
+                            tint = if (isOtherSelected) EmeraldConnected else Color(0xFF94A3B8),
+                            modifier = Modifier.size(13.dp)
+                        )
                     }
                 }
             }

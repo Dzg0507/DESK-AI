@@ -1,7 +1,7 @@
 {
-  "versionCode": 13,
-  "versionName": "2.2.1",
-  "changelog": "DeskAI v2.2.1 (Build 13): Multi-proposal cards support, local proposal fallback fix, notification deep link to task, and full FCM push updates.",
+  "versionCode": 14,
+  "versionName": "2.3.0",
+  "changelog": "DeskAI v2.3.0 (Build 14): Live task cards with real-time progress & ETA countdown, multiple-choice questions, mini PC server migration, AgentWork add project, and idempotency key duplicate protection.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 23837359
+  "fileSizeBytes": 23902878
 }

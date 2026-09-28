@@ -373,10 +373,12 @@ fun TaskRowCard(
     onCancel: () -> Unit,
     onRetry: () -> Unit
 ) {
-    val phaseColor = when (task.phase) {
-        "completed" -> EmeraldConnected
-        "in_progress" -> Color(0xFFF59E0B)
-        "failed" -> RoseError
+    val isCancelled = task.cancelled || task.phase == "cancelled"
+    val phaseColor = when {
+        isCancelled -> Color(0xFF94A3B8)
+        task.phase == "completed" -> EmeraldConnected
+        task.phase == "in_progress" -> Color(0xFFF59E0B)
+        task.phase == "failed" -> RoseError
         else -> ElectricCyan
     }
 
@@ -409,7 +411,7 @@ fun TaskRowCard(
                         .padding(horizontal = 6.dp, vertical = 2.dp)
                 ) {
                     Text(
-                        text = task.phase.uppercase(),
+                        text = if (isCancelled) "CANCELLED" else task.phase.uppercase(),
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Bold,
                         color = phaseColor,
@@ -418,18 +420,21 @@ fun TaskRowCard(
                 }
             }
 
-            if (!task.outputSummary.isNullOrBlank()) {
+            // Status Text or Output Summary
+            val displayStatus = task.statusText ?: task.outputSummary
+            if (!displayStatus.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = task.outputSummary,
+                    text = displayStatus,
                     fontSize = 11.sp,
-                    color = Color(0xFF94A3B8)
+                    color = if (task.phase == "failed" && !isCancelled) RoseError else Color(0xFF94A3B8)
                 )
             }
 
             // Task Progress Bar
             Spacer(modifier = Modifier.height(6.dp))
-            if (task.phase == "in_progress") {
+            if (task.phase == "in_progress" && !isCancelled) {
+                val prog = task.progress
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -437,28 +442,48 @@ fun TaskRowCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "⚡ EXECUTING LIVE ON HOST",
+                            text = if (prog != null && prog.label.isNotBlank()) "⚡ ${prog.label.uppercase()}" else "⚡ EXECUTING LIVE ON HOST",
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFF59E0B),
                             fontFamily = FontFamily.Monospace
                         )
                         Text(
-                            text = "In Flight",
+                            text = if (prog != null) "${prog.percent}%" else "In Flight",
                             fontSize = 9.sp,
-                            color = Color(0xFF94A3B8),
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFF59E0B),
                             fontFamily = FontFamily.Monospace
                         )
                     }
+                    if (prog != null && prog.detail.isNotBlank()) {
+                        Text(
+                            text = prog.detail,
+                            fontSize = 9.sp,
+                            color = Color(0xFF94A3B8)
+                        )
+                    }
                     Spacer(modifier = Modifier.height(3.dp))
-                    LinearProgressIndicator(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(3.dp)
-                            .clip(RoundedCornerShape(1.5.dp)),
-                        color = Color(0xFFF59E0B),
-                        trackColor = Color(0xFF0F172A)
-                    )
+                    if (prog != null) {
+                        LinearProgressIndicator(
+                            progress = { (prog.percent.coerceIn(0, 100)) / 100f },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(4.dp)
+                                .clip(RoundedCornerShape(2.dp)),
+                            color = Color(0xFFF59E0B),
+                            trackColor = Color(0xFF0F172A)
+                        )
+                    } else {
+                        LinearProgressIndicator(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(3.dp)
+                                .clip(RoundedCornerShape(1.5.dp)),
+                            color = Color(0xFFF59E0B),
+                            trackColor = Color(0xFF0F172A)
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.height(6.dp))
             } else if (task.phase == "completed") {
@@ -480,14 +505,14 @@ fun TaskRowCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "#${task.id.take(8)} • ${task.engine}",
+                    text = "#${task.id.take(12)} • ${task.engine}",
                     fontSize = 10.sp,
                     color = Color(0xFF64748B),
                     fontFamily = FontFamily.Monospace
                 )
 
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    if (task.phase == "in_progress" || task.phase == "backlog") {
+                    if ((task.phase == "in_progress" || task.phase == "backlog") && !isCancelled) {
                         Text(
                             text = "Cancel",
                             fontSize = 11.sp,
@@ -495,7 +520,7 @@ fun TaskRowCard(
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.clickable { onCancel() }
                         )
-                    } else if (task.phase == "failed") {
+                    } else if (task.phase == "failed" && !isCancelled) {
                         Text(
                             text = "Retry",
                             fontSize = 11.sp,

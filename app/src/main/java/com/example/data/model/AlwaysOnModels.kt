@@ -16,6 +16,22 @@ data class DaemonStats(
     val activeTask: AgentTaskItem? = null
 )
 
+data class TaskProgress(
+    val stage: String = "",       // narration -> capture -> assemble -> send
+    val label: String = "",       // e.g. "Capturing frames"
+    val percent: Int = 0,         // 0..99
+    val detail: String = "",      // e.g. "Frame 480 of 1078"
+    val etaSeconds: Int = 0,      // time left as of updatedAt
+    val updatedAt: String = ""
+)
+
+data class TaskResult(
+    val type: String = "",        // "video"
+    val filename: String = "",
+    val url: String = "",         // e.g. "/videos/vibe_check_....mp4"
+    val deliveredToTelegram: Boolean = false
+)
+
 data class AgentTaskItem(
     val id: String,
     val title: String,
@@ -27,7 +43,11 @@ data class AgentTaskItem(
     val completedAt: String? = null,
     val outputSummary: String? = null,
     val lastError: String? = null,
-    val workerPid: Int? = null
+    val workerPid: Int? = null,
+    val statusText: String? = null,
+    val progress: TaskProgress? = null,
+    val cancelled: Boolean = false,
+    val result: TaskResult? = null
 )
 
 data class MemoryFactItem(
@@ -63,7 +83,16 @@ data class TaskProposal(
     val project: String? = null,
     val expired: Boolean = false,
     val isLocal: Boolean = false,
-    val state: String = "pending"
+    val state: String = "pending",
+    val kind: String = "task" // "task" or "add_project"
+)
+
+data class ChatQuestion(
+    val id: String = "",
+    val text: String = "",
+    val options: List<String> = emptyList(),
+    val allowOther: Boolean = true,
+    val answeredOption: String? = null
 )
 
 data class AgentWorkProject(

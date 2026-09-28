@@ -5,12 +5,15 @@ import com.example.data.model.AgentWorkProject
 import com.example.data.model.BridgeConfig
 import com.example.data.model.BridgeProtocol
 import com.example.data.model.ChatMessage
+import com.example.data.model.ChatQuestion
 import com.example.data.model.DaemonStats
 import com.example.data.model.MemoryFactItem
 import com.example.data.model.MemoryOverview
 import com.example.data.model.PushRegistrationResult
 import com.example.data.model.SystemLogEntry
+import com.example.data.model.TaskProgress
 import com.example.data.model.TaskProposal
+import com.example.data.model.TaskResult
 import com.example.data.model.VideoItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -25,6 +28,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 class AlwaysOnAgentClient {
@@ -46,6 +50,8 @@ class AlwaysOnAgentClient {
         set(value) {
             lastReceivedProposals = if (value != null) listOf(value) else emptyList()
         }
+
+    var lastReceivedQuestion: ChatQuestion? = null
 
     private fun addAuth(builder: Request.Builder, config: BridgeConfig): Request.Builder {
         if (config.apiKey.isNotBlank()) {
@@ -237,7 +243,8 @@ class AlwaysOnAgentClient {
         title: String,
         prompt: String,
         engine: String = "auto",
-        priority: String = "medium"
+        priority: String = "medium",
+        idempotencyKey: String = UUID.randomUUID().toString()
     ): Result<String> = withContext(Dispatchers.IO) {
         try {
             executeWithFailover(config) { baseUrl ->
@@ -252,6 +259,7 @@ class AlwaysOnAgentClient {
                 val req = addAuth(
                     Request.Builder()
                         .url("$baseUrl/api/tasks")
+                        .addHeader("Idempotency-Key", idempotencyKey)
                         .post(payload.toString().toRequestBody(jsonMediaType)),
                     config
                 ).build()
@@ -287,6 +295,13 @@ class AlwaysOnAgentClient {
                     val body = resp.body?.string() ?: ""
                     if (resp.isSuccessful) {
                         Result.success("Task #$taskId cancelled")
+                    } else if (resp.code == 409) {
+                        var detail = "Task already finished; nothing to cancel"
+                        try {
+                            val j = JSONObject(body)
+                            detail = j.optString("detail", detail)
+                        } catch (_: Exception) {}
+                        Result.failure(Exception(detail))
                     } else {
                         Result.failure(Exception("HTTP ${resp.code}: $body"))
                     }
@@ -346,6 +361,26 @@ class AlwaysOnAgentClient {
         }
     }
 
+    suspend fun getTask(config: BridgeConfig, taskId: String): Result<AgentTaskItem> = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                val req = addAuth(Request.Builder().url("$baseUrl/api/tasks/$taskId"), config).build()
+                httpClient.newCall(req).execute().use { resp ->
+                    val body = resp.body?.string() ?: ""
+                    if (resp.isSuccessful) {
+                        val json = JSONObject(body)
+                        val taskObj = json.optJSONObject("task") ?: json
+                        Result.success(parseTaskJson(taskObj))
+                    } else {
+                        Result.failure(Exception("HTTP ${resp.code}: $body"))
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     private fun parseTaskJson(item: JSONObject): AgentTaskItem {
         fun optNullableString(key: String): String? {
             if (!item.has(key) || item.isNull(key)) return null
@@ -353,18 +388,46 @@ class AlwaysOnAgentClient {
             return if (str.isEmpty() || str.equals("null", ignoreCase = true)) null else str
         }
 
+        val progressObj = item.optJSONObject("progress")
+        val parsedProgress = if (progressObj != null) {
+            TaskProgress(
+                stage = progressObj.optString("stage", ""),
+                label = progressObj.optString("label", ""),
+                percent = progressObj.optInt("percent", 0),
+                detail = progressObj.optString("detail", ""),
+                etaSeconds = progressObj.optInt("eta_seconds", 0),
+                updatedAt = progressObj.optString("updated_at", "")
+            )
+        } else null
+
+        val resultObj = item.optJSONObject("result")
+        val parsedResult = if (resultObj != null) {
+            TaskResult(
+                type = resultObj.optString("type", ""),
+                filename = resultObj.optString("filename", ""),
+                url = resultObj.optString("url", ""),
+                deliveredToTelegram = resultObj.optBoolean("delivered_to_telegram", false)
+            )
+        } else null
+
+        val isCancelled = item.optBoolean("cancelled", false) || optNullableString("phase") == "cancelled"
+
         return AgentTaskItem(
             id = optNullableString("id") ?: optNullableString("task_id") ?: "",
             title = optNullableString("title") ?: optNullableString("prompt") ?: "Task",
             prompt = optNullableString("prompt") ?: optNullableString("title") ?: "",
-            phase = optNullableString("phase") ?: "backlog",
+            phase = if (isCancelled) "cancelled" else (optNullableString("phase") ?: "backlog"),
             engine = optNullableString("engine") ?: "auto",
             priority = optNullableString("priority") ?: "medium",
             startedAt = optNullableString("started_at"),
             completedAt = optNullableString("completed_at"),
             outputSummary = optNullableString("output_summary"),
             lastError = optNullableString("last_error"),
-            workerPid = if (item.has("worker_pid") && !item.isNull("worker_pid")) item.optInt("worker_pid") else null
+            workerPid = if (item.has("worker_pid") && !item.isNull("worker_pid")) item.optInt("worker_pid") else null,
+            statusText = optNullableString("status_text"),
+            progress = parsedProgress,
+            cancelled = isCancelled,
+            result = parsedResult
         )
     }
 
@@ -434,9 +497,20 @@ class AlwaysOnAgentClient {
                     val body = resp.body?.string() ?: ""
                     if (resp.isSuccessful) {
                         val json = JSONObject(body)
-                        Result.success(json.optString("task_id", "proposal_running"))
+                        val taskId = json.optString("task_id", "")
+                        val msg = json.optString("message", "")
+                        val proj = json.optString("project", "")
+                        val returnVal = if (taskId.isNotBlank()) taskId else if (msg.isNotBlank()) msg else if (proj.isNotBlank()) "Added project '$proj'" else "success"
+                        Result.success(returnVal)
                     } else if (resp.code == 404) {
                         Result.failure(Exception("EXPIRED: This proposal expired because the agent restarted."))
+                    } else if (resp.code == 400) {
+                        var detail = body
+                        try {
+                            val j = JSONObject(body)
+                            detail = j.optString("detail", j.optString("message", body))
+                        } catch (_: Exception) {}
+                        Result.failure(Exception(detail))
                     } else {
                         Result.failure(Exception("HTTP ${resp.code}: $body"))
                     }
@@ -498,7 +572,59 @@ class AlwaysOnAgentClient {
         }
     }
 
-    suspend fun dispatchAgentWorkJob(config: BridgeConfig, project: String, instruction: String): Result<String> = withContext(Dispatchers.IO) {
+    suspend fun addAgentWorkProject(
+        config: BridgeConfig,
+        name: String,
+        repo: String,
+        description: String = ""
+    ): Result<AgentWorkProject> = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                val payload = JSONObject().apply {
+                    put("name", name.trim())
+                    put("repo", repo.trim())
+                    put("description", description.trim())
+                }
+                val req = addAuth(
+                    Request.Builder()
+                        .url("$baseUrl/api/agentwork/projects")
+                        .post(payload.toString().toRequestBody(jsonMediaType)),
+                    config
+                ).build()
+
+                httpClient.newCall(req).execute().use { resp ->
+                    val body = resp.body?.string() ?: ""
+                    if (resp.isSuccessful) {
+                        val json = JSONObject(body)
+                        val projObj = json.optJSONObject("project") ?: json
+                        Result.success(
+                            AgentWorkProject(
+                                name = projObj.optString("name", name),
+                                description = projObj.optString("description", description),
+                                repo = projObj.optString("repo", repo)
+                            )
+                        )
+                    } else {
+                        var errDetail = "HTTP ${resp.code}: $body"
+                        try {
+                            val j = JSONObject(body)
+                            errDetail = j.optString("detail", j.optString("message", errDetail))
+                        } catch (_: Exception) {}
+                        Result.failure(Exception(errDetail))
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun dispatchAgentWorkJob(
+        config: BridgeConfig,
+        project: String,
+        instruction: String,
+        idempotencyKey: String = UUID.randomUUID().toString()
+    ): Result<String> = withContext(Dispatchers.IO) {
         try {
             executeWithFailover(config) { baseUrl ->
                 val payload = JSONObject().apply {
@@ -508,6 +634,7 @@ class AlwaysOnAgentClient {
                 val req = addAuth(
                     Request.Builder()
                         .url("$baseUrl/api/agentwork/jobs")
+                        .addHeader("Idempotency-Key", idempotencyKey)
                         .post(payload.toString().toRequestBody(jsonMediaType)),
                     config
                 ).build()
@@ -668,7 +795,12 @@ class AlwaysOnAgentClient {
         }
     }
 
-    suspend fun triggerMedia(config: BridgeConfig, action: String, quote: String?): Result<String> = withContext(Dispatchers.IO) {
+    suspend fun triggerMedia(
+        config: BridgeConfig,
+        action: String,
+        quote: String?,
+        idempotencyKey: String = UUID.randomUUID().toString()
+    ): Result<String> = withContext(Dispatchers.IO) {
         try {
             executeWithFailover(config) { baseUrl ->
                 val payload = JSONObject().apply {
@@ -678,6 +810,7 @@ class AlwaysOnAgentClient {
                 val req = addAuth(
                     Request.Builder()
                         .url("$baseUrl/api/trigger_media")
+                        .addHeader("Idempotency-Key", idempotencyKey)
                         .post(payload.toString().toRequestBody(jsonMediaType)),
                     config
                 ).build()
@@ -1319,6 +1452,7 @@ class AlwaysOnAgentClient {
                                     val propInstr = propObj.optString("instruction")
                                     val propReason = propObj.optString("reason", "")
                                     val propProj = if (propObj.has("project") && !propObj.isNull("project")) propObj.optString("project") else null
+                                    val propKind = propObj.optString("kind", "task")
                                     if (propInstr.isNotBlank()) {
                                         parsedProposals.add(
                                             TaskProposal(
@@ -1328,13 +1462,37 @@ class AlwaysOnAgentClient {
                                                 reason = propReason,
                                                 project = propProj,
                                                 isLocal = false,
-                                                state = "pending"
+                                                state = "pending",
+                                                kind = propKind
                                             )
                                         )
                                     }
                                 }
                             }
                             lastReceivedProposals = parsedProposals
+
+                            // Section 7.6 Multiple-choice questions
+                            val questionObj = json.optJSONObject("question")
+                            if (questionObj != null) {
+                                val qId = questionObj.optString("id")
+                                val qText = questionObj.optString("text")
+                                val qOptsArr = questionObj.optJSONArray("options")
+                                val optsList = mutableListOf<String>()
+                                if (qOptsArr != null) {
+                                    for (i in 0 until qOptsArr.length()) {
+                                        optsList.add(qOptsArr.getString(i))
+                                    }
+                                }
+                                val allowOther = questionObj.optBoolean("allow_other", true)
+                                lastReceivedQuestion = ChatQuestion(
+                                    id = qId,
+                                    text = qText,
+                                    options = optsList,
+                                    allowOther = allowOther
+                                )
+                            } else {
+                                lastReceivedQuestion = null
+                            }
 
                             onChunk(text)
                         } catch (_: Exception) {

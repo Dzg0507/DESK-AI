@@ -41,18 +41,18 @@ class ChatRepository(
 
         if (config == null) {
             BridgeConfig(
-                serverUrl = savedServer ?: "http://192.168.12.153:8080",
-                remoteUrl = savedRemote ?: "",
+                serverUrl = savedServer ?: "http://192.168.12.151:8080",
+                remoteUrl = savedRemote ?: "http://100.109.85.92:8080",
                 apiKey = savedKey ?: ""
             )
         } else if (config.apiKey.isBlank() && !savedKey.isNullOrBlank()) {
             config.copy(
                 apiKey = savedKey,
-                serverUrl = if (config.serverUrl.isBlank() && !savedServer.isNullOrBlank()) savedServer else config.serverUrl,
+                serverUrl = if ((config.serverUrl.isBlank() || config.serverUrl == "http://192.168.12.153:8080") && !savedServer.isNullOrBlank()) savedServer else config.serverUrl,
                 remoteUrl = if (config.remoteUrl.isBlank() && !savedRemote.isNullOrBlank()) savedRemote else config.remoteUrl
             )
         } else {
-            config
+            if (config.serverUrl == "http://192.168.12.153:8080") config.copy(serverUrl = "http://192.168.12.151:8080") else config
         }
     }
 
@@ -67,8 +67,8 @@ class ChatRepository(
 
         if (inDb == null) {
             BridgeConfig(
-                serverUrl = savedServer ?: "http://192.168.12.153:8080",
-                remoteUrl = savedRemote ?: "",
+                serverUrl = savedServer ?: "http://192.168.12.151:8080",
+                remoteUrl = savedRemote ?: "http://100.109.85.92:8080",
                 apiKey = savedKey ?: "",
                 selectedModel = savedModel ?: "auto",
                 protocol = savedProtocol ?: BridgeConfig().protocol
@@ -129,9 +129,19 @@ class ChatRepository(
         agentClient.setDefaultEngine(config, engine)
     }
 
-    suspend fun createTask(title: String, prompt: String, engine: String = "auto"): Result<String> = withContext(Dispatchers.IO) {
+    suspend fun createTask(
+        title: String,
+        prompt: String,
+        engine: String = "auto",
+        idempotencyKey: String = UUID.randomUUID().toString()
+    ): Result<String> = withContext(Dispatchers.IO) {
         val config = getActiveConfig()
-        agentClient.createTask(config, title, prompt, engine)
+        agentClient.createTask(config, title, prompt, engine, priority = "medium", idempotencyKey = idempotencyKey)
+    }
+
+    suspend fun getTask(taskId: String): Result<AgentTaskItem> = withContext(Dispatchers.IO) {
+        val config = getActiveConfig()
+        agentClient.getTask(config, taskId)
     }
 
     suspend fun cancelTask(taskId: String): Result<String> = withContext(Dispatchers.IO) {
@@ -174,9 +184,18 @@ class ChatRepository(
         agentClient.getAgentWorkProjects(config)
     }
 
-    suspend fun dispatchAgentWorkJob(project: String, instruction: String): Result<String> = withContext(Dispatchers.IO) {
+    suspend fun addAgentWorkProject(name: String, repo: String, description: String = ""): Result<AgentWorkProject> = withContext(Dispatchers.IO) {
         val config = getActiveConfig()
-        agentClient.dispatchAgentWorkJob(config, project, instruction)
+        agentClient.addAgentWorkProject(config, name, repo, description)
+    }
+
+    suspend fun dispatchAgentWorkJob(
+        project: String,
+        instruction: String,
+        idempotencyKey: String = UUID.randomUUID().toString()
+    ): Result<String> = withContext(Dispatchers.IO) {
+        val config = getActiveConfig()
+        agentClient.dispatchAgentWorkJob(config, project, instruction, idempotencyKey)
     }
 
     suspend fun runBackup(): Result<String> = withContext(Dispatchers.IO) {
@@ -209,9 +228,13 @@ class ChatRepository(
         agentClient.testPush(config)
     }
 
-    suspend fun triggerMedia(action: String, quote: String?): Result<String> = withContext(Dispatchers.IO) {
+    suspend fun triggerMedia(
+        action: String,
+        quote: String?,
+        idempotencyKey: String = UUID.randomUUID().toString()
+    ): Result<String> = withContext(Dispatchers.IO) {
         val config = getActiveConfig()
-        agentClient.triggerMedia(config, action, quote)
+        agentClient.triggerMedia(config, action, quote, idempotencyKey)
     }
 
     suspend fun fetchVideos(): List<VideoItem> = withContext(Dispatchers.IO) {
@@ -421,6 +444,8 @@ class ChatRepository(
             val latency = System.currentTimeMillis() - startTime
             val structuredProps = agentClient.lastReceivedProposals
             agentClient.lastReceivedProposals = emptyList()
+            val receivedQuestion = agentClient.lastReceivedQuestion
+            agentClient.lastReceivedQuestion = null
 
             val finalProposals: List<TaskProposal> = if (structuredProps.isNotEmpty()) {
                 // Agent-issued structured proposals (preserves all proposals from agent)
@@ -457,6 +482,9 @@ class ChatRepository(
             }
 
             val firstProp = finalProposals.firstOrNull()
+            val detectedTaskId = Regex("""Task ID:\s*`?\[?([a-zA-Z0-9_\-]+)\]?`?""", RegexOption.IGNORE_CASE)
+                .find(currentText)?.groupValues?.get(1)
+
             val finalAssistantMessage = assistantMessage.copy(
                 content = currentText.ifBlank { "Task processed." },
                 status = "sent",
@@ -465,7 +493,9 @@ class ChatRepository(
                 proposalInstruction = firstProp?.instruction,
                 proposalProject = firstProp?.project,
                 proposalToken = if (firstProp != null && !firstProp.isLocal) firstProp.id else null,
-                proposalState = if (firstProp != null) firstProp.state else null
+                proposalState = if (firstProp != null) firstProp.state else null,
+                questionJson = if (receivedQuestion != null) ChatMessage.serializeQuestion(receivedQuestion) else null,
+                linkedTaskId = detectedTaskId
             )
             chatDao.updateMessage(finalAssistantMessage)
 

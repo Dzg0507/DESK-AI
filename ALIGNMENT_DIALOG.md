@@ -4,18 +4,45 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-09-27 (DeskAI v2.2.1 / Build 13 — Version Bump & Refinements Complete)
+**Last Updated:** 2026-09-28 (DeskAI v2.3.0 / Build 14 — Questions, Live Cards & Server Migration Complete)
 
 ---
 
-## 0. Sync Status: DeskAI v2.2.1 (Build 13) Complete
+## 0. Sync Status: DeskAI v2.3.0 (Build 14) Complete
 
 **DeskAI Side Update:**
-We received your latest verification notes on Firebase push and v2.2. All points from your review have been addressed:
+We have fully implemented all requested specifications from the Section 7.6 / 7.7 expansion and host migration:
 
-1. **Version Code Bumped to 13 (CRITICAL):**
-   - Bumped `versionCode = 13` and `versionName = "2.2.1"` in `app/build.gradle.kts` and `web_dist/version.json`.
-   - Guaranteed that existing v2.2 installs trigger the in-app updater cleanly.
+1. **Tap-to-Answer Multiple-Choice Questions (Section 7.6):**
+   - Agent messages can include structured `"question": {"id": "...", "text": "...", "options": [...], "allow_other": true}` payloads.
+   - Rendered as interactive Cyberpunk choice pills within the message bubble.
+   - Tapping an option automatically updates the message state and sends the chosen option as the user's response.
+   - "Other..." button shifts focus straight into the chat input bar for freeform entry.
+   - Fully persisted in Room Database via `MIGRATION_3_4` adding `questionJson` to `chat_messages`.
+
+2. **Live Task Progress Cards with Stage & Countdown (Section 7.7):**
+   - Dedicated `LiveTaskCard` rendered inside chat bubbles when a message is linked to a background task (`linkedTaskId`).
+   - Polls `/api/tasks/{id}` with failover, displaying live stage (`narration` -> `capture` -> `assemble` -> `send`), progress bar, percent indicator (0-99%), frame details (e.g., "Frame 480 of 1078"), and dynamic ETA countdown.
+   - Completed video tasks display a prominent "▶ Play Video" launcher.
+   - In-progress tasks include an immediate "Abort" button (`POST /api/cancel/{id}`).
+   - Failed tasks include a one-tap "Retry" button (`POST /api/retry/{id}`).
+
+3. **AgentWork Direct Project Addition:**
+   - Supported `add_project` proposal kind from `/api/chat` with customized card UI and "➕ Add Project" action button.
+   - Added `POST /api/agentwork/projects` endpoint integration in `AlwaysOnAgentClient`, `ChatRepository`, and `ChatViewModel`.
+   - New "Add Project" capability directly integrated into the AgentWork management sheet.
+
+4. **Network & Server Migration to Mini PC:**
+   - Updated default Local LAN URL to `http://192.168.12.151:8080` (mini PC `devinmini`).
+   - Updated default Tailscale Remote Away URL to `http://100.109.85.92:8080`.
+   - Updated fallback defaults in `ConnectionHubDialog` and `ChatRepository`.
+
+5. **Idempotency Protection & Deduplication:**
+   - Added client-generated UUID idempotency keys to `/api/tasks`, `/api/agentwork/jobs`, and `/api/media/trigger` to prevent duplicate task execution on network retries.
+
+6. **Version Bump to Build 14 (v2.3.0):**
+   - Bumped `versionCode = 14`, `versionName = "2.3.0"` in `app/build.gradle.kts` and `web_dist/version.json`.
+   - Recompiled all APKs (`DeskAI.apk`, `DeskAI-update.apk`, `web_dist/DeskAI.apk`).
 
 2. **Notification Deep Link (`OPEN_TASK_ID`):**
    - In `MainActivity.kt`, `OPEN_TASK_ID` is parsed from `intent?.extras` on launch and via `onNewIntent()`.

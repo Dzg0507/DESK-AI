@@ -107,6 +107,7 @@ fun ChatScreen(
     var showConnectionDialog by remember { mutableStateOf(false) }
     var showUpdaterDialog by remember { mutableStateOf(false) }
     var hasUpdateAvailable by remember { mutableStateOf(false) }
+    var playbackVideo by remember { mutableStateOf<com.example.data.model.VideoItem?>(null) }
 
     // Check for updates in background
     LaunchedEffect(config.getResolvedUrl()) {
@@ -384,6 +385,19 @@ fun ChatScreen(
                                     onDeleteMessage = { viewModel.deleteMessage(it) },
                                     onRegenerate = { viewModel.sendMessage("Please retry: ${it.content.take(60)}") },
                                     onSpeak = { viewModel.speak(it) },
+                                    onAnswerQuestion = { msg, opt -> viewModel.answerQuestion(msg, opt) },
+                                    onFocusInput = { /* chat input is directly below */ },
+                                    onGetTask = { tid -> viewModel.getTask(tid) },
+                                    onCancelTask = { tid -> viewModel.cancelTask(tid) },
+                                    onRetryTask = { tid -> viewModel.retryTask(tid) },
+                                    onPlayVideo = { url, filename ->
+                                        playbackVideo = com.example.data.model.VideoItem(
+                                            filename = filename,
+                                            sizeMb = 0.0,
+                                            createdAt = "",
+                                            url = url
+                                        )
+                                    },
                                     serverBaseUrl = config.getResolvedUrl(),
                                     authToken = config.apiKey
                                 )
@@ -518,7 +532,22 @@ fun ChatScreen(
         com.example.ui.dialogs.AgentWorkSheet(
             onDismiss = { showAgentWorkSheet = false },
             onFetchProjects = { viewModel.fetchAgentWorkProjects() },
-            onDispatchJob = { project, instruction -> viewModel.dispatchAgentWorkJob(project, instruction) }
+            onDispatchJob = { project, instruction -> viewModel.dispatchAgentWorkJob(project, instruction) },
+            onAddProject = { name, repo, desc -> viewModel.addAgentWorkProject(name, repo, desc) }
+        )
+    }
+
+    // Video Player Dialog (from Live Task Card or Media Gallery)
+    if (playbackVideo != null) {
+        com.example.ui.dialogs.VideoPlayerDialog(
+            video = playbackVideo!!,
+            onDismiss = { playbackVideo = null },
+            onDownloadVideo = { url, file, onProg -> viewModel.downloadVideo(url, file, onProg) },
+            onPostTikTok = {
+                scope.launch {
+                    viewModel.triggerMedia("tiktok", null)
+                }
+            }
         )
     }
 

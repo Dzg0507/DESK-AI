@@ -70,16 +70,20 @@ fun ConnectionHubDialog(
     val prefs = remember { context.getSharedPreferences("desk_ai_credentials", Context.MODE_PRIVATE) }
     var localUrl by remember {
         val savedServer = prefs.getString("server_url", null)
-        val initial = if (config.serverUrl.isNotBlank() && config.serverUrl != "http://10.0.2.2:8080") {
+        val initial = if (config.serverUrl.isNotBlank() && config.serverUrl != "http://10.0.2.2:8080" && config.serverUrl != "http://192.168.12.153:8080") {
             config.serverUrl
         } else {
-            savedServer ?: "http://192.168.12.153:8080"
+            savedServer ?: "http://192.168.12.151:8080"
         }
         mutableStateOf(initial.replace("192.168.12.2.246", "192.168.12.246"))
     }
     var remoteUrl by remember {
         val savedRemote = prefs.getString("remote_url", null)
-        val initial = if (config.remoteUrl.isNotBlank()) config.remoteUrl else (savedRemote ?: "")
+        val initial = if (config.remoteUrl.isNotBlank() && config.remoteUrl != "http://100.111.163.124:8080") {
+            config.remoteUrl
+        } else {
+            savedRemote ?: "http://100.109.85.92:8080"
+        }
         mutableStateOf(initial)
     }
     var token by remember {
