@@ -4,11 +4,26 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-09-28 (DeskAI v2.3.1 / Build 15 — Live Card Fixes, Timezone-Aware ETA, Battery-Saving Polling)
+**Last Updated:** 2026-09-28 (DeskAI v2.3.2 / Build 16 — Relative Video URL Resolution & Playback Fix)
 
 ---
 
-## 0. Sync Status: DeskAI v2.3.1 (Build 15) Complete
+## 0. Sync Status: DeskAI v2.3.2 (Build 16) Complete
+
+**DeskAI Side Update:**
+1. **Relative Video URL Resolution on LiveTaskCard Playback:**
+   - Fixed initial playback failure when tapping "▶ Play Video" on a completed card. Relative URLs (e.g. `/videos/vibe_check_….mp4`) are now dynamically resolved against the active server base URL inside `AlwaysOnAgentClient.downloadVideo`, `AlwaysOnAgentClient.parseTaskJson`, and `ChatScreen.onPlayVideo`.
+   - Video download and streaming now reliably work on first tap without needing to pre-cache the file via the gallery.
+
+2. **Regex Fallback Refinement:**
+   - Removed the broad standalone `\b(task-\d+)\b` regex pattern to eliminate false-positive live cards when the assistant simply mentions past tasks in conversation.
+
+3. **Version Bump:**
+   - Bumped `versionCode = 16`, `versionName = "2.3.2"` across `app/build.gradle.kts` and `web_dist/version.json`.
+
+---
+
+## 1. Prior Sync Status: DeskAI v2.3.1 (Build 15)
 
 **DeskAI Side Update:**
 We have fully addressed the review findings from AlwaysOnAgent:
@@ -17,7 +32,7 @@ We have fully addressed the review findings from AlwaysOnAgent:
    - Slash commands `/video` and `/tiktok` now capture the returned `task_id` directly from `triggerMedia` and assign it to `linkedTaskId`.
    - `POST /api/chat` JSON parsing extracts `task_id` directly from the response payload (for `/task`, `/cancel`, etc.).
    - Replaced lengthy static worker pool text with concise bubble labels ("🎬 Rendering your video" and "🚀 Rendering & publishing to TikTok") since `LiveTaskCard` provides live status.
-   - Text regex fallback is now resilient to markdown bolding (e.g. `**Task ID:** `[task-041]``) and enqueued formats (`Enqueued task [task-044]`). Dropped the broad standalone `\b(task-\d+)\b` pattern to avoid false-positive task cards when the assistant simply mentions or discusses past tasks in conversation.
+   - Text regex fallback is now resilient to markdown bolding (e.g. `**Task ID:** `[task-041]``) and enqueued formats (`Enqueued task [task-044]`).
 
 2. **Media Gallery "Render" & "TikTok" Integration:**
    - Tapping "Render 3D Video" or "Post to TikTok" inside the Media Gallery sheet now displays a `LiveTaskCard` directly within the sheet with live stage progress, countdown, and playback.

@@ -391,11 +391,18 @@ fun ChatScreen(
                                     onCancelTask = { tid -> viewModel.cancelTask(tid) },
                                     onRetryTask = { tid -> viewModel.retryTask(tid) },
                                     onPlayVideo = { url, filename ->
+                                        val cleanBase = config.getResolvedUrl().trimEnd('/')
+                                        val fullUrl = when {
+                                            url.startsWith("http://") || url.startsWith("https://") -> url
+                                            url.startsWith("/") -> "$cleanBase$url"
+                                            url.isNotBlank() -> "$cleanBase/$url"
+                                            else -> url
+                                        }
                                         playbackVideo = com.example.data.model.VideoItem(
                                             filename = filename,
                                             sizeMb = 0.0,
                                             createdAt = "",
-                                            url = url
+                                            url = fullUrl
                                         )
                                     },
                                     serverBaseUrl = config.getResolvedUrl(),

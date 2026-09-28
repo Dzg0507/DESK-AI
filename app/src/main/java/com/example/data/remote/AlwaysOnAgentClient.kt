@@ -352,7 +352,7 @@ class AlwaysOnAgentClient {
                     }
                     val list = mutableListOf<AgentTaskItem>()
                     for (i in 0 until array.length()) {
-                        list.add(parseTaskJson(array.getJSONObject(i)))
+                        list.add(parseTaskJson(array.getJSONObject(i), baseUrl))
                     }
                     list
                 }
@@ -371,7 +371,7 @@ class AlwaysOnAgentClient {
                     if (resp.isSuccessful) {
                         val json = JSONObject(body)
                         val taskObj = json.optJSONObject("task") ?: json
-                        Result.success(parseTaskJson(taskObj))
+                        Result.success(parseTaskJson(taskObj, baseUrl))
                     } else {
                         Result.failure(Exception("HTTP ${resp.code}: $body"))
                     }
@@ -382,7 +382,7 @@ class AlwaysOnAgentClient {
         }
     }
 
-    private fun parseTaskJson(item: JSONObject): AgentTaskItem {
+    private fun parseTaskJson(item: JSONObject, baseUrl: String? = null): AgentTaskItem {
         fun optNullableString(key: String): String? {
             if (!item.has(key) || item.isNull(key)) return null
             val str = item.optString(key, "").trim()
@@ -403,10 +403,18 @@ class AlwaysOnAgentClient {
 
         val resultObj = item.optJSONObject("result")
         val parsedResult = if (resultObj != null) {
+            val rawUrl = resultObj.optString("url", "").trim()
+            val cleanBase = baseUrl?.trimEnd('/') ?: ""
+            val fullUrl = when {
+                rawUrl.startsWith("http://") || rawUrl.startsWith("https://") -> rawUrl
+                rawUrl.startsWith("/") && cleanBase.isNotEmpty() -> "$cleanBase$rawUrl"
+                rawUrl.isNotBlank() && cleanBase.isNotEmpty() -> "$cleanBase/$rawUrl"
+                else -> rawUrl
+            }
             TaskResult(
                 type = resultObj.optString("type", ""),
                 filename = resultObj.optString("filename", ""),
-                url = resultObj.optString("url", ""),
+                url = fullUrl,
                 deliveredToTelegram = resultObj.optBoolean("delivered_to_telegram", false)
             )
         } else null
@@ -890,7 +898,14 @@ class AlwaysOnAgentClient {
         onProgress: (bytesRead: Long, totalBytes: Long) -> Unit
     ): Result<java.io.File> = withContext(Dispatchers.IO) {
         try {
-            val reqBuilder = Request.Builder().url(videoUrl)
+            val cleanBase = config.getResolvedUrl().trimEnd('/')
+            val resolvedUrl = when {
+                videoUrl.startsWith("http://") || videoUrl.startsWith("https://") -> videoUrl
+                videoUrl.startsWith("/") -> "$cleanBase$videoUrl"
+                videoUrl.isNotBlank() -> "$cleanBase/$videoUrl"
+                else -> videoUrl
+            }
+            val reqBuilder = Request.Builder().url(resolvedUrl)
             val req = addAuth(reqBuilder, config).build()
             val response = httpClient.newCall(req).execute()
             if (!response.isSuccessful) {

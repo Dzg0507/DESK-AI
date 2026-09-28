@@ -1,7 +1,7 @@
 {
-  "versionCode": 15,
-  "versionName": "2.3.1",
-  "changelog": "DeskAI v2.3.1 (Build 15): Direct live task cards for /video & /tiktok, JSON task_id parsing, markdown-tolerant regex fallback, timezone-offset aware ETA countdown, battery-saving 404 polling stop, and Media Gallery live task cards.",
+  "versionCode": 16,
+  "versionName": "2.3.2",
+  "changelog": "DeskAI v2.3.2 (Build 16): Fixed initial video playback failure on LiveTaskCard by resolving relative video URLs against active host URL, eliminated broad task regex false-positives.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 23931354
+  "fileSizeBytes": 23919271
 }
