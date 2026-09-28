@@ -484,11 +484,9 @@ class ChatRepository(
             }
 
             val firstProp = finalProposals.firstOrNull()
-            // Fallback regex tolerant to markdown bolding (e.g. **Task ID:** `[task-041]`), enqueued formats, or bracketed ids
+            // Fallback regex tolerant to markdown bolding (e.g. **Task ID:** `[task-041]`) and enqueued formats
             val regexFallbackId = Regex("""(?:Task ID:\**|Enqueued task)\s*`?\[?([a-zA-Z0-9_\-]+)\]?`?""", RegexOption.IGNORE_CASE)
                 .find(currentText)?.groupValues?.get(1)
-                ?: Regex("""\b(task-\d+)\b""", RegexOption.IGNORE_CASE)
-                    .find(currentText)?.groupValues?.get(1)
 
             val detectedTaskId = receivedTaskId ?: regexFallbackId
 
