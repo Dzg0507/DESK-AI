@@ -554,9 +554,8 @@ fun ChatScreen(
             onDismiss = { playbackVideo = null },
             onDownloadVideo = { url, file, onProg -> viewModel.downloadVideo(url, file, onProg) },
             onPostTikTok = {
-                scope.launch {
-                    viewModel.triggerMedia("tiktok", null)
-                }
+                val filename = playbackVideo?.filename
+                if (filename != null) scope.launch { viewModel.publishVideoToTikTok(filename) }
             }
         )
     }

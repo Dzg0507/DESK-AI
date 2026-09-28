@@ -1,7 +1,7 @@
 {
-  "versionCode": 16,
-  "versionName": "2.3.2",
-  "changelog": "DeskAI v2.3.2 (Build 16): Fixed initial video playback failure on LiveTaskCard by resolving relative video URLs against active host URL, eliminated broad task regex false-positives.",
+  "versionCode": 17,
+  "versionName": "2.3.3",
+  "changelog": "DeskAI v2.3.3 (Build 17): Posting an existing video to TikTok now shows a live task card with the real result instead of an instant \"Posted\" message, and the video player's TikTok button posts the video you're watching (it used to render and post a new one).",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 23919271
+  "fileSizeBytes": 23919288
 }

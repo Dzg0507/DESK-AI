@@ -84,6 +84,19 @@ fun MediaGallerySheet(
     var customQuote by remember { mutableStateOf("") }
     var statusMessage by remember { mutableStateOf<String?>(null) }
     var activeRenderTaskId by remember { mutableStateOf<String?>(null) }
+
+    // Posting only queues a task on the agent; the live card below reports when TikTok has it (or why not)
+    suspend fun publishExisting(filename: String) {
+        statusMessage = "Sending $filename to the agent..."
+        val res = onPublishExistingVideo(filename)
+        val tid = res.getOrNull()
+        if (res.isSuccess && tid != null && tid.startsWith("task-")) {
+            activeRenderTaskId = tid
+            statusMessage = "🚀 Queued: posting $filename to TikTok"
+        } else {
+            statusMessage = "⚠️ ${res.exceptionOrNull()?.message ?: "Couldn't queue the TikTok post"}"
+        }
+    }
     var isLoading by remember { mutableStateOf(true) }
     var videos by remember { mutableStateOf<List<VideoItem>>(emptyList()) }
     var selectedVideoForPlayback by remember { mutableStateOf<VideoItem?>(null) }
@@ -407,11 +420,7 @@ fun MediaGallerySheet(
                                                 .background(Color(0xFF0284C7).copy(alpha = 0.25f))
                                                 .border(1.dp, Color(0xFF0284C7).copy(alpha = 0.5f), RoundedCornerShape(6.dp))
                                                 .clickable {
-                                                    scope.launch {
-                                                        statusMessage = "Publishing ${video.filename} to TikTok..."
-                                                        val res = onPublishExistingVideo(video.filename)
-                                                        statusMessage = if (res.isSuccess) "🚀 Posted to TikTok: ${video.filename} (${res.getOrNull()})" else "⚠️ ${res.exceptionOrNull()?.message}"
-                                                    }
+                                                    scope.launch { publishExisting(video.filename) }
                                                 }
                                                 .padding(horizontal = 8.dp, vertical = 6.dp)
                                         ) {
@@ -439,10 +448,8 @@ fun MediaGallerySheet(
             onDismiss = { selectedVideoForPlayback = null },
             onDownloadVideo = onDownloadVideo,
             onPostTikTok = {
-                scope.launch {
-                    val res = onTriggerTikTok(null)
-                    statusMessage = if (res.isSuccess) "🚀 TikTok mission queued for ${selectedVideoForPlayback?.filename}" else "⚠️ Failed"
-                }
+                val filename = selectedVideoForPlayback?.filename
+                if (filename != null) scope.launch { publishExisting(filename) }
             }
         )
     }
@@ -805,7 +812,7 @@ fun VideoPlayerDialog(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "🚀 Auto-Post to TikTok",
+                            text = "🚀 Post This to TikTok",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White

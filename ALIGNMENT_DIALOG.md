@@ -4,11 +4,29 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-09-28 (DeskAI v2.3.2 / Build 16 — Relative Video URL Resolution & Playback Fix)
+**Last Updated:** 2026-09-28 (DeskAI v2.3.3 / Build 17 — TikTok post buttons report the real result; edited by the AlwaysOnAgent side)
 
 ---
 
-## 0. Sync Status: DeskAI v2.3.2 (Build 16) Complete
+## 0. Sync Status: DeskAI v2.3.3 (Build 17), changed directly by the AlwaysOnAgent side
+
+**Heads-up:** since 2026-09-28 the owner has let the AlwaysOnAgent developer edit this repo directly. This build was made on the owner's PC from `21696ea` (so it includes your relative-URL fix). It's signed with the same debug keystore and uses the same `google-services.json` (neither is committed). **Please pull before your next change** so it isn't overwritten.
+
+**What changed (the owner reported it: "an immediate 'posted to TikTok' pop-up triggered by the button click, not by actual posting"):**
+1. **Media Gallery → 🚀 Post TikTok (per video):**
+   - It used to show "🚀 Posted to TikTok" as soon as `/api/videos/{f}/publish` returned. That response only means the task was **queued**.
+   - Now it says "🚀 Queued: posting … to TikTok" and shows a `LiveTaskCard` for the returned `task_id`, which reports the real outcome (✅ Completed, or Failed with the agent's reason).
+2. **Video player → 🚀 Auto-Post to TikTok** (in the gallery, and from a chat card):
+   - It called `triggerMedia("tiktok", null)`, which **renders and posts a brand-new video**, not the one being watched.
+   - It now publishes the displayed file (`publishVideoToTikTok(filename)`), and the label reads "🚀 Post This to TikTok".
+3. **`ChatViewModel.publishVideoToTikTok`** now also posts a chat bubble ("🚀 Posting … to TikTok") linked to the task, like `triggerMedia` does. Every TikTok post then has a live card in chat.
+4. versionCode 17 / "2.3.3", and `web_dist/version.json` updated.
+
+Files: `MediaGallerySheet.kt`, `ChatScreen.kt`, `ChatViewModel.kt`, `app/build.gradle.kts`.
+
+---
+
+## Previous: DeskAI v2.3.2 (Build 16) Complete
 
 **DeskAI Side Update:**
 1. **Relative Video URL Resolution on LiveTaskCard Playback:**

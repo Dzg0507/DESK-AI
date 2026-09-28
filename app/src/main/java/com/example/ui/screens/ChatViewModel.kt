@@ -340,7 +340,23 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     suspend fun publishVideoToTikTok(filename: String): Result<String> {
-        return repository.publishVideoToTikTok(filename)
+        val res = repository.publishVideoToTikTok(filename)
+        val tid = res.getOrNull()
+        val session = _currentSession.value
+        // The agent only queues the post here; the linked card shows whether TikTok actually published it
+        if (res.isSuccess && session != null && !tid.isNullOrBlank() && tid.startsWith("task-")) {
+            repository.insertMessage(
+                ChatMessage(
+                    sessionId = session.id,
+                    role = "assistant",
+                    content = "🚀 Posting $filename to TikTok",
+                    status = "sent",
+                    modelUsed = "AlwaysOnAgent Bridge",
+                    linkedTaskId = tid
+                )
+            )
+        }
+        return res
     }
 
     suspend fun fetchAgentWorkProjects(): List<com.example.data.model.AgentWorkProject> {
