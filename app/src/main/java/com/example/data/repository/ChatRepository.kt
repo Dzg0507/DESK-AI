@@ -180,6 +180,26 @@ class ChatRepository(
         agentClient.dismissProposal(config, proposalId)
     }
 
+    // Schedules: videos, phone reminders and background tasks the agent runs at set times
+    suspend fun fetchSchedules(): Result<com.example.data.model.ScheduleList> = withContext(Dispatchers.IO) {
+        agentClient.getSchedules(getActiveConfig())
+    }
+
+    suspend fun previewSchedule(cron: String, kind: String): Result<com.example.data.model.SchedulePreview> =
+        withContext(Dispatchers.IO) { agentClient.previewSchedule(getActiveConfig(), cron, kind) }
+
+    suspend fun createSchedule(fields: org.json.JSONObject): Result<com.example.data.model.AgentSchedule> =
+        withContext(Dispatchers.IO) { agentClient.createSchedule(getActiveConfig(), fields) }
+
+    suspend fun updateSchedule(id: Int, fields: org.json.JSONObject): Result<com.example.data.model.AgentSchedule> =
+        withContext(Dispatchers.IO) { agentClient.updateSchedule(getActiveConfig(), id, fields) }
+
+    suspend fun deleteSchedule(id: Int): Result<Unit> =
+        withContext(Dispatchers.IO) { agentClient.deleteSchedule(getActiveConfig(), id) }
+
+    suspend fun runScheduleNow(id: Int): Result<String> =
+        withContext(Dispatchers.IO) { agentClient.runScheduleNow(getActiveConfig(), id) }
+
     suspend fun fetchAgentWorkProjects(): List<AgentWorkProject> = withContext(Dispatchers.IO) {
         val config = getActiveConfig()
         agentClient.getAgentWorkProjects(config)

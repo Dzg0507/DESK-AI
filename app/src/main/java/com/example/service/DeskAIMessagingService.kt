@@ -61,13 +61,17 @@ class DeskAIMessagingService : FirebaseMessagingService() {
     ) {
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        val channelId = if (channelKey == "tasks") CHANNEL_TASKS else CHANNEL_ALERTS
-        val channelName = if (channelKey == "tasks") "Tasks Updates" else "System Alerts"
+        val channelId = when (channelKey) { "tasks" -> CHANNEL_TASKS; "reminders" -> CHANNEL_REMINDERS; else -> CHANNEL_ALERTS }
+        val channelName = when (channelKey) { "tasks" -> "Tasks Updates"; "reminders" -> "Reminders"; else -> "System Alerts" }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val importance = if (channelKey == "alerts") NotificationManager.IMPORTANCE_HIGH else NotificationManager.IMPORTANCE_DEFAULT
+            val importance = if (channelKey == "tasks") NotificationManager.IMPORTANCE_DEFAULT else NotificationManager.IMPORTANCE_HIGH
             val channel = NotificationChannel(channelId, channelName, importance).apply {
-                description = if (channelKey == "tasks") "Notifications when tasks complete or fail" else "Critical warnings, backups and supervisor alerts"
+                description = when (channelKey) {
+                    "tasks" -> "Notifications when tasks complete or fail"
+                    "reminders" -> "Reminders you scheduled with the agent"
+                    else -> "Critical warnings, backups and supervisor alerts"
+                }
                 enableLights(true)
                 enableVibration(true)
             }
@@ -94,7 +98,7 @@ class DeskAIMessagingService : FirebaseMessagingService() {
             .setContentText(body)
             .setAutoCancel(true)
             .setSound(soundUri)
-            .setPriority(if (channelKey == "alerts") NotificationCompat.PRIORITY_HIGH else NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(if (channelKey == "tasks") NotificationCompat.PRIORITY_DEFAULT else NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pendingIntent)
 
         val notificationId = if (taskId.isNotBlank()) taskId.hashCode() else System.currentTimeMillis().toInt()
@@ -124,5 +128,6 @@ class DeskAIMessagingService : FirebaseMessagingService() {
         private const val TAG = "DeskAIMessagingService"
         const val CHANNEL_TASKS = "deskai_tasks_channel"
         const val CHANNEL_ALERTS = "deskai_alerts_channel"
+        const val CHANNEL_REMINDERS = "deskai_reminders_channel"
     }
 }

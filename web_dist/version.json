@@ -1,7 +1,7 @@
 {
-  "versionCode": 22,
-  "versionName": "2.3.8",
-  "changelog": "DeskAI v2.3.8 (Build 22): The Web Dashboard button is gone (the server no longer has a web dashboard; everything is in the app). /hud now shows the server's address.",
+  "versionCode": 23,
+  "versionName": "2.3.9",
+  "changelog": "DeskAI v2.3.9 (Build 23): Schedules. Videos (optionally posted to TikTok), phone reminders and background tasks that run by themselves at set times. Open Actions, then Schedules, or just ask in chat.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 23935697
+  "fileSizeBytes": 24017605
 }

@@ -155,6 +155,7 @@ fun ChatScreen(
     var showMediaSheet by remember { mutableStateOf(false) }
     var showCommandPalette by remember { mutableStateOf(false) }
     var showAgentWorkSheet by remember { mutableStateOf(false) }
+    var showSchedulesSheet by remember { mutableStateOf(false) }
     var showMaintenanceSheet by remember { mutableStateOf(false) }
 
     // Open Tasks Sheet directly if tapped from push notification
@@ -434,6 +435,7 @@ fun ChatScreen(
             onOpenUpdater = { showUpdaterDialog = true },
             onOpenAgentWork = { showAgentWorkSheet = true },
             onOpenMaintenance = { showMaintenanceSheet = true },
+            onOpenSchedules = { showSchedulesSheet = true },
             onSelectCommandTemplate = { template ->
                 viewModel.onInputTextChange(template)
             },
@@ -505,6 +507,19 @@ fun ChatScreen(
             onFetchImages = { viewModel.fetchImages() },
             onDeleteImage = { filename -> viewModel.deleteImage(filename) },
             authToken = config.apiKey
+        )
+    }
+
+    // Schedules: videos, phone reminders and tasks the agent runs at set times
+    if (showSchedulesSheet) {
+        com.example.ui.dialogs.SchedulesSheet(
+            onDismiss = { showSchedulesSheet = false },
+            onFetch = { viewModel.fetchSchedules() },
+            onPreview = { cron, kind -> viewModel.previewSchedule(cron, kind) },
+            onCreate = { fields -> viewModel.createSchedule(fields) },
+            onUpdate = { id, fields -> viewModel.updateSchedule(id, fields) },
+            onDelete = { id -> viewModel.deleteSchedule(id) },
+            onRunNow = { id -> viewModel.runScheduleNow(id) }
         )
     }
 

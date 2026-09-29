@@ -378,6 +378,14 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         return res
     }
 
+    // Schedules sheet
+    suspend fun fetchSchedules() = repository.fetchSchedules()
+    suspend fun previewSchedule(cron: String, kind: String) = repository.previewSchedule(cron, kind)
+    suspend fun createSchedule(fields: org.json.JSONObject) = repository.createSchedule(fields)
+    suspend fun updateSchedule(id: Int, fields: org.json.JSONObject) = repository.updateSchedule(id, fields)
+    suspend fun deleteSchedule(id: Int) = repository.deleteSchedule(id)
+    suspend fun runScheduleNow(id: Int) = repository.runScheduleNow(id)
+
     suspend fun fetchAgentWorkProjects(): List<com.example.data.model.AgentWorkProject> {
         return repository.fetchAgentWorkProjects()
     }

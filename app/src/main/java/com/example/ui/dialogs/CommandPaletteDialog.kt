@@ -25,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.Memory
@@ -89,6 +90,7 @@ fun CommandPaletteDialog(
     onOpenUpdater: () -> Unit,
     onOpenAgentWork: () -> Unit = {},
     onOpenMaintenance: () -> Unit = {},
+    onOpenSchedules: () -> Unit = {},
     onSelectCommandTemplate: (String) -> Unit,
     onExecuteCommand: (String) -> Unit,
     onDismiss: () -> Unit
@@ -530,6 +532,19 @@ fun CommandPaletteDialog(
                                             }
                                         )
                                     }
+
+                                    // 7. Schedules: videos, reminders and tasks that run by themselves
+                                    WorkstationCard(
+                                        title = "Schedules",
+                                        subtitle = "Videos, reminders & tasks on a timer",
+                                        icon = Icons.Default.Schedule,
+                                        accentColor = Color(0xFF22D3EE),
+                                        modifier = Modifier.fillMaxWidth(),
+                                        onClick = {
+                                            onDismiss()
+                                            onOpenSchedules()
+                                        }
+                                    )
                                 }
 
                                 Spacer(modifier = Modifier.height(8.dp))

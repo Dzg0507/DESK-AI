@@ -4,7 +4,33 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-09-29 (DeskAI v2.3.8 / Build 22 — no web dashboard; ImageGen)
+**Last Updated:** 2026-09-29 (DeskAI v2.3.9 / Build 23 — Schedules)
+
+---
+
+## 0. Sync Status: DeskAI v2.3.9 (Build 23), Schedules (by the AlwaysOnAgent side)
+
+The owner asked for a scheduler. The agent now runs **videos (optionally posted to TikTok), phone reminders and
+background tasks at set times** (server: `core/schedules.py`, API: `/api/schedules`, see docs/API.md).
+- **New screen:** `ui/dialogs/SchedulesSheet.kt`, opened from the **Schedules** card in the command palette
+  (where Web Dashboard was).
+  - **List:** each schedule shows what it does, when (the server's plain-English `description`), next and last
+    run, an on/off switch, **Run now**, and **Delete** (tap twice).
+  - **New schedule form:**
+    - Video / Reminder / Task.
+    - A time picker and weekday toggles (Every day / Weekdays / Weekends), or an advanced cron field.
+    - For videos, a **Post to TikTok** switch.
+    - A live preview from `GET /api/schedules/preview` (it shows why a time is refused, e.g. videos must be 60 min
+      apart).
+    - Save sends an `Idempotency-Key`.
+- **Data layer:**
+  - `AgentSchedule`, `ScheduleList` and `SchedulePreview` in `AlwaysOnModels.kt`.
+  - A small `scheduleCall()` helper plus six calls in `AlwaysOnAgentClient`.
+  - Pass-throughs in `ChatRepository` / `ChatViewModel`.
+- **Push:** reminders arrive as `type: "reminder"`, `channel: "reminders"`. `DeskAIMessagingService` has a new
+  high-importance **Reminders** channel. Older builds show them on the alerts channel.
+- **In chat:** the assistant has `create_schedule` / `list_schedules` / `change_schedule`, so "post a TikTok every
+  day at 6pm" or "remind me on weekdays at 8:30" works without the screen.
 
 ---
 

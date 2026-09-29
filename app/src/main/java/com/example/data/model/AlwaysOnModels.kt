@@ -119,3 +119,25 @@ data class PushRegistrationResult(
     val pushReady: Boolean = false,
     val message: String = ""
 )
+
+/** A schedule on the agent: a video, a phone reminder or a background task at set times (GET /api/schedules). */
+data class AgentSchedule(
+    val id: Int,
+    val name: String,
+    val kind: String,               // video | reminder | task
+    val cron: String,
+    val description: String,        // plain English, e.g. "weekdays at 08:30"
+    val enabled: Boolean,
+    val nextRunAt: String?,
+    val lastRunAt: String?,
+    val lastResult: String?,
+    val runs: Int,
+    val postToTiktok: Boolean,
+    val text: String?,
+    val instruction: String?,
+    val project: String?
+)
+
+data class ScheduleList(val schedules: List<AgentSchedule>, val timezone: String)
+
+data class SchedulePreview(val valid: Boolean, val description: String, val nextRuns: List<String>, val error: String?)

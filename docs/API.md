@@ -150,6 +150,23 @@ Generated images and rendered 3D videos are stored outside the agent repository 
 | `GET /api/logs?limit=100` | | `[{"id", "timestamp", "level", "message"}]`, newest last |
 | `GET /api/stream` | | Server-Sent Events, one `data: {json}` per second: `timestamp`, `stats`, `active_task`, `tasks` (30 newest), `blockers`, `new_logs`, `daemon_status`, `overall_phase`, `last_heartbeat`, `default_engine` |
 
+## Schedules
+
+Videos, phone reminders and background tasks that run by themselves (see AGENT.md, Schedules). Times are 5-field
+cron in the server's local time.
+
+| Method & path | Body | Returns |
+|---|---|---|
+| `GET /api/schedules` | | `{"schedules": [schedule], "timezone": "Central Daylight Time", "kinds": [...], "min_gap_minutes": {"video": 60, "task": 15, "reminder": 5}}` |
+| `GET /api/schedules/preview?cron=0 9 * * 1-5&kind=video` | | `{"valid": true, "description": "weekdays at 09:00", "next_runs": [iso, iso, iso]}`, or `{"valid": false, "error": "..."}` |
+| `POST /api/schedules` | `{"name", "kind": "video"\|"reminder"\|"task", "cron", "enabled"?, "post_to_tiktok"?, "quote"?, "text"? (reminder), "instruction"? + "project"? (task)}` | `{"status": "success", "schedule": schedule}`; `400` with the reason if the cron is invalid or too frequent. Accepts `Idempotency-Key`. |
+| `PATCH /api/schedules/{id}` | any of the create fields except `kind` | `{"status": "success", "schedule": schedule}`. Changing `cron`, or turning it back on, re-plans the next run. |
+| `DELETE /api/schedules/{id}` | | `{"status": "success", "id": id}` |
+| `POST /api/schedules/{id}/run` | | Runs it once now, even in standby: `{"status": "success", "result": "started task-051", "task_id": "task-051", "ran": true}`. The next run doesn't change. |
+
+A `schedule`: `id`, `name`, `kind`, `cron`, `description` (plain English), `enabled`, `next_run_at`, `last_run_at`,
+`last_result`, `runs`, `post_to_tiktok`, `quote`, `text`, `instruction`, `project`, `created_at`, `source`.
+
 ## Push notifications (Firebase Cloud Messaging)
 
 | Method & path | Body | Returns |
@@ -160,16 +177,17 @@ Generated images and rendered 3D videos are stored outside the agent repository 
 
 Messages are **data-only and high priority**, and the app builds the notification. The `data` map (all
 strings):
-- `type`: `task_completed`, `task_failed`, `alert` or `test`;
+- `type`: `task_completed`, `task_failed`, `alert`, `reminder` or `test`;
 - `task_id`;
 - `title` and `body`, both short. They pass through Google's servers, so they never carry memory or chat
-  content.
-- `channel`: `tasks` or `alerts`.
+  content. The one exception is a reminder's body: the text the owner wrote for that reminder.
+- `channel`: `tasks`, `alerts` or `reminders`. Apps older than 2.3.9 show reminders on the alerts channel.
 
 **When pushes are sent:**
 - `task_completed` for every finished task.
 - `task_failed` for every failure except cancels.
 - `alert` for backup failures, stuck tasks and safety-check failures.
+- `reminder` when a reminder schedule runs.
 
 Tokens that FCM rejects are removed automatically.
 

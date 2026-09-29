@@ -1,5 +1,6 @@
 package com.example.data.remote
 
+import com.example.data.model.AgentSchedule
 import com.example.data.model.AgentTaskItem
 import com.example.data.model.AgentWorkProject
 import com.example.data.model.BridgeConfig
@@ -10,6 +11,8 @@ import com.example.data.model.DaemonStats
 import com.example.data.model.MemoryFactItem
 import com.example.data.model.MemoryOverview
 import com.example.data.model.PushRegistrationResult
+import com.example.data.model.ScheduleList
+import com.example.data.model.SchedulePreview
 import com.example.data.model.SystemLogEntry
 import com.example.data.model.TaskProgress
 import com.example.data.model.TaskProposal
@@ -662,6 +665,91 @@ class AlwaysOnAgentClient {
             Result.failure(e)
         }
     }
+
+    // ------------------------------------------------------------------ schedules (/api/schedules)
+    private fun parseSchedule(o: JSONObject): AgentSchedule = AgentSchedule(
+        id = o.optInt("id"),
+        name = o.optString("name", "Schedule"),
+        kind = o.optString("kind", "video"),
+        cron = o.optString("cron", ""),
+        description = o.optString("description", o.optString("cron", "")),
+        enabled = o.optBoolean("enabled", true),
+        nextRunAt = o.optString("next_run_at").takeIf { it.isNotBlank() && it != "null" },
+        lastRunAt = o.optString("last_run_at").takeIf { it.isNotBlank() && it != "null" },
+        lastResult = o.optString("last_result").takeIf { it.isNotBlank() && it != "null" },
+        runs = o.optInt("runs", 0),
+        postToTiktok = o.optBoolean("post_to_tiktok", false),
+        text = o.optString("text").takeIf { it.isNotBlank() && it != "null" },
+        instruction = o.optString("instruction").takeIf { it.isNotBlank() && it != "null" },
+        project = o.optString("project").takeIf { it.isNotBlank() && it != "null" }
+    )
+
+    /** One schedules request; the server's own error message (e.g. "must be at least 60 min apart") on failure. */
+    private suspend fun scheduleCall(
+        config: BridgeConfig,
+        method: String,
+        path: String,
+        body: JSONObject? = null,
+        idempotencyKey: String? = null
+    ): Result<JSONObject> = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                val builder = Request.Builder().url("$baseUrl$path")
+                val reqBody = (body ?: JSONObject()).toString().toRequestBody(jsonMediaType)
+                when (method) {
+                    "POST" -> builder.post(reqBody)
+                    "PATCH" -> builder.patch(reqBody)
+                    "DELETE" -> builder.delete()
+                    else -> builder.get()
+                }
+                if (idempotencyKey != null) builder.addHeader("Idempotency-Key", idempotencyKey)
+                httpClient.newCall(addAuth(builder, config).build()).execute().use { resp ->
+                    val text = resp.body?.string() ?: ""
+                    if (resp.isSuccessful) {
+                        Result.success(if (text.isBlank()) JSONObject() else JSONObject(text))
+                    } else {
+                        val detail = try { JSONObject(text).optString("detail", "HTTP ${resp.code}") } catch (_: Exception) { "HTTP ${resp.code}" }
+                        Result.failure(Exception(detail))
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getSchedules(config: BridgeConfig): Result<ScheduleList> =
+        scheduleCall(config, "GET", "/api/schedules").map { json ->
+            val arr = json.optJSONArray("schedules") ?: JSONArray()
+            ScheduleList((0 until arr.length()).map { parseSchedule(arr.getJSONObject(it)) },
+                json.optString("timezone", "the PC's time"))
+        }
+
+    suspend fun previewSchedule(config: BridgeConfig, cron: String, kind: String): Result<SchedulePreview> {
+        val q = "cron=${java.net.URLEncoder.encode(cron, "UTF-8")}&kind=${java.net.URLEncoder.encode(kind, "UTF-8")}"
+        return scheduleCall(config, "GET", "/api/schedules/preview?$q").map { json ->
+            val runs = json.optJSONArray("next_runs") ?: JSONArray()
+            SchedulePreview(
+                valid = json.optBoolean("valid", false),
+                description = json.optString("description", ""),
+                nextRuns = (0 until runs.length()).map { runs.getString(it) },
+                error = json.optString("error").takeIf { it.isNotBlank() && it != "null" }
+            )
+        }
+    }
+
+    suspend fun createSchedule(config: BridgeConfig, fields: JSONObject,
+                               idempotencyKey: String = UUID.randomUUID().toString()): Result<AgentSchedule> =
+        scheduleCall(config, "POST", "/api/schedules", fields, idempotencyKey).map { parseSchedule(it.getJSONObject("schedule")) }
+
+    suspend fun updateSchedule(config: BridgeConfig, id: Int, fields: JSONObject): Result<AgentSchedule> =
+        scheduleCall(config, "PATCH", "/api/schedules/$id", fields).map { parseSchedule(it.getJSONObject("schedule")) }
+
+    suspend fun deleteSchedule(config: BridgeConfig, id: Int): Result<Unit> =
+        scheduleCall(config, "DELETE", "/api/schedules/$id").map { }
+
+    suspend fun runScheduleNow(config: BridgeConfig, id: Int): Result<String> =
+        scheduleCall(config, "POST", "/api/schedules/$id/run").map { it.optString("result", "done") }
 
     suspend fun runBackup(config: BridgeConfig): Result<String> = withContext(Dispatchers.IO) {
         try {
