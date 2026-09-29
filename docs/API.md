@@ -10,7 +10,7 @@ DeskAI repo at `docs/API.md`, updated whenever this one changes.
 | Base URL | `http://192.168.12.151:8080` on the home Wi-Fi, `http://100.109.85.92:8080` over Tailscale (the mini PC `devinmini`) |
 | Auth | `X-HUD-Token: <HUD_AUTH_TOKEN>` on **every** request (`Authorization: Bearer <token>` also works). Send it only to this host. |
 | No auth | `GET /api/status`, `GET /api/health` |
-| Browser login | `GET /?token=<token>` sets a cookie (`hud_token`, one year, SameSite=Lax) and redirects to a clean URL. DeskAI's **Web Dashboard** button uses it. |
+| Token in a URL | `?token=<token>` also works, for media links opened outside the app |
 | Errors | `401`: missing or wrong token. Otherwise `{"detail": "..."}` with a normal HTTP code. |
 | JSON | `snake_case`; timestamps are ISO 8601 in the server's local time |
 | CORS | none on purpose (it would let any website read the owner's memory). Native HTTP clients are unaffected. |
@@ -34,7 +34,7 @@ DeskAI repo at `docs/API.md`, updated whenever this one changes.
   - `/task <instruction>` (queues a task);
   - `/cancel` (the running task);
   - `/restart`;
-  - `/image <prompt>`, `/imagine <prompt>`, `/draw <prompt>`, which replies with markdown `![...](/images/gen_xxxx.jpg)` (supports `--style <anime|photo|3d|painting|pixel|cyberpunk|fantasy|retro|cinematic>`, `--nsfw` / `--adult` for uncensored generation via AI Horde, `--raw`, and Gemini prompt enrichment); load it with the token.
+  - `/image <prompt>`, `/imagine <prompt>`, `/draw <prompt>`, which replies with markdown `![...](/images/gen_xxxx.jpg)` (supports `--style <anime|photo|3d|painting|pixel|cyberpunk|fantasy|retro|cinematic>`, `--nsfw` / `--adult` for uncensored generation via AI Horde, `--raw`, and Gemini prompt enrichment). The separate ImageGen tool makes the image; load it with the token. `/image help` returns the guide.
 - **`proposals`:** suggested actions, each shown as a card:
   ```json
   [{"id": "a1b2c3d4e5", "instruction": "...", "reason": "...", "project": null, "kind": "task"}]
@@ -131,7 +131,7 @@ Generated images and rendered 3D videos are stored outside the agent repository 
 | Method & path | Body | Returns |
 |---|---|---|
 | `GET /api/images` | | `{"images": [{"filename", "size_mb", "created_at", "mtime", "url"}]}`: lists all generated artwork |
-| `DELETE /api/images/{filename}` | | `{"status": "deleted", "filename": "..."}`: removes an image from disk |
+| `DELETE /api/images/{filename}` | | `{"status": "success", "message": "Deleted <filename>"}`: removes an image from disk |
 | `GET /images/{filename}` | | Static image file (supports token parameter or auth headers) |
 | `GET /api/videos` | | `{"videos": [{"filename", "size_mb", "created_at", "url"}]}`: lists rendered video creations |
 | `POST /api/trigger_media` | `{"type": "video"|"tiktok", "quote": "..."}` | `{"status": "success", "task_id": "..."}`: dispatches a video render task |
@@ -173,7 +173,8 @@ strings):
 
 Tokens that FCM rejects are removed automatically.
 
-## Web pages
+## Connection check
 
-`/` is the dashboard (Mission Control), and `/memory` is the Memory page. Both use the same token (the cookie
-from the `?token=` login).
+`GET /` returns `{"status": "online", "message": "AlwaysOnAgent is running"}`, or `401` with a missing or wrong
+token. DeskAI's connection test uses it. There are no web pages: the dashboard and the Memory page were removed
+on 2026-09-29, since DeskAI shows everything they did.
