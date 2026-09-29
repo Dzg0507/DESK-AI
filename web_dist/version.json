@@ -1,7 +1,7 @@
 {
-  "versionCode": 20,
-  "versionName": "2.3.6",
-  "changelog": "DeskAI v2.3.6 (Build 20): Chats open instantly at the newest message (older ones load on request), a New chat button, the keyboard no longer covers the input box, and one Actions button replaces the row of /command chips.",
+  "versionCode": 21,
+  "versionName": "2.3.7",
+  "changelog": "DeskAI v2.3.7 (Build 21): Replies now show a simple Thinking indicator instead of a busy card, and no more automatic task cards.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 23952087
+  "fileSizeBytes": 23935691
 }

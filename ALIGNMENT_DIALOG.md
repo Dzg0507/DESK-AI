@@ -4,7 +4,23 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-09-29 (DeskAI v2.3.6 / Build 20 — faster chats, keyboard fix, Actions button)
+**Last Updated:** 2026-09-29 (DeskAI v2.3.7 / Build 21 — simple Thinking indicator)
+
+---
+
+## 0. Sync Status: DeskAI v2.3.7 (Build 21), a simpler "Thinking" look (by the AlwaysOnAgent side)
+
+The owner found the reply UI confusing: every message opened a card. What changed:
+- **While waiting:** the empty assistant bubble shows **Thinking** with three pulsing dots
+  (`ThinkingIndicator` in `MessageBubble.kt`). It replaces the "AlwaysOnAgent Busy" card and its three
+  made-up progress steps.
+- **While the reply streams in:** plain text, without the "Streaming output..." line and progress bar.
+- **The status box above the chat is gone** (phase text, timer, STOP). The Stop button in the input bar still
+  cancels a reply.
+- **No guessed task cards:** `ChatRepository` no longer attaches a "run task" card when the message contains
+  "write a / create a / build a / implement". The assistant starts real jobs itself now, and real proposals
+  from the agent (and ones written in the reply's text) still show as cards.
+- `ChatViewModel.streamingPhase` / `streamingDurationMs` are still set but no longer shown.
 
 ---
 

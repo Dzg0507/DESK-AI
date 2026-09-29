@@ -183,49 +183,7 @@ fun MessageBubble(
             ) {
                 Column {
                     if (message.status == "sending" && message.content.isEmpty()) {
-                        Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(15.dp),
-                                        strokeWidth = 2.dp,
-                                        color = ElectricCyan
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = "AlwaysOnAgent Busy",
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = ElectricCyan
-                                    )
-                                }
-                                Text(
-                                    text = "Processing...",
-                                    fontSize = 11.sp,
-                                    fontFamily = FontFamily.Monospace,
-                                    color = Color(0xFF94A3B8)
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(8.dp))
-                            LinearProgressIndicator(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(4.dp)
-                                    .clip(RoundedCornerShape(2.dp)),
-                                color = ElectricCyan,
-                                trackColor = Color(0xFF1E293B)
-                            )
-                            Spacer(modifier = Modifier.height(10.dp))
-                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                ProgressStepRow(done = true, active = false, label = "Dispatched instruction to host machine")
-                                ProgressStepRow(done = false, active = true, label = "Executing autonomous tools & workflows")
-                                ProgressStepRow(done = false, active = false, label = "Formatting response & verifying media")
-                            }
-                        }
+                        ThinkingIndicator()
                     } else {
                         MarkdownContent(
                             content = message.content,
@@ -234,43 +192,6 @@ fun MessageBubble(
                             authToken = authToken
                         )
 
-                        // Live Streaming Progress Pulse when content is actively arriving
-                        if (message.status == "sending") {
-                            val cursorTransition = rememberInfiniteTransition(label = "cursor")
-                            val cursorAlpha by cursorTransition.animateFloat(
-                                initialValue = 1f,
-                                targetValue = 0.1f,
-                                animationSpec = infiniteRepeatable(
-                                    animation = tween(500),
-                                    repeatMode = RepeatMode.Reverse
-                                ),
-                                label = "cursor_alpha"
-                            )
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = "Streaming output...",
-                                    fontSize = 11.sp,
-                                    color = ElectricCyan,
-                                    fontFamily = FontFamily.Monospace
-                                )
-                                Text(
-                                    text = " ▌",
-                                    fontSize = 11.sp,
-                                    color = ElectricCyan.copy(alpha = cursorAlpha),
-                                    fontFamily = FontFamily.Monospace
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            LinearProgressIndicator(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(2.dp)
-                                    .clip(RoundedCornerShape(1.dp)),
-                                color = ElectricCyan,
-                                trackColor = Color(0xFF1E293B)
-                            )
-                        }
                     }
 
                     // Interactive Proposal Cards matching AlwaysOnAgent & Telegram (supports multiple proposals)
@@ -739,35 +660,27 @@ fun QuestionChoicesCard(
 }
 
 @Composable
-private fun ProgressStepRow(done: Boolean, active: Boolean, label: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Text(
-            text = when {
-                done -> "✓"
-                active -> "⚡"
-                else -> "○"
-            },
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            color = when {
-                done -> EmeraldConnected
-                active -> ElectricCyan
-                else -> Color(0xFF64748B)
-            },
-            modifier = Modifier.width(18.dp)
-        )
-        Text(
-            text = label,
-            fontSize = 11.sp,
-            color = when {
-                done -> Color(0xFFCBD5E1)
-                active -> Color(0xFFE2E8F0)
-                else -> Color(0xFF64748B)
-            },
-            fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal
-        )
+private fun ThinkingIndicator() {
+    // "Thinking" with three dots pulsing one after another
+    val transition = rememberInfiniteTransition(label = "thinking")
+    val phase by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 3f,
+        animationSpec = infiniteRepeatable(animation = tween(1200), repeatMode = RepeatMode.Restart),
+        label = "thinking_phase"
+    )
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 2.dp)) {
+        Text(text = "Thinking", fontSize = 14.sp, color = Color(0xFF94A3B8))
+        Spacer(modifier = Modifier.width(4.dp))
+        repeat(3) { i ->
+            val lit = phase.toInt() == i
+            Box(
+                modifier = Modifier
+                    .padding(horizontal = 2.dp)
+                    .size(5.dp)
+                    .clip(CircleShape)
+                    .background(if (lit) ElectricCyan else Color(0xFF475569))
+            )
+        }
     }
 }

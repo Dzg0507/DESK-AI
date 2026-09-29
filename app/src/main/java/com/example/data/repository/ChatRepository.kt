@@ -417,23 +417,6 @@ class ChatRepository(
         val startTime = System.currentTimeMillis()
         var currentText = ""
 
-        // Check if this message warrants a suggested task proposal card
-        val trimmed = userText.trim().lowercase()
-        val isActionable = trimmed.contains("write a") || trimmed.contains("create a") || trimmed.contains("build a") || trimmed.contains("implement")
-        val initialProposals = if (isActionable) {
-            listOf(
-                TaskProposal(
-                    id = "local_${UUID.randomUUID().toString().take(8)}",
-                    token = "",
-                    instruction = userText.trim(),
-                    isLocal = true,
-                    state = "pending"
-                )
-            )
-        } else {
-            emptyList()
-        }
-
         val assistantMessage = ChatMessage(
             id = assistantId,
             sessionId = session.id,
@@ -442,9 +425,9 @@ class ChatRepository(
             status = "sending",
             modelUsed = "AlwaysOnAgent v2.2.1",
             proposalToken = null, // Only agent-issued tokens go here
-            proposalInstruction = if (isActionable) userText.trim() else null,
-            proposalState = if (isActionable) "pending" else null,
-            proposalsJson = if (initialProposals.isNotEmpty()) ChatMessage.serializeProposals(initialProposals) else null
+            proposalInstruction = null,
+            proposalState = null,
+            proposalsJson = null
         )
         chatDao.insertMessage(assistantMessage)
 
@@ -485,17 +468,6 @@ class ChatRepository(
                             state = "pending"
                         )
                     }
-                } else if (isActionable) {
-                    listOf(
-                        TaskProposal(
-                            id = "local_${UUID.randomUUID().toString().take(8)}",
-                            token = "",
-                            instruction = userText.trim(),
-                            project = null,
-                            isLocal = true,
-                            state = "pending"
-                        )
-                    )
                 } else {
                     emptyList()
                 }
