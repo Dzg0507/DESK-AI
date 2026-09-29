@@ -24,6 +24,21 @@ The owner asked for a clear separation of docs by part. In this repo:
 
 ---
 
+## 00. Sync Status: Image Gallery & External Storage (2026-09-28)
+
+**What was added/changed:**
+1. **Agent Side:**
+   - Generated images strictly removed from repo and stored in `C:\Projects\AgentGallery\images`.
+   - Free adult/uncensored model via AI Horde (`--nsfw` / `--adult`).
+   - `GET /api/images` and `DELETE /api/images/{filename}` endpoints added to HUD server.
+   - Assistant memory aware of `/image` tasks and prompts.
+2. **App Side (`DeskAI`):**
+   - Media Gallery sheet upgraded to a tabbed hub: **🖼️ Images** & **🎬 Videos**.
+   - 2-column image gallery grid with thumbnail caching, full-screen zoom/pan viewer modal, one-tap save to `Pictures/DeskAI`, and server-side image deletion.
+   - Models (`ImageItem`), remote client (`getImages`, `deleteImage`), repository and view model methods wired into `MediaGallerySheet` and `ChatScreen`.
+
+---
+
 ## 0. Sync Status: DeskAI v2.3.4 (Build 18), Telegram removed (changed by the AlwaysOnAgent side)
 
 **Heads-up:** made on the owner's PC from `31b69ba` and signed with the same debug keystore. **Please pull before your next change.**
