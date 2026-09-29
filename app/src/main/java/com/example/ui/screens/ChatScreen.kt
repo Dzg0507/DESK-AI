@@ -548,7 +548,7 @@ fun ChatScreen(
             onRetryTask = { tid -> viewModel.retryTask(tid) },
             onFetchImages = { viewModel.fetchImages() },
             onDeleteImage = { filename -> viewModel.deleteImage(filename) },
-            authToken = config.hudToken
+            authToken = config.apiKey
         )
     }
 

@@ -1,7 +1,7 @@
 {
-  "versionCode": 18,
-  "versionName": "2.3.4",
-  "changelog": "DeskAI v2.3.4 (Build 18): Telegram is gone for good; DeskAI is the only way in. New Web Dashboard button opens the server's HUD already signed in. Videos finish about 1.5 minutes sooner (no Telegram upload).",
+  "versionCode": 19,
+  "versionName": "2.3.5",
+  "changelog": "DeskAI v2.3.5 (Build 19): Image gallery (tabs for Images and Videos, full-screen viewer with pinch-zoom, save to phone, delete).",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 23919276
+  "fileSizeBytes": 23952039
 }

@@ -4,7 +4,22 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-09-28 (DeskAI v2.3.4 / Build 18 — Telegram removed; Web Dashboard button)
+**Last Updated:** 2026-09-28 (DeskAI v2.3.5 / Build 19 — image gallery shipped)
+
+---
+
+## 0. Sync Status: DeskAI v2.3.5 (Build 19), the image gallery shipped (built by the AlwaysOnAgent side)
+
+The image gallery from the previous session (`965f8b9`) is released as 2.3.5 (build 19), signed with the usual
+debug keystore.
+- **Compile fix:** `ChatScreen.kt` passed `authToken = config.hudToken`, but `BridgeConfig` has no
+  `hudToken`, so the build failed. It's `config.apiKey` now.
+- The rest was reviewed and is unchanged. The TikTok flows from 2.3.3 (live card on post, the player posts the
+  watched video) survived the gallery rewrite.
+- **Agent side (live):**
+  - `/api/chat` no longer blocks the server during image generation.
+  - Image prompts are no longer written to long-term memory; they're kept short-term, and the assistant can
+    read the last ones with a new tool ("enhance my last prompt").
 
 ---
 
