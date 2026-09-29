@@ -26,6 +26,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddComment
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
@@ -40,6 +41,8 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
@@ -161,10 +164,20 @@ fun ChatScreen(
         }
     }
 
-    // Auto-scroll to bottom when new messages arrive
-    LaunchedEffect(messages.size, messages.lastOrNull()?.content) {
-        if (messages.isNotEmpty()) {
-            listState.animateScrollToItem(messages.size - 1)
+    val hasEarlierMessages by viewModel.hasEarlierMessages.collectAsStateWithLifecycle()
+    // The list has a "Load earlier messages" row above the messages when older ones exist
+    val lastItemIndex = messages.size - 1 + (if (hasEarlierMessages) 1 else 0)
+
+    // Opening a chat jumps straight to the newest message (no animated scroll through the history);
+    // a new or updated last message scrolls smoothly. Loading earlier messages keeps the reading position.
+    var jumpedForSession by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(currentSession?.id, messages.lastOrNull()?.id, messages.lastOrNull()?.content) {
+        if (messages.isEmpty()) return@LaunchedEffect
+        if (jumpedForSession != currentSession?.id) {
+            listState.scrollToItem(lastItemIndex)
+            jumpedForSession = currentSession?.id
+        } else {
+            listState.animateScrollToItem(lastItemIndex)
         }
     }
 
@@ -233,6 +246,18 @@ fun ChatScreen(
                         }
                     },
                     actions = {
+                        // Start a fresh conversation (the assistant's memory lives on the server, so nothing is forgotten)
+                        IconButton(
+                            onClick = { viewModel.createNewSession() },
+                            modifier = Modifier.testTag("new_chat_button")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AddComment,
+                                contentDescription = "New chat",
+                                tint = Color(0xFF94A3B8)
+                            )
+                        }
+
                         // In-App OTA Update Button with badge indicator
                         IconButton(
                             onClick = { showUpdaterDialog = true },
@@ -281,6 +306,8 @@ fun ChatScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
+                    // The Scaffold already padded for the system bars; the input bar adds only the keyboard's extra height
+                    .consumeWindowInsets(innerPadding)
                     .background(Color(0xFF080B11))
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
@@ -378,6 +405,20 @@ fun ChatScreen(
                                 .fillMaxSize()
                                 .padding(vertical = 4.dp)
                         ) {
+                            if (hasEarlierMessages) {
+                                item(key = "load_earlier") {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 6.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        TextButton(onClick = { viewModel.loadEarlierMessages() }) {
+                                            Text("Load earlier messages", color = ElectricCyan, fontSize = 12.sp)
+                                        }
+                                    }
+                                }
+                            }
                             items(messages, key = { it.id }) { message ->
                                 MessageBubble(
                                     message = message,
@@ -418,7 +459,7 @@ fun ChatScreen(
                                 onClick = {
                                     scope.launch {
                                         if (messages.isNotEmpty()) {
-                                            listState.animateScrollToItem(messages.size - 1)
+                                            listState.animateScrollToItem(lastItemIndex)
                                         }
                                     }
                                 },

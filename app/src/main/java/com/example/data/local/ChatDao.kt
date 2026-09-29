@@ -29,6 +29,10 @@ interface ChatDao {
     @Query("SELECT * FROM chat_messages WHERE sessionId = :sessionId ORDER BY timestamp ASC")
     fun getMessagesForSession(sessionId: String): Flow<List<ChatMessage>>
 
+    // The newest :limit messages, oldest first: a long chat opens without loading its whole history
+    @Query("SELECT * FROM (SELECT * FROM chat_messages WHERE sessionId = :sessionId ORDER BY timestamp DESC LIMIT :limit) ORDER BY timestamp ASC")
+    fun getRecentMessagesForSession(sessionId: String, limit: Int): Flow<List<ChatMessage>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMessage(message: ChatMessage)
 

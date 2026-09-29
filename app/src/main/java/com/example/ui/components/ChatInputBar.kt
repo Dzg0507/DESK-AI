@@ -13,6 +13,12 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.material.icons.filled.Apps
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -65,21 +71,6 @@ fun ChatInputBar(
     onOpenCommandPalette: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val quickCommands = remember {
-        listOf(
-            "📊 /status",
-            "🟢 /wake",
-            "⏸️ /standby",
-            "🎬 /video",
-            "🚀 /tiktok",
-            "🧠 /memory",
-            "📋 /tasks",
-            "⚙️ /engine",
-            "🎨 /image",
-            "ℹ️ /help"
-        )
-    }
-
     // Android Speech to Text launcher
     val speechLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -100,69 +91,10 @@ fun ChatInputBar(
             .fillMaxWidth()
             .background(Color(0xFF0F172A))
             .border(1.dp, Color(0xFF1E293B))
-            .navigationBarsPadding()
+            // Above the keyboard when it's open, above the navigation bar when it isn't
+            .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime))
             .padding(vertical = 6.dp)
     ) {
-        // Quick command chips row
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 10.dp, vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Prominent Command Deck Pop-out Launcher Chip
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(ElectricCyan.copy(alpha = 0.16f))
-                    .border(1.dp, ElectricCyan.copy(alpha = 0.7f), RoundedCornerShape(12.dp))
-                    .clickable { onOpenCommandPalette() }
-                    .padding(horizontal = 10.dp, vertical = 4.dp)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "[/] COMMAND DECK",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = ElectricCyan,
-                        fontFamily = FontFamily.Monospace
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "• Hubs & Actions",
-                        fontSize = 10.sp,
-                        color = Color.White
-                    )
-                }
-            }
-
-            quickCommands.forEach { cmd ->
-                val pureCommand = cmd.substringAfter(" ")
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFF1E293B))
-                        .border(1.dp, Color(0xFF334155), RoundedCornerShape(12.dp))
-                        .clickable {
-                            onTextChange(pureCommand)
-                        }
-                        .padding(horizontal = 10.dp, vertical = 4.dp)
-                ) {
-                    Text(
-                        text = cmd,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFFCBD5E1),
-                        fontFamily = FontFamily.Monospace
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(4.dp))
-
         // Input row
         Row(
             modifier = Modifier
@@ -170,7 +102,7 @@ fun ChatInputBar(
                 .padding(horizontal = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Dedicated Command Deck Button [/]
+            // Actions: every command and hub (the command palette)
             IconButton(
                 onClick = onOpenCommandPalette,
                 modifier = Modifier
@@ -183,12 +115,11 @@ fun ChatInputBar(
                         CircleShape
                     )
             ) {
-                Text(
-                    text = "/",
-                    color = if (text.startsWith("/")) ElectricCyan else Color(0xFF94A3B8),
-                    fontWeight = FontWeight.Black,
-                    fontSize = 18.sp,
-                    fontFamily = FontFamily.Monospace
+                Icon(
+                    imageVector = Icons.Default.Apps,
+                    contentDescription = "Actions",
+                    tint = if (text.startsWith("/")) ElectricCyan else Color(0xFF94A3B8),
+                    modifier = Modifier.size(20.dp)
                 )
             }
 

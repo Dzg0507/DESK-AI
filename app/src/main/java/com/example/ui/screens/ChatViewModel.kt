@@ -41,6 +41,11 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val _messages = MutableStateFlow<List<ChatMessage>>(emptyList())
     val messages: StateFlow<List<ChatMessage>> = _messages.asStateFlow()
 
+    // Only the newest messages are loaded; older ones on request ("Load earlier messages")
+    private var messageLimit = PAGE_SIZE
+    private val _hasEarlierMessages = MutableStateFlow(false)
+    val hasEarlierMessages: StateFlow<Boolean> = _hasEarlierMessages.asStateFlow()
+
     private val _daemonStats = MutableStateFlow(DaemonStats())
     val daemonStats: StateFlow<DaemonStats> = _daemonStats.asStateFlow()
 
@@ -83,13 +88,26 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private fun listenToMessages(sessionId: String) {
+    private fun listenToMessages(sessionId: String, resetPaging: Boolean = true) {
+        if (resetPaging) messageLimit = PAGE_SIZE
         messagesCollectJob?.cancel()
         messagesCollectJob = viewModelScope.launch {
-            repository.getMessages(sessionId).collect { list ->
+            repository.getRecentMessages(sessionId, messageLimit).collect { list ->
                 _messages.value = list
+                _hasEarlierMessages.value = list.size >= messageLimit &&
+                    repository.getMessageCount(sessionId) > list.size
             }
         }
+    }
+
+    fun loadEarlierMessages() {
+        val session = _currentSession.value ?: return
+        messageLimit += PAGE_SIZE
+        listenToMessages(session.id, resetPaging = false)
+    }
+
+    companion object {
+        const val PAGE_SIZE = 60
     }
 
     private fun pollStatsPeriodically() {

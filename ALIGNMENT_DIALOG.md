@@ -4,7 +4,29 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-09-28 (DeskAI v2.3.5 / Build 19 — image gallery shipped)
+**Last Updated:** 2026-09-29 (DeskAI v2.3.6 / Build 20 — faster chats, keyboard fix, Actions button)
+
+---
+
+## 0. Sync Status: DeskAI v2.3.6 (Build 20), faster chats, keyboard fix, simpler input bar (by the AlwaysOnAgent side)
+
+The owner reported three things; all fixed in this build:
+1. **Slow to open a long chat.** It loaded every message in the session and then animated the scroll from the
+   top down to the newest.
+   - Now it loads only the newest 60 (`ChatDao.getRecentMessagesForSession`), jumps straight to the bottom
+     without animating, and shows a **Load earlier messages** row at the top when older ones exist
+     (`ChatViewModel.loadEarlierMessages`).
+   - Auto-scroll is keyed on the last message, so loading earlier ones keeps your place.
+2. **"Can't see the input box while typing."** The app is edge-to-edge, but nothing reacted to the keyboard.
+   Fixed with:
+   - `windowSoftInputMode="adjustResize"` on the activity;
+   - `consumeWindowInsets(innerPadding)` in `ChatScreen`;
+   - the input bar padding by `WindowInsets.navigationBars.union(WindowInsets.ime)`.
+3. **The /command chips row removed**, as the owner asked. The round `/` button is now an **Actions** button
+   (grid icon) that opens the same command palette.
+
+Also: a **New chat** button in the top bar (`createNewSession`). The assistant's memory is on the server, so a new
+chat forgets nothing.
 
 ---
 

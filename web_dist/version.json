@@ -1,7 +1,7 @@
 {
-  "versionCode": 19,
-  "versionName": "2.3.5",
-  "changelog": "DeskAI v2.3.5 (Build 19): Image gallery (tabs for Images and Videos, full-screen viewer with pinch-zoom, save to phone, delete).",
+  "versionCode": 20,
+  "versionName": "2.3.6",
+  "changelog": "DeskAI v2.3.6 (Build 20): Chats open instantly at the newest message (older ones load on request), a New chat button, the keyboard no longer covers the input box, and one Actions button replaces the row of /command chips.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 23952039
+  "fileSizeBytes": 23952087
 }

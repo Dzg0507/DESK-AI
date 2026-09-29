@@ -280,6 +280,13 @@ class ChatRepository(
     fun getMessages(sessionId: String): Flow<List<ChatMessage>> =
         chatDao.getMessagesForSession(sessionId)
 
+    fun getRecentMessages(sessionId: String, limit: Int): Flow<List<ChatMessage>> =
+        chatDao.getRecentMessagesForSession(sessionId, limit)
+
+    suspend fun getMessageCount(sessionId: String): Int = withContext(Dispatchers.IO) {
+        chatDao.getMessageCount(sessionId)
+    }
+
     suspend fun createSession(
         title: String = "AlwaysOnAgent",
         systemPrompt: String = "You are AlwaysOnAgent (v2.1), an autonomous AI worker and desktop personal assistant. Be concise, direct, helpful, and provide clear code snippets."
