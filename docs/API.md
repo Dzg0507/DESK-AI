@@ -116,6 +116,7 @@ A **task object** (from `GET /api/tasks`, `GET /api/tasks/{id}`, and the stream'
 | `DELETE /api/memory/facts/{id}?erase=true` | forgets it everywhere, including old messages |
 | `POST /api/memory/profile/rebuild` | rebuilds the owner profile now |
 | `GET /api/memory/usage` | AI token usage by purpose over the last day |
+| `GET /api/memory/budget` | today's calls and tokens per model, with countdowns to Google (Pacific) and Cloudflare (UTC) daily resets |
 
 ## AgentWork (project jobs)
 
