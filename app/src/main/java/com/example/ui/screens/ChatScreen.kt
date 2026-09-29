@@ -121,12 +121,9 @@ fun ChatScreen(
                     .connectTimeout(5, java.util.concurrent.TimeUnit.SECONDS)
                     .readTimeout(5, java.util.concurrent.TimeUnit.SECONDS)
                     .build()
-                val cleanBase = config.getResolvedUrl().trimEnd('/')
+                // Updates are published only on GitHub. (The agent's server doesn't host version.json, so asking
+                // it first just logged a rejected request on the Mini at every launch.)
                 val checkUrls = mutableListOf<String>()
-                if (cleanBase.isNotBlank()) {
-                    checkUrls.add("$cleanBase/version.json")
-                    checkUrls.add("$cleanBase/static/version.json")
-                }
                 checkUrls.add("https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/web_dist/version.json")
                 checkUrls.add("https://raw.githubusercontent.com/Dzg0507/Desk-ai/master/web_dist/version.json")
                 for (u in checkUrls) {

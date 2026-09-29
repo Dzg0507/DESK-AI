@@ -1,7 +1,7 @@
 {
-  "versionCode": 23,
-  "versionName": "2.3.9",
-  "changelog": "DeskAI v2.3.9 (Build 23): Schedules. Videos (optionally posted to TikTok), phone reminders and background tasks that run by themselves at set times. Open Actions, then Schedules, or just ask in chat.",
+  "versionCode": 24,
+  "versionName": "2.3.10",
+  "changelog": "DeskAI v2.3.10 (Build 24): The update check asks GitHub only, so opening the app no longer logs rejected requests on the Mini.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24017605
+  "fileSizeBytes": 24017603
 }

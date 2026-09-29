@@ -4,7 +4,16 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-09-29 (DeskAI v2.3.9 / Build 23 — Schedules)
+**Last Updated:** 2026-09-29 (DeskAI v2.3.10 / Build 24 — update check asks GitHub only)
+
+---
+
+## 0. Sync Status: DeskAI v2.3.10 (Build 24), the update check asks only GitHub (by the AlwaysOnAgent side)
+
+At every launch, `ChatScreen`'s background update check first asked the agent's server for `/version.json` and
+`/static/version.json`, without the token. The server has never hosted that file, so each launch logged two
+"Rejected unauthenticated request" warnings on the Mini (visible now that its console window is shown). Updates
+are published only on GitHub (`web_dist/version.json`), so the check now asks GitHub only. Nothing else changed.
 
 ---
 
