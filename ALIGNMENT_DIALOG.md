@@ -8,6 +8,22 @@
 
 ---
 
+## 0a. Docs reorganized (2026-09-28, by the AlwaysOnAgent side, no code changes)
+
+The owner asked for a clear separation of docs by part. In this repo:
+- **README.md** now describes the app: its screens and code, connecting, updates, and how to work on it.
+  The old README was an API spec with the laptop's address and a CORS recommendation the agent deliberately
+  doesn't follow.
+- **docs/API.md** is a copy of the agent's API contract (its source of truth is `docs/API.md` in
+  AlwaysOnAgent). The agent side keeps it current, so use it instead of any older notes.
+- **BUILD.md** covers building, signing and shipping a release: the keystore, Firebase config, the checks,
+  and bumping versionCode.
+- **Removed** `API_CHAT_SPECIFICATION.md` (reference implementations of the agent's server, superseded by
+  docs/API.md) and `REMOTE_SETUP_GUIDE.md` (setup steps from before /api/chat existed; connecting is now in
+  the README).
+
+---
+
 ## 0. Sync Status: DeskAI v2.3.4 (Build 18), Telegram removed (changed by the AlwaysOnAgent side)
 
 **Heads-up:** made on the owner's PC from `31b69ba` and signed with the same debug keystore. **Please pull before your next change.**
