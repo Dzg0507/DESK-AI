@@ -36,7 +36,7 @@ DeskAI repo at `docs/API.md`, updated whenever this one changes.
   - `/task <instruction>` (queues a task);
   - `/cancel` (the running task);
   - `/restart`;
-  - `/image <prompt>`, `/imagine <prompt>`, `/draw <prompt>`, which replies with markdown `![...](/images/gen_xxxx.jpg)` (supports `--style <anime|photo|3d|painting|pixel|cyberpunk|fantasy|retro|cinematic>`, `--raw`, and Gemini prompt enrichment); load it with the token.
+  - `/image <prompt>`, `/imagine <prompt>`, `/draw <prompt>`, which replies with markdown `![...](/images/gen_xxxx.jpg)` (supports `--style <anime|photo|3d|painting|pixel|cyberpunk|fantasy|retro|cinematic>`, `--nsfw` / `--adult` for uncensored generation via AI Horde, `--raw`, and Gemini prompt enrichment); load it with the token.
 - **`proposals`:** suggested actions, each shown as a card:
   ```json
   [{"id": "a1b2c3d4e5", "instruction": "...", "reason": "...", "project": null, "kind": "task"}]
