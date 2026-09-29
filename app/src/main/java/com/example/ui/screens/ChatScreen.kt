@@ -545,7 +545,10 @@ fun ChatScreen(
             onPublishExistingVideo = { filename -> viewModel.publishVideoToTikTok(filename) },
             onGetTask = { tid -> viewModel.getTask(tid) },
             onCancelTask = { tid -> viewModel.cancelTask(tid) },
-            onRetryTask = { tid -> viewModel.retryTask(tid) }
+            onRetryTask = { tid -> viewModel.retryTask(tid) },
+            onFetchImages = { viewModel.fetchImages() },
+            onDeleteImage = { filename -> viewModel.deleteImage(filename) },
+            authToken = config.hudToken
         )
     }
 

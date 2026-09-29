@@ -74,6 +74,13 @@ data class VideoItem(
     val url: String
 )
 
+data class ImageItem(
+    val filename: String,
+    val sizeMb: Double,
+    val createdAt: String,
+    val url: String
+)
+
 data class TaskProposal(
     val id: String = "",
     val token: String = "",

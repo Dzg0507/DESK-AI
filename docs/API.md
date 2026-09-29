@@ -1,5 +1,3 @@
-> **Copy.** The source of truth is `docs/API.md` in the AlwaysOnAgent repo (private). The agent side updates this copy whenever the API changes. Don't edit it here; ask for a change instead.
-
 # The AlwaysOnAgent API
 
 This is what DeskAI (and anything else) talks to. **This file is the source of truth.** A copy lives in the
@@ -125,6 +123,18 @@ A **task object** (from `GET /api/tasks`, `GET /api/tasks/{id}`, and the stream'
 | `GET /api/agentwork/projects` | | `[{"name", "description", "repo"}]` |
 | `POST /api/agentwork/projects` | `{"name": "recipe-app", "repo": "https://github.com/o/r.git", "description": "..."}` | `{"status", "project": {...}}`, or 400 (bad name, not https, a duplicate, unreachable). It checks the repo first, which takes a few seconds. |
 | `POST /api/agentwork/jobs` | `{"project": "...", "instruction": "at least 8 characters"}` | `{"status": "success", "task_id": "..."}`; 400 for an unknown project |
+
+## Media and Gallery
+
+Generated images and rendered 3D videos are stored outside the agent repository in the dedicated gallery directory (`AGENT_GALLERY_DIR/images`).
+
+| Method & path | Body | Returns |
+|---|---|---|
+| `GET /api/images` | | `{"images": [{"filename", "size_mb", "created_at", "mtime", "url"}]}`: lists all generated artwork |
+| `DELETE /api/images/{filename}` | | `{"status": "deleted", "filename": "..."}`: removes an image from disk |
+| `GET /images/{filename}` | | Static image file (supports token parameter or auth headers) |
+| `GET /api/videos` | | `{"videos": [{"filename", "size_mb", "created_at", "url"}]}`: lists rendered video creations |
+| `POST /api/trigger_media` | `{"type": "video"|"tiktok", "quote": "..."}` | `{"status": "success", "task_id": "..."}`: dispatches a video render task |
 
 ## Agent controls and maintenance
 

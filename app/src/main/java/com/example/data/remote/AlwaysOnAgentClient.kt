@@ -15,6 +15,7 @@ import com.example.data.model.TaskProgress
 import com.example.data.model.TaskProposal
 import com.example.data.model.TaskResult
 import com.example.data.model.VideoItem
+import com.example.data.model.ImageItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -887,6 +888,76 @@ class AlwaysOnAgentClient {
             }
         } catch (_: Exception) {
             emptyList()
+        }
+    }
+
+    suspend fun getImages(config: BridgeConfig): List<ImageItem> = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                try {
+                    val url = "$baseUrl/api/images"
+                    val req = addAuth(Request.Builder().url(url), config).build()
+                    httpClient.newCall(req).execute().use { resp ->
+                        if (!resp.isSuccessful) return@use emptyList<ImageItem>()
+                        val body = resp.body?.string() ?: ""
+                        val json = JSONObject(body)
+                        val array = json.optJSONArray("images") ?: return@use emptyList<ImageItem>()
+                        val list = mutableListOf<ImageItem>()
+                        val cleanBase = baseUrl.trimEnd('/')
+                        for (i in 0 until array.length()) {
+                            val obj = array.getJSONObject(i)
+                            val fname = obj.optString("filename", "")
+                            val rawPath = obj.optString("url", "").trim()
+                            val fullUrl = when {
+                                rawPath.startsWith("http://") || rawPath.startsWith("https://") -> rawPath
+                                rawPath.startsWith("/") -> "$cleanBase$rawPath"
+                                rawPath.isNotBlank() -> "$cleanBase/$rawPath"
+                                fname.isNotBlank() -> "$cleanBase/images/$fname"
+                                else -> ""
+                            }
+                            val authedUrl = if (config.apiKey.isNotBlank() && !fullUrl.contains("token=")) {
+                                "$fullUrl${if (fullUrl.contains("?")) "&" else "?"}token=${config.apiKey.trim()}"
+                            } else {
+                                fullUrl
+                            }
+                            if (fname.isNotBlank()) {
+                                list.add(
+                                    ImageItem(
+                                        filename = fname,
+                                        sizeMb = obj.optDouble("size_mb", 0.0),
+                                        createdAt = obj.optString("created_at", ""),
+                                        url = authedUrl
+                                    )
+                                )
+                            }
+                        }
+                        list
+                    }
+                } catch (_: Exception) {
+                    emptyList()
+                }
+            } ?: emptyList()
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    suspend fun deleteImage(config: BridgeConfig, filename: String): Result<Boolean> = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                try {
+                    val url = "$baseUrl/api/images/$filename"
+                    val req = addAuth(Request.Builder().url(url).delete(), config).build()
+                    httpClient.newCall(req).execute().use { resp ->
+                        if (resp.isSuccessful) Result.success(true)
+                        else Result.failure(Exception("HTTP ${resp.code}"))
+                    }
+                } catch (e: Exception) {
+                    Result.failure(e)
+                }
+            } ?: Result.failure(Exception("Connection failed"))
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 

@@ -365,7 +365,7 @@ fun ImageViewerDialog(
     }
 }
 
-private suspend fun saveImageToDevice(
+internal suspend fun saveImageToDevice(
     context: Context,
     imageUrl: String,
     authToken: String,

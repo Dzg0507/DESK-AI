@@ -14,6 +14,7 @@ import com.example.data.model.PushRegistrationResult
 import com.example.data.model.SystemLogEntry
 import com.example.data.model.TaskProposal
 import com.example.data.model.VideoItem
+import com.example.data.model.ImageItem
 import com.example.data.remote.AlwaysOnAgentClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -240,6 +241,16 @@ class ChatRepository(
     suspend fun fetchVideos(): List<VideoItem> = withContext(Dispatchers.IO) {
         val config = getActiveConfig()
         agentClient.getVideos(config)
+    }
+
+    suspend fun fetchImages(): List<ImageItem> = withContext(Dispatchers.IO) {
+        val config = getActiveConfig()
+        agentClient.getImages(config)
+    }
+
+    suspend fun deleteImage(filename: String): Result<Boolean> = withContext(Dispatchers.IO) {
+        val config = getActiveConfig()
+        agentClient.deleteImage(config, filename)
     }
 
     suspend fun downloadVideo(

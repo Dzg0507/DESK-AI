@@ -23,14 +23,24 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.SubcomposeAsyncImage
+import coil.request.ImageRequest
+import com.example.data.model.ImageItem
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -78,14 +88,18 @@ fun MediaGallerySheet(
     onPublishExistingVideo: suspend (filename: String) -> Result<String> = { Result.success("published") },
     onGetTask: (suspend (String) -> Result<AgentTaskItem>)? = null,
     onCancelTask: (suspend (String) -> Result<String>)? = null,
-    onRetryTask: (suspend (String) -> Result<String>)? = null
+    onRetryTask: (suspend (String) -> Result<String>)? = null,
+    onFetchImages: (suspend () -> List<ImageItem>)? = null,
+    onDeleteImage: (suspend (String) -> Result<Boolean>)? = null,
+    authToken: String = ""
 ) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    var selectedTab by remember { mutableStateOf(0) } // 0 = Images, 1 = Videos
     var customQuote by remember { mutableStateOf("") }
     var statusMessage by remember { mutableStateOf<String?>(null) }
     var activeRenderTaskId by remember { mutableStateOf<String?>(null) }
 
-    // Posting only queues a task on the agent; the live card below reports when TikTok has it (or why not)
     suspend fun publishExisting(filename: String) {
         statusMessage = "Sending $filename to the agent..."
         val res = onPublishExistingVideo(filename)
@@ -97,9 +111,14 @@ fun MediaGallerySheet(
             statusMessage = "⚠️ ${res.exceptionOrNull()?.message ?: "Couldn't queue the TikTok post"}"
         }
     }
+
     var isLoading by remember { mutableStateOf(true) }
     var videos by remember { mutableStateOf<List<VideoItem>>(emptyList()) }
     var selectedVideoForPlayback by remember { mutableStateOf<VideoItem?>(null) }
+
+    var isImagesLoading by remember { mutableStateOf(true) }
+    var images by remember { mutableStateOf<List<ImageItem>>(emptyList()) }
+    var selectedImageForViewer by remember { mutableStateOf<ImageItem?>(null) }
 
     fun refreshVideos() {
         scope.launch {
@@ -107,22 +126,35 @@ fun MediaGallerySheet(
             try {
                 videos = onFetchVideos()
             } catch (_: Exception) {
-                // Keep current list on network error
             } finally {
                 isLoading = false
             }
         }
     }
 
+    fun refreshImages() {
+        if (onFetchImages == null) return
+        scope.launch {
+            isImagesLoading = true
+            try {
+                images = onFetchImages()
+            } catch (_: Exception) {
+            } finally {
+                isImagesLoading = false
+            }
+        }
+    }
+
     LaunchedEffect(Unit) {
         refreshVideos()
+        refreshImages()
     }
 
     Dialog(onDismissRequest = onDismiss) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.88f)
+                .fillMaxHeight(0.90f)
                 .clip(RoundedCornerShape(16.dp))
                 .background(Color(0xFF0F172A))
                 .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(16.dp))
@@ -137,14 +169,14 @@ fun MediaGallerySheet(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = Icons.Default.Videocam,
-                            contentDescription = "Media Gallery",
+                            imageVector = if (selectedTab == 0) Icons.Default.Image else Icons.Default.Videocam,
+                            contentDescription = "Media Hub",
                             tint = ElectricCyan,
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Workflow Video Gallery",
+                            text = "Agent Media Hub",
                             fontSize = 17.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -152,12 +184,15 @@ fun MediaGallerySheet(
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconButton(
-                            onClick = { refreshVideos() },
+                            onClick = {
+                                refreshVideos()
+                                refreshImages()
+                            },
                             modifier = Modifier.size(28.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Refresh,
-                                contentDescription = "Refresh Videos",
+                                contentDescription = "Refresh Media",
                                 tint = Color(0xFF94A3B8)
                             )
                         }
@@ -168,38 +203,194 @@ fun MediaGallerySheet(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                // Custom Quote Input for Render / TikTok
-                OutlinedTextField(
-                    value = customQuote,
-                    onValueChange = { customQuote = it },
-                    placeholder = { Text("Custom quote (leave blank for daily affirmation)...", color = Color(0xFF64748B), fontSize = 12.sp) },
-                    textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 12.sp),
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Color(0xFF1E293B),
-                        unfocusedContainerColor = Color(0xFF1E293B),
-                        focusedBorderColor = ElectricCyan,
-                        unfocusedBorderColor = Color(0xFF334155)
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Action buttons: Render 3D Video & Post to TikTok
+                // Tab Selector (Images vs Videos)
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color(0xFF1E293B))
+                        .padding(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    // Render 3D Card
+                    // Images Tab
                     Box(
                         modifier = Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFF1E293B))
-                            .border(1.dp, Color(0xFF334155), RoundedCornerShape(8.dp))
+                            .background(if (selectedTab == 0) ElectricCyan.copy(alpha = 0.22f) else Color.Transparent)
+                            .border(
+                                width = 1.dp,
+                                color = if (selectedTab == 0) ElectricCyan else Color.Transparent,
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .clickable { selectedTab = 0 }
+                            .padding(vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Image,
+                                contentDescription = null,
+                                tint = if (selectedTab == 0) ElectricCyan else Color(0xFF94A3B8),
+                                modifier = Modifier.size(15.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Images (${images.size})",
+                                fontSize = 12.sp,
+                                fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal,
+                                color = if (selectedTab == 0) Color.White else Color(0xFF94A3B8)
+                            )
+                        }
+                    }
+
+                    // Videos Tab
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (selectedTab == 1) ElectricCyan.copy(alpha = 0.22f) else Color.Transparent)
+                            .border(
+                                width = 1.dp,
+                                color = if (selectedTab == 1) ElectricCyan else Color.Transparent,
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .clickable { selectedTab = 1 }
+                            .padding(vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Videocam,
+                                contentDescription = null,
+                                tint = if (selectedTab == 1) ElectricCyan else Color(0xFF94A3B8),
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Videos (${videos.size})",
+                                fontSize = 12.sp,
+                                fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal,
+                                color = if (selectedTab == 1) Color.White else Color(0xFF94A3B8)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Tab Content
+                if (selectedTab == 0) {
+                    // ================= IMAGES VIEW =================
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "AGENT CREATIONS (${images.size})",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF94A3B8),
+                            letterSpacing = 0.5.sp
+                        )
+                        if (isImagesLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(14.dp),
+                                color = ElectricCyan,
+                                strokeWidth = 2.dp
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (images.isEmpty() && !isImagesLoading) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(text = "🎨", fontSize = 32.sp)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "No images created yet",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF94A3B8)
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Run /image <prompt> in chat to generate visuals!",
+                                    fontSize = 11.sp,
+                                    color = Color(0xFF64748B)
+                                )
+                            }
+                        }
+                    } else {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            modifier = Modifier.weight(1f),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            items(images) { image ->
+                                ImageGalleryCard(
+                                    image = image,
+                                    authToken = authToken,
+                                    onClick = { selectedImageForViewer = image },
+                                    onSave = {
+                                        scope.launch {
+                                            saveImageToDevice(context, image.url, authToken, image.filename)
+                                        }
+                                    },
+                                    onDelete = {
+                                        scope.launch {
+                                            val res = onDeleteImage?.invoke(image.filename)
+                                            if (res?.isSuccess == true) {
+                                                images = images.filter { it.filename != image.filename }
+                                            }
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    // ================= VIDEOS VIEW =================
+                    // Custom Quote Input for Render / TikTok
+                    OutlinedTextField(
+                        value = customQuote,
+                        onValueChange = { customQuote = it },
+                        placeholder = { Text("Custom quote (leave blank for daily affirmation)...", color = Color(0xFF64748B), fontSize = 12.sp) },
+                        textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 12.sp),
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = Color(0xFF1E293B),
+                            unfocusedContainerColor = Color(0xFF1E293B),
+                            focusedBorderColor = ElectricCyan,
+                            unfocusedBorderColor = Color(0xFF334155)
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Action buttons: Render 3D Video & Post to TikTok
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Render 3D Card
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color(0xFF1E293B))
+                                .border(1.dp, Color(0xFF334155), RoundedCornerShape(8.dp))
                             .clickable {
                                 scope.launch {
                                     val res = onTriggerRender(customQuote.ifBlank { null })
@@ -214,222 +405,223 @@ fun MediaGallerySheet(
                                 }
                             }
                             .padding(vertical = 10.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "🎬 Render 3D Video",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFE2E8F0)
-                        )
-                    }
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "🎬 Render 3D Video",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFE2E8F0)
+                            )
+                        }
 
-                    // Post to TikTok
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFF0284C7))
-                            .clickable {
-                                scope.launch {
-                                    val res = onTriggerTikTok(customQuote.ifBlank { null })
-                                    if (res.isSuccess) {
-                                        val tid = res.getOrNull()
-                                        activeRenderTaskId = tid
-                                        statusMessage = "🚀 TikTok Mission Queued ($tid)"
-                                    } else {
-                                        statusMessage = "⚠️ Failed: ${res.exceptionOrNull()?.message}"
+                        // Post to TikTok
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color(0xFF0284C7))
+                                .clickable {
+                                    scope.launch {
+                                        val res = onTriggerTikTok(customQuote.ifBlank { null })
+                                        if (res.isSuccess) {
+                                            val tid = res.getOrNull()
+                                            activeRenderTaskId = tid
+                                            statusMessage = "🚀 TikTok Mission Queued ($tid)"
+                                        } else {
+                                            statusMessage = "⚠️ Failed: ${res.exceptionOrNull()?.message}"
+                                        }
                                     }
                                 }
-                            }
-                            .padding(vertical = 10.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "🚀 Post to TikTok",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
-                }
-
-                if (statusMessage != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = statusMessage!!,
-                        fontSize = 11.sp,
-                        color = EmeraldConnected,
-                        fontFamily = FontFamily.Monospace
-                    )
-                }
-
-                // Live Task Card inside sheet for active render
-                activeRenderTaskId?.let { tid ->
-                    if (onGetTask != null) {
-                        Spacer(modifier = Modifier.height(10.dp))
-                        LiveTaskCard(
-                            taskId = tid,
-                            onGetTask = onGetTask,
-                            onCancelTask = onCancelTask,
-                            onRetryTask = onRetryTask,
-                            onPlayVideo = { url, fn ->
-                                selectedVideoForPlayback = VideoItem(
-                                    filename = fn,
-                                    url = url,
-                                    sizeMb = 0.0,
-                                    createdAt = "Just now"
-                                )
-                                refreshVideos()
-                            }
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "RENDERED VIDEOS (${videos.size})",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF94A3B8),
-                        letterSpacing = 0.5.sp
-                    )
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(14.dp),
-                            color = ElectricCyan,
-                            strokeWidth = 2.dp
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(6.dp))
-
-                if (videos.isEmpty() && !isLoading) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(text = "🎥", fontSize = 32.sp)
-                            Spacer(modifier = Modifier.height(8.dp))
+                                .padding(vertical = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Text(
-                                text = "No videos rendered yet",
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color(0xFF94A3B8)
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "Tap 'Render 3D Video' above to generate your first clip!",
-                                fontSize = 11.sp,
-                                color = Color(0xFF64748B)
+                                text = "🚀 Post to TikTok",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
                             )
                         }
                     }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+
+                    if (statusMessage != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = statusMessage!!,
+                            fontSize = 11.sp,
+                            color = EmeraldConnected,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
+
+                    // Live Task Card inside sheet for active render
+                    activeRenderTaskId?.let { tid ->
+                        if (onGetTask != null) {
+                            Spacer(modifier = Modifier.height(10.dp))
+                            LiveTaskCard(
+                                taskId = tid,
+                                onGetTask = onGetTask,
+                                onCancelTask = onCancelTask,
+                                onRetryTask = onRetryTask,
+                                onPlayVideo = { url, fn ->
+                                    selectedVideoForPlayback = VideoItem(
+                                        filename = fn,
+                                        url = url,
+                                        sizeMb = 0.0,
+                                        createdAt = "Just now"
+                                    )
+                                    refreshVideos()
+                                }
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        items(videos) { video ->
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(Color(0xFF1E293B))
-                                    .border(1.dp, Color(0xFF334155), RoundedCornerShape(10.dp))
-                                    .clickable { selectedVideoForPlayback = video }
-                                    .padding(10.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
+                        Text(
+                            text = "RENDERED VIDEOS (${videos.size})",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF94A3B8),
+                            letterSpacing = 0.5.sp
+                        )
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(14.dp),
+                                color = ElectricCyan,
+                                strokeWidth = 2.dp
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    if (videos.isEmpty() && !isLoading) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(text = "🎥", fontSize = 32.sp)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "No videos rendered yet",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF94A3B8)
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Tap 'Render 3D Video' above to generate your first clip!",
+                                    fontSize = 11.sp,
+                                    color = Color(0xFF64748B)
+                                )
+                            }
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(videos) { video ->
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(Color(0xFF1E293B))
+                                        .border(1.dp, Color(0xFF334155), RoundedCornerShape(10.dp))
+                                        .clickable { selectedVideoForPlayback = video }
+                                        .padding(10.dp)
                                 ) {
                                     Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        // Play thumbnail action
-                                        Box(
-                                            modifier = Modifier
-                                                .size(38.dp)
-                                                .clip(RoundedCornerShape(8.dp))
-                                                .background(ElectricCyan.copy(alpha = 0.18f))
-                                                .clickable { selectedVideoForPlayback = video },
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.PlayArrow,
-                                                contentDescription = "Play Video",
-                                                tint = ElectricCyan,
-                                                modifier = Modifier.size(22.dp)
-                                            )
-                                        }
-                                        Spacer(modifier = Modifier.width(10.dp))
-                                        Column {
-                                            Text(
-                                                text = video.filename,
-                                                fontSize = 12.sp,
-                                                fontWeight = FontWeight.Medium,
-                                                color = Color(0xFFF1F5F9),
-                                                maxLines = 1
-                                            )
-                                            Text(
-                                                text = "${video.sizeMb} MB • ${video.createdAt}",
-                                                fontSize = 10.sp,
-                                                color = Color(0xFF64748B),
-                                                fontFamily = FontFamily.Monospace
-                                            )
-                                        }
-                                    }
-
-                                    Row(
-                                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        // Watch button
-                                        Box(
-                                            modifier = Modifier
-                                                .clip(RoundedCornerShape(6.dp))
-                                                .background(Color(0xFF0F172A))
-                                                .border(1.dp, Color(0xFF334155), RoundedCornerShape(6.dp))
-                                                .clickable { selectedVideoForPlayback = video }
-                                                .padding(horizontal = 8.dp, vertical = 6.dp)
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.weight(1f)
                                         ) {
-                                            Text(
-                                                text = "▶ Watch",
-                                                fontSize = 11.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = ElectricCyan
-                                            )
+                                            // Play thumbnail action
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(38.dp)
+                                                    .clip(RoundedCornerShape(8.dp))
+                                                    .background(ElectricCyan.copy(alpha = 0.18f))
+                                                    .clickable { selectedVideoForPlayback = video },
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.PlayArrow,
+                                                    contentDescription = "Play Video",
+                                                    tint = ElectricCyan,
+                                                    modifier = Modifier.size(22.dp)
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.width(10.dp))
+                                            Column {
+                                                Text(
+                                                    text = video.filename,
+                                                    fontSize = 12.sp,
+                                                    fontWeight = FontWeight.Medium,
+                                                    color = Color(0xFFF1F5F9),
+                                                    maxLines = 1
+                                                )
+                                                Text(
+                                                    text = "${video.sizeMb} MB • ${video.createdAt}",
+                                                    fontSize = 10.sp,
+                                                    color = Color(0xFF64748B),
+                                                    fontFamily = FontFamily.Monospace
+                                                )
+                                            }
                                         }
 
-                                        // 🚀 Direct TikTok Publish Button (Section 7.4)
-                                        Box(
-                                            modifier = Modifier
-                                                .clip(RoundedCornerShape(6.dp))
-                                                .background(Color(0xFF0284C7).copy(alpha = 0.25f))
-                                                .border(1.dp, Color(0xFF0284C7).copy(alpha = 0.5f), RoundedCornerShape(6.dp))
-                                                .clickable {
-                                                    scope.launch { publishExisting(video.filename) }
-                                                }
-                                                .padding(horizontal = 8.dp, vertical = 6.dp)
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                            verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            Text(
-                                                text = "🚀 Post TikTok",
-                                                fontSize = 11.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = Color(0xFF38BDF8)
-                                            )
+                                            // Watch button
+                                            Box(
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(6.dp))
+                                                    .background(Color(0xFF0F172A))
+                                                    .border(1.dp, Color(0xFF334155), RoundedCornerShape(6.dp))
+                                                    .clickable { selectedVideoForPlayback = video }
+                                                    .padding(horizontal = 8.dp, vertical = 6.dp)
+                                            ) {
+                                                Text(
+                                                    text = "▶ Watch",
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = ElectricCyan
+                                                )
+                                            }
+
+                                            // 🚀 Direct TikTok Publish Button (Section 7.4)
+                                            Box(
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(6.dp))
+                                                    .background(Color(0xFF0284C7).copy(alpha = 0.25f))
+                                                    .border(1.dp, Color(0xFF0284C7).copy(alpha = 0.5f), RoundedCornerShape(6.dp))
+                                                    .clickable {
+                                                        scope.launch { publishExisting(video.filename) }
+                                                    }
+                                                    .padding(horizontal = 8.dp, vertical = 6.dp)
+                                            ) {
+                                                Text(
+                                                    text = "🚀 Post TikTok",
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = Color(0xFF38BDF8)
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -439,6 +631,16 @@ fun MediaGallerySheet(
                 }
             }
         }
+    }
+
+    // Image Fullscreen Viewer Dialog
+    if (selectedImageForViewer != null) {
+        ImageViewerDialog(
+            imageUrl = selectedImageForViewer!!.url,
+            altText = selectedImageForViewer!!.filename,
+            authToken = authToken,
+            onDismiss = { selectedImageForViewer = null }
+        )
     }
 
     // Video Player Dialog with Local Cache & Stream
@@ -452,6 +654,134 @@ fun MediaGallerySheet(
                 if (filename != null) scope.launch { publishExisting(filename) }
             }
         )
+    }
+}
+
+@Composable
+fun ImageGalleryCard(
+    image: ImageItem,
+    authToken: String,
+    onClick: () -> Unit,
+    onSave: () -> Unit,
+    onDelete: () -> Unit
+) {
+    val context = LocalContext.current
+    val imageRequest = remember(image.url, authToken) {
+        ImageRequest.Builder(context)
+            .data(image.url)
+            .crossfade(true)
+            .apply {
+                if (authToken.isNotBlank()) {
+                    addHeader("X-HUD-Token", authToken.trim())
+                    addHeader("Authorization", "Bearer ${authToken.trim()}")
+                }
+            }
+            .build()
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFF1E293B))
+            .border(1.dp, Color(0xFF334155), RoundedCornerShape(12.dp))
+    ) {
+        Column {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(130.dp)
+                    .background(Color(0xFF0F172A))
+                    .clickable { onClick() },
+                contentAlignment = Alignment.Center
+            ) {
+                SubcomposeAsyncImage(
+                    model = imageRequest,
+                    contentDescription = image.filename,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                    loading = {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(22.dp),
+                                color = ElectricCyan,
+                                strokeWidth = 2.dp
+                            )
+                        }
+                    },
+                    error = {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
+                            modifier = Modifier.padding(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Image,
+                                contentDescription = null,
+                                tint = Color(0xFF64748B),
+                                modifier = Modifier.size(26.dp)
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Preview error",
+                                fontSize = 10.sp,
+                                color = Color(0xFF64748B)
+                            )
+                        }
+                    }
+                )
+            }
+
+            // Info & Action bar
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = image.filename,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFFF1F5F9),
+                        maxLines = 1
+                    )
+                    Text(
+                        text = "${image.sizeMb} MB",
+                        fontSize = 9.sp,
+                        color = Color(0xFF64748B),
+                        fontFamily = FontFamily.Monospace
+                    )
+                }
+
+                Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                    IconButton(
+                        onClick = onSave,
+                        modifier = Modifier.size(26.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.FileDownload,
+                            contentDescription = "Save to device",
+                            tint = ElectricCyan,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                    IconButton(
+                        onClick = onDelete,
+                        modifier = Modifier.size(26.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete image",
+                            tint = Color(0xFFEF4444),
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 

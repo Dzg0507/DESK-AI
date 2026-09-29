@@ -13,6 +13,7 @@ import com.example.data.model.ChatSession
 import com.example.data.model.DaemonStats
 import com.example.data.model.TaskProposal
 import com.example.data.model.VideoItem
+import com.example.data.model.ImageItem
 import com.example.data.repository.ChatRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -422,6 +423,14 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     suspend fun fetchVideos(): List<VideoItem> {
         return repository.fetchVideos()
+    }
+
+    suspend fun fetchImages(): List<ImageItem> {
+        return repository.fetchImages()
+    }
+
+    suspend fun deleteImage(filename: String): Result<Boolean> {
+        return repository.deleteImage(filename)
     }
 
     suspend fun downloadVideo(
