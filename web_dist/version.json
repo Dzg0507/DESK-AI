@@ -1,7 +1,7 @@
 {
-  "versionCode": 17,
-  "versionName": "2.3.3",
-  "changelog": "DeskAI v2.3.3 (Build 17): Posting an existing video to TikTok now shows a live task card with the real result instead of an instant \"Posted\" message, and the video player's TikTok button posts the video you're watching (it used to render and post a new one).",
+  "versionCode": 18,
+  "versionName": "2.3.4",
+  "changelog": "DeskAI v2.3.4 (Build 18): Telegram is gone for good; DeskAI is the only way in. New Web Dashboard button opens the server's HUD already signed in. Videos finish about 1.5 minutes sooner (no Telegram upload).",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 23919288
+  "fileSizeBytes": 23919276
 }

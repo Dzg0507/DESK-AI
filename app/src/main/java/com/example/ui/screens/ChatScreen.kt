@@ -93,6 +93,7 @@ fun ChatScreen(
     val allSessions by viewModel.allSessions.collectAsStateWithLifecycle()
     val messages by viewModel.messages.collectAsStateWithLifecycle()
     val config by viewModel.config.collectAsStateWithLifecycle()
+    val context = androidx.compose.ui.platform.LocalContext.current
     val daemonStats by viewModel.daemonStats.collectAsStateWithLifecycle()
     val inputText by viewModel.inputText.collectAsStateWithLifecycle()
     val isStreaming by viewModel.isStreaming.collectAsStateWithLifecycle()
@@ -466,6 +467,17 @@ fun ChatScreen(
             onOpenUpdater = { showUpdaterDialog = true },
             onOpenAgentWork = { showAgentWorkSheet = true },
             onOpenMaintenance = { showMaintenanceSheet = true },
+            onOpenDashboard = {
+                // The HUD takes a one-time ?token= link, sets its own cookie and drops the token from the URL
+                val base = config.getResolvedUrl().trimEnd('/')
+                val token = config.apiKey.trim()
+                val link = if (token.isNotEmpty()) "$base/?token=${android.net.Uri.encode(token)}" else "$base/"
+                try {
+                    context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(link)))
+                } catch (e: Exception) {
+                    android.widget.Toast.makeText(context, "No browser available to open the dashboard", android.widget.Toast.LENGTH_SHORT).show()
+                }
+            },
             onSelectCommandTemplate = { template ->
                 viewModel.onInputTextChange(template)
             },

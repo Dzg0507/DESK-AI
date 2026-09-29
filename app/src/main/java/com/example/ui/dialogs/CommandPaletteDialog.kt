@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.Memory
@@ -88,6 +89,7 @@ fun CommandPaletteDialog(
     onOpenUpdater: () -> Unit,
     onOpenAgentWork: () -> Unit = {},
     onOpenMaintenance: () -> Unit = {},
+    onOpenDashboard: () -> Unit = {},
     onSelectCommandTemplate: (String) -> Unit,
     onExecuteCommand: (String) -> Unit,
     onDismiss: () -> Unit
@@ -529,6 +531,19 @@ fun CommandPaletteDialog(
                                             }
                                         )
                                     }
+
+                                    // 7. The server's web dashboard (the HUD), opened already signed in
+                                    WorkstationCard(
+                                        title = "Web Dashboard",
+                                        subtitle = "Mission Control HUD in the browser",
+                                        icon = Icons.Default.Dashboard,
+                                        accentColor = Color(0xFF22D3EE),
+                                        modifier = Modifier.fillMaxWidth(),
+                                        onClick = {
+                                            onDismiss()
+                                            onOpenDashboard()
+                                        }
+                                    )
                                 }
 
                                 Spacer(modifier = Modifier.height(8.dp))

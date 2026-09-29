@@ -414,8 +414,7 @@ class AlwaysOnAgentClient {
             TaskResult(
                 type = resultObj.optString("type", ""),
                 filename = resultObj.optString("filename", ""),
-                url = fullUrl,
-                deliveredToTelegram = resultObj.optBoolean("delivered_to_telegram", false)
+                url = fullUrl
             )
         } else null
 

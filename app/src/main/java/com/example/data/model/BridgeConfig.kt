@@ -38,7 +38,7 @@ data class BridgeConfig(
 
     companion object {
         /**
-         * Parses a quick-import link like the one output by the Telegram bot's /hud:
+         * Parses a quick-import server link (with an optional ?token=):
          * "http://192.168.1.45:8080/?token=abc123xyz" -> ("http://192.168.1.45:8080", "abc123xyz")
          */
         fun parseImportUrl(raw: String): Pair<String, String?> {

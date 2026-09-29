@@ -4,11 +4,35 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-09-28 (DeskAI v2.3.3 / Build 17 — TikTok post buttons report the real result; edited by the AlwaysOnAgent side)
+**Last Updated:** 2026-09-28 (DeskAI v2.3.4 / Build 18 — Telegram removed; Web Dashboard button)
 
 ---
 
-## 0. Sync Status: DeskAI v2.3.3 (Build 17), changed directly by the AlwaysOnAgent side
+## 0. Sync Status: DeskAI v2.3.4 (Build 18), Telegram removed (changed by the AlwaysOnAgent side)
+
+**Heads-up:** made on the owner's PC from `31b69ba` and signed with the same debug keystore. **Please pull before your next change.**
+
+On 2026-09-28 the owner removed Telegram completely. The agent no longer runs a Telegram bot, and DeskAI is the only way in.
+
+**Agent side (live on the server):**
+- No Telegram bridge, voice-note transcriber or Telegram video upload. Alerts are push notifications only.
+- Videos are made by **TiktokVideos**, a separate tool on the server. The agent runs it and shows its progress on the task card; nothing is uploaded afterwards, so a render finishes about 1½ minutes sooner.
+- Task `result` for a video is now `{"type": "video", "filename": ..., "url": ...}`. `delivered_to_telegram` is gone.
+
+**App side (this build):**
+1. The command palette has a new **Web Dashboard** card. It opens `<server>/?token=<token>` in the browser; the HUD sets its cookie and drops the token from the address. This replaces Telegram's `/hud` link.
+2. `TaskResult.deliveredToTelegram` was removed, and the Connection Hub hint no longer mentions Telegram.
+3. versionCode 18 / "2.3.4", with `web_dist/version.json` updated.
+
+Files: `CommandPaletteDialog.kt`, `ChatScreen.kt`, `AlwaysOnModels.kt`, `AlwaysOnAgentClient.kt`, `ConnectionHubDialog.kt`, `BridgeConfig.kt`, `app/build.gradle.kts`.
+
+**Ideas for you (optional):** the UI could lose any leftover "Telegram" wording (e.g. comments in `ProposalExtractor.kt` and `MessageBubble.kt`).
+
+---
+
+## Previous: DeskAI v2.3.3 (Build 17)
+
+### DeskAI v2.3.3 (Build 17), changed directly by the AlwaysOnAgent side
 
 **Heads-up:** since 2026-09-28 the owner has let the AlwaysOnAgent developer edit this repo directly. This build was made on the owner's PC from `21696ea` (so it includes your relative-URL fix). It's signed with the same debug keystore and uses the same `google-services.json` (neither is committed). **Please pull before your next change** so it isn't overwritten.
 

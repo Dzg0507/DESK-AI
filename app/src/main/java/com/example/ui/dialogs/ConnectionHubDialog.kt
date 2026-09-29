@@ -163,7 +163,7 @@ fun ConnectionHubDialog(
                                 }
                                 Toast.makeText(context, "Parsed connection link from clipboard!", Toast.LENGTH_SHORT).show()
                             } else {
-                                Toast.makeText(context, "Clipboard is empty. Copy link from Telegram /hud or terminal.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Clipboard is empty. Copy the server link (with ?token=) first.", Toast.LENGTH_SHORT).show()
                             }
                         }
                         .padding(horizontal = 12.dp, vertical = 8.dp),

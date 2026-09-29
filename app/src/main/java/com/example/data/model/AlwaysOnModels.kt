@@ -28,8 +28,7 @@ data class TaskProgress(
 data class TaskResult(
     val type: String = "",        // "video"
     val filename: String = "",
-    val url: String = "",         // e.g. "/videos/vibe_check_....mp4"
-    val deliveredToTelegram: Boolean = false
+    val url: String = ""          // resolved against the server URL
 )
 
 data class AgentTaskItem(
