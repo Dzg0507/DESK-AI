@@ -145,7 +145,7 @@ fun ConnectionHubDialog(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Paste from /hud Link Button
+                // Paste a server link (http://host:8080/?token=...) from the clipboard
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -178,7 +178,7 @@ fun ConnectionHubDialog(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "Paste Link from /hud or Web HUD",
+                            text = "Paste Server Link",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = ElectricCyan

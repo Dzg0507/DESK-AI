@@ -4,7 +4,26 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-09-29 (DeskAI v2.3.7 / Build 21 — simple Thinking indicator)
+**Last Updated:** 2026-09-29 (DeskAI v2.3.8 / Build 22 — no web dashboard; ImageGen)
+
+---
+
+## 0. Sync Status: DeskAI v2.3.8 (Build 22), the server's web dashboard is gone (by the AlwaysOnAgent side)
+
+The owner doesn't use the browser dashboard (DeskAI shows everything), so the server dropped it while splitting
+its 3,200-line `web_hud.py` into `interfaces/hud/` (one module per area). **Every API endpoint is unchanged.**
+- **Removed on the server:**
+  - The dashboard page at `/` and the Memory page at `/memory`.
+  - The `?token=` cookie login those pages used.
+  - `GET /` now returns `{"status": "online", ...}` (or 401), which is exactly what `ping()` checks.
+- **Removed in the app:**
+  - The **Web Dashboard** card in the command palette, and `onOpenDashboard`.
+  - `/hud` now prints the server address and `/docs` (the memory page link is gone).
+  - The connection dialog's paste button is now labelled **Paste Server Link** (it still parses
+    `http://host:8080/?token=...`).
+- **Images:** `/image` requests are now made by a separate tool, **ImageGen** (repo `TheVibeCheckProject/ImageGen`),
+  that the agent runs. The chat reply format is the same (`![...](/images/gen_xxxx.jpg)`), and so are the
+  gallery endpoints.
 
 ---
 

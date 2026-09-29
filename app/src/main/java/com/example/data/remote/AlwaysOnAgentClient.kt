@@ -1389,11 +1389,10 @@ class AlwaysOnAgentClient {
 
             "/hud" -> {
                 onChunk("""
-                    ⚡ **Mission Control Web HUD**
+                    ⚡ **AlwaysOnAgent server**
                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-                    • **Workstation:** `${config.serverUrl}`
+                    • **Address:** `${config.serverUrl}`
                     • **API Documentation:** `${config.serverUrl}/docs`
-                    • **Memory Page:** `${config.serverUrl}/memory`
                 """.trimIndent())
             }
 
@@ -1422,7 +1421,7 @@ class AlwaysOnAgentClient {
                     • `/forget <#id>` - Erase memory fact
                     • `/cancel <id>` - Abort running task
                     • `/retry <id>` - Retry failed task
-                    • `/hud` - Mission Control link
+                    • `/hud` - the server's address
                     
                     💡 Or just type any question or instruction to chat directly!
                 """.trimIndent())

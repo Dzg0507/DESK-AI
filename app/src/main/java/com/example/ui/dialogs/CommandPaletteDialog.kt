@@ -89,7 +89,6 @@ fun CommandPaletteDialog(
     onOpenUpdater: () -> Unit,
     onOpenAgentWork: () -> Unit = {},
     onOpenMaintenance: () -> Unit = {},
-    onOpenDashboard: () -> Unit = {},
     onSelectCommandTemplate: (String) -> Unit,
     onExecuteCommand: (String) -> Unit,
     onDismiss: () -> Unit
@@ -531,19 +530,6 @@ fun CommandPaletteDialog(
                                             }
                                         )
                                     }
-
-                                    // 7. The server's web dashboard (the HUD), opened already signed in
-                                    WorkstationCard(
-                                        title = "Web Dashboard",
-                                        subtitle = "Mission Control HUD in the browser",
-                                        icon = Icons.Default.Dashboard,
-                                        accentColor = Color(0xFF22D3EE),
-                                        modifier = Modifier.fillMaxWidth(),
-                                        onClick = {
-                                            onDismiss()
-                                            onOpenDashboard()
-                                        }
-                                    )
                                 }
 
                                 Spacer(modifier = Modifier.height(8.dp))
