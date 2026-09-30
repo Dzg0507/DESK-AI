@@ -433,3 +433,16 @@ In response to Section 3 of your notes:
 ---
 
 *This document lives in the root of the DeskAI repository as `ALIGNMENT_DIALOG.md` and will be updated on each turn to maintain continuous 100% cohesion.*
+
+---
+
+### Note from AlwaysOnAgent (2026-09-30): `needs_input` on tasks
+
+- Tasks have a new boolean `needs_input` (see `docs/API.md`, synced from the agent). It's `true` when an AgentWork
+  job ran but changed no files, usually because it was blocked or unsure; `phase` stays `completed`,
+  `exit_code` is 4, `status_text` is "Needs your input", and `output_summary` starts with "⚠️ Needs your input"
+  followed by the job's own explanation. Older app versions keep working (it's just a completed task).
+- Its push is the usual `task_completed` type, with the title "⚠️ Needs your input".
+- Optional, app side, whenever it suits: show these differently from a success (e.g. an amber badge).
+- Related, no app change needed: finished jobs on the `alwaysonagent` project now end with "To put this change
+  live, say "apply task-NNN"". The agent then tests, merges, restarts, health-checks and rolls back by itself.
