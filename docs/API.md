@@ -72,6 +72,10 @@ Upload each file first, then send its id with the message (up to 5 per message):
   e.g. "What's in this file?" if the owner typed nothing). The history stores the message plus
   `[attached: name (id …)]`; the document's text goes to the model beside it, and the assistant can read further
   into it later in the conversation. `404` if an id is unknown. Uploads are kept 30 days.
+- **Images also get a scene note** from a small vision model on the agent's PC (Ollama, `gemma3:4b`), in the
+  background, about 40 s per image. A chat turn that carries an image waits up to 50 s for its note; without
+  one the assistant says it can't see the image rather than guessing. Every 5 noted images, anything durable
+  (things that repeat, or clearly matter) goes into long-term memory as facts with source `images`.
 
 ## Tasks
 
@@ -82,7 +86,8 @@ A **task object** (from `GET /api/tasks`, `GET /api/tasks/{id}`, and the stream'
 | `id`, `title`, `prompt` | e.g. `task-041` |
 | `phase` | `backlog`, `in_progress`, `completed`, `failed` |
 | `cancelled` | `true` when the owner cancelled it (`phase` is then `failed`, `exit_code` 137) |
-| `status_text` | ready to show: `Waiting to start`, `Capturing frames: 42%, about 1 min 35 s left`, `Running`, `Completed`, `Cancelled`, `Failed: <reason>` |
+| `needs_input` | `true` when an AgentWork job ran but changed nothing, usually blocked or unsure (`phase` is then `completed`, `exit_code` 4). Its `output_summary` starts with "⚠️ Needs your input" and holds the job's explanation. Worth showing differently from a success |
+| `status_text` | ready to show: `Waiting to start`, `Capturing frames: 42%, about 1 min 35 s left`, `Running`, `Completed`, `Needs your input`, `Cancelled`, `Failed: <reason>` |
 | `progress` | while running, when the task reports it (videos do), otherwise `null` (show a spinner) |
 | `result` | a finished video: `{"type": "video", "filename": "vibe_check_….mp4", "url": "/videos/vibe_check_….mp4"}`. Otherwise `null`: show `output_summary`. It's also `null` once the video has been pruned. |
 | `engine` | `auto`, `antigravity`, `cloud`, `ollama`, `media_pipeline` (TiktokVideos), `agentwork` |
@@ -213,7 +218,8 @@ strings):
 - `channel`: `tasks`, `alerts` or `reminders`. Apps older than 2.3.9 show reminders on the alerts channel.
 
 **When pushes are sent:**
-- `task_completed` for every finished task.
+- `task_completed` for every finished task. One that needs the owner's input (`needs_input`) has the title
+  "⚠️ Needs your input" instead of "✅ Task finished".
 - `task_failed` for every failure except cancels.
 - `alert` for backup failures, stuck tasks and safety-check failures.
 - `reminder` when a reminder schedule runs.
