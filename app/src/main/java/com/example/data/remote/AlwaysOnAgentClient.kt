@@ -5,6 +5,7 @@ import com.example.data.model.AgentTaskItem
 import com.example.data.model.AgentWorkProject
 import com.example.data.model.BridgeConfig
 import com.example.data.model.BridgeProtocol
+import com.example.data.model.ChatAttachment
 import com.example.data.model.ChatMessage
 import com.example.data.model.ChatQuestion
 import com.example.data.model.DaemonStats
@@ -491,6 +492,57 @@ class AlwaysOnAgentClient {
             }
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    /**
+     * Uploads a file for the chat (POST /api/chat/attachments). The agent reads its text right away (OCR for
+     * images can take a few seconds), so this waits for that and returns the attachment as the agent saw it.
+     */
+    suspend fun uploadAttachment(
+        config: BridgeConfig,
+        localId: String,
+        name: String,
+        bytes: ByteArray
+    ): ChatAttachment = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                val payload = JSONObject().apply {
+                    put("name", name)
+                    put("data_b64", android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP))
+                }
+                val req = addAuth(
+                    Request.Builder()
+                        .url("$baseUrl/api/chat/attachments")
+                        .post(payload.toString().toRequestBody(jsonMediaType)),
+                    config
+                ).build()
+                httpClient.newCall(req).execute().use { resp ->
+                    val body = resp.body?.string() ?: ""
+                    if (resp.isSuccessful) {
+                        val a = JSONObject(body).getJSONObject("attachment")
+                        val warnings = a.optJSONArray("warnings")
+                        ChatAttachment(
+                            localId = localId,
+                            name = a.optString("name", name),
+                            status = "ready",
+                            id = a.getString("id"),
+                            kind = a.optString("kind").ifBlank { null },
+                            method = a.optString("method").ifBlank { null },
+                            confidence = if (a.isNull("confidence") || !a.has("confidence")) null else a.optDouble("confidence"),
+                            warnings = (0 until (warnings?.length() ?: 0)).map { warnings!!.getString(it) }
+                        )
+                    } else {
+                        // 422: the agent's reason (unsupported type, too big, can't be read)
+                        val detail = try { JSONObject(body).optString("detail", "") } catch (_: Exception) { "" }
+                        ChatAttachment(localId = localId, name = name, status = "error",
+                            error = detail.ifBlank { "HTTP ${resp.code}" })
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            ChatAttachment(localId = localId, name = name, status = "error",
+                error = "Couldn't reach the agent: ${e.message ?: "connection failed"}")
         }
     }
 
@@ -1199,7 +1251,8 @@ class AlwaysOnAgentClient {
         config: BridgeConfig,
         systemPrompt: String,
         history: List<ChatMessage>,
-        userMessage: String
+        userMessage: String,
+        attachmentIds: List<String> = emptyList()
     ): Flow<String> = flow {
         val trimmed = userMessage.trim()
 
@@ -1231,7 +1284,7 @@ class AlwaysOnAgentClient {
         }
 
         // 3. Real conversational chat with the computer assistant
-        executeRealConversation(config, systemPrompt, history, trimmed) { chunk ->
+        executeRealConversation(config, systemPrompt, history, trimmed, attachmentIds) { chunk ->
             emit(chunk)
         }
     }.flowOn(Dispatchers.IO)
@@ -1360,7 +1413,7 @@ class AlwaysOnAgentClient {
                 if (arg.isBlank()) {
                     onChunk("🎨 **AI Image Generation:**\n\nUsage: `/image <prompt>`\nExample: `/image futuristic cyberpunk workstation with neon cyan glow, 8k`")
                 } else {
-                    streamAlwaysOnAgentChat(config, "You are AlwaysOnAgent AI assistant.", emptyList(), "/image $arg", onChunk)
+                    streamAlwaysOnAgentChat(config, "You are AlwaysOnAgent AI assistant.", emptyList(), "/image $arg", emptyList(), onChunk)
                 }
             }
 
@@ -1516,7 +1569,7 @@ class AlwaysOnAgentClient {
             }
 
             else -> {
-                executeRealConversation(config, "You are AlwaysOnAgent AI assistant.", emptyList(), cmdText, onChunk)
+                executeRealConversation(config, "You are AlwaysOnAgent AI assistant.", emptyList(), cmdText, onChunk = onChunk)
             }
         }
     }
@@ -1526,6 +1579,7 @@ class AlwaysOnAgentClient {
         systemPrompt: String,
         history: List<ChatMessage>,
         userMessage: String,
+        attachmentIds: List<String> = emptyList(),
         onChunk: suspend (String) -> Unit
     ) {
         val protocol = try {
@@ -1535,7 +1589,7 @@ class AlwaysOnAgentClient {
         }
 
         when (protocol) {
-            BridgeProtocol.ALWAYSON_AGENT -> streamAlwaysOnAgentChat(config, systemPrompt, history, userMessage, onChunk)
+            BridgeProtocol.ALWAYSON_AGENT -> streamAlwaysOnAgentChat(config, systemPrompt, history, userMessage, attachmentIds, onChunk)
             BridgeProtocol.OPENAI_COMPATIBLE -> streamOpenAiChat(config, systemPrompt, history, userMessage, onChunk)
             BridgeProtocol.OLLAMA_NATIVE -> streamOllamaChat(config, systemPrompt, history, userMessage, onChunk)
         }
@@ -1546,11 +1600,13 @@ class AlwaysOnAgentClient {
         systemPrompt: String,
         history: List<ChatMessage>,
         userMessage: String,
+        attachmentIds: List<String>,
         onChunk: suspend (String) -> Unit
     ) {
         executeWithFailover(config) { baseUrl ->
             val payload = JSONObject().apply {
                 put("message", userMessage)
+                if (attachmentIds.isNotEmpty()) put("attachments", JSONArray(attachmentIds))
                 put("prompt", userMessage)
                 put("model", if (config.selectedModel.isNotBlank()) config.selectedModel else "auto")
                 put("engine", if (config.selectedModel.isNotBlank()) config.selectedModel else "auto")

@@ -1,5 +1,11 @@
 package com.example.ui.screens
 
+import android.net.Uri
+import android.provider.OpenableColumns
+import com.example.data.model.ChatAttachment
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.util.UUID
 import android.app.Application
 import android.speech.tts.TextToSpeech
 import androidx.lifecycle.AndroidViewModel
@@ -51,6 +57,10 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _inputText = MutableStateFlow("")
     val inputText: StateFlow<String> = _inputText.asStateFlow()
+
+    // Files attached to the message being written (uploaded and read by the agent as soon as they're picked)
+    private val _attachments = MutableStateFlow<List<ChatAttachment>>(emptyList())
+    val attachments: StateFlow<List<ChatAttachment>> = _attachments.asStateFlow()
 
     private val _isStreaming = MutableStateFlow(false)
     val isStreaming: StateFlow<Boolean> = _isStreaming.asStateFlow()
@@ -108,6 +118,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     companion object {
         const val PAGE_SIZE = 60
+        const val MAX_ATTACHMENTS = 5                       // the agent takes up to 5 per message
+        const val MAX_ATTACHMENT_BYTES = 15 * 1024 * 1024   // and up to 15 MB each
     }
 
     private fun pollStatsPeriodically() {
@@ -131,12 +143,49 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         _inputText.value = text
     }
 
+    /** Reads a picked file and uploads it; its chip shows "Reading…" until the agent has its text. */
+    fun attachFile(uri: Uri) {
+        if (_attachments.value.size >= MAX_ATTACHMENTS) return
+        val resolver = getApplication<Application>().contentResolver
+        val name = resolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c ->
+            if (c.moveToFirst()) c.getString(0) else null
+        } ?: uri.lastPathSegment?.substringAfterLast('/') ?: "file"
+        val localId = UUID.randomUUID().toString()
+        _attachments.value = _attachments.value + ChatAttachment(localId = localId, name = name)
+        viewModelScope.launch {
+            val result = try {
+                val bytes = withContext(Dispatchers.IO) {
+                    resolver.openInputStream(uri)?.use { input ->
+                        val buf = input.readBytes()
+                        if (buf.size > MAX_ATTACHMENT_BYTES) null else buf
+                    }
+                }
+                if (bytes == null) ChatAttachment(localId = localId, name = name, status = "error",
+                    error = "Too big: the limit is ${MAX_ATTACHMENT_BYTES / (1024 * 1024)} MB")
+                else repository.uploadAttachment(localId, name, bytes)
+            } catch (e: Exception) {
+                ChatAttachment(localId = localId, name = name, status = "error", error = e.message ?: "Couldn't read the file")
+            }
+            // Only if it wasn't removed while it uploaded
+            _attachments.value = _attachments.value.map { if (it.localId == localId) result else it }
+        }
+    }
+
+    fun removeAttachment(localId: String) {
+        _attachments.value = _attachments.value.filterNot { it.localId == localId }
+    }
+
     fun sendMessage(textOverride: String? = null) {
+        val ready = if (textOverride == null) _attachments.value.filter { it.status == "ready" } else emptyList()
+        if (textOverride == null && _attachments.value.any { it.status == "uploading" }) return
+        // A file on its own is a question about it
         val textToSend = (textOverride ?: _inputText.value).trim()
+            .ifBlank { if (ready.isNotEmpty()) "What's in ${if (ready.size == 1) "this file" else "these files"}?" else "" }
         if (textToSend.isBlank() || _isStreaming.value) return
 
         val session = _currentSession.value ?: return
         _inputText.value = ""
+        if (textOverride == null) _attachments.value = emptyList()
         _isStreaming.value = true
         _streamingDurationMs.value = 0L
 
@@ -160,7 +209,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         streamJob = viewModelScope.launch {
             try {
                 val history = _messages.value
-                repository.sendMessageStream(session, textToSend, history).collect { (msg, _) ->
+                repository.sendMessageStream(session, textToSend, history, ready).collect { (msg, _) ->
                     if (msg.content.isNotEmpty()) {
                         _streamingPhase.value = "📡 Streaming response from AlwaysOnAgent..."
                     }

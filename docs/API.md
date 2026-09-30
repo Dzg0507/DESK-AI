@@ -18,7 +18,8 @@ DeskAI repo at `docs/API.md`, updated whenever this one changes.
 
 ## Chat
 
-**`POST /api/chat`** `{"message": "...", "model": "auto", "engine": "auto", "conversation_id": null}` →
+**`POST /api/chat`** `{"message": "...", "model": "auto", "engine": "auto", "conversation_id": null,
+"attachments": []}` →
 
 ```json
 {"success": true, "reply": "...", "model": "...", "agent_status": "idle|working|waiting_for_approval|error",
@@ -52,6 +53,25 @@ DeskAI repo at `docs/API.md`, updated whenever this one changes.
   - Show the options as buttons.
   - A tap sends that option's text as the next ordinary chat message. **Other…** focuses the text box.
   - A reply never has both a `question` and `proposals`.
+
+### Attaching documents
+
+Upload each file first, then send its id with the message (up to 5 per message):
+
+| Method & path | Body | Returns |
+|---|---|---|
+| `POST /api/chat/attachments` | `{"name": "notes.pdf", "data_b64": "<the file, base64>", "conversation_id"?}` | `{"status": "success", "attachment": {"id": "att-1a2b3c4d5e6f", "name", "kind": "pdf"\|"word"\|"text"\|"image", "method": "text"\|"ocr"\|"mixed", "chars", "pages"?, "confidence"?, "warnings": [...], "seconds", ...}, "preview": "first 300 characters"}`; `422` with the reason (unsupported type, empty, over 15 MB, can't be read); `400` bad base64 |
+| `GET /api/chat/attachments?conversation_id=&limit=10` | | `{"attachments": [attachment]}`, newest first |
+
+- **Types:** PDF, Word `.docx`, text-like files (`.txt`, `.md`, `.csv`, `.json`, code…) and images (`.png`,
+  `.jpg`, `.webp`…). Up to 15 MB.
+- **How the text is read:** documents directly; images and scanned PDF pages by OCR (Tesseract, on the agent's
+  PC), which takes a few seconds and can misread words. `method` says which; `warnings` flags an uncertain
+  OCR reading or no text found. Show them on the file's chip.
+- **In the chat:** `POST /api/chat` with `"attachments": ["att-…"]`. The message itself is required (send
+  e.g. "What's in this file?" if the owner typed nothing). The history stores the message plus
+  `[attached: name (id …)]`; the document's text goes to the model beside it, and the assistant can read further
+  into it later in the conversation. `404` if an id is unknown. Uploads are kept 30 days.
 
 ## Tasks
 

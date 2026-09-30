@@ -4,7 +4,24 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-09-29 (DeskAI v2.3.10 / Build 24 — update check asks GitHub only)
+**Last Updated:** 2026-09-29 (DeskAI v2.3.11 / Build 25 — attach files in the chat)
+
+---
+
+## 0. Sync Status: DeskAI v2.3.11 (Build 25), attach files in the chat (by the AlwaysOnAgent side)
+
+The owner asked for a way to add documents to the chat. Server: `POST /api/chat/attachments` + `"attachments"`
+on `/api/chat` (see docs/API.md, "Attaching documents"); the agent reads the text itself (documents directly,
+images and scans by Tesseract OCR on the Mini, no AI).
+- **ChatInputBar:** a paperclip button after the mic (the system file picker: PDF, Word, text, JSON, images;
+  several at once), and a row of chips above the input: type icon, name, "Reading…" with a spinner, then how it
+  was read ("Read by OCR (96% sure)") or a warning (amber) / error (red), and a remove button. Send is enabled with
+  a ready file and no text (it sends "What's in this file?"), and waits while a file is still uploading.
+- **ChatViewModel:** `attachments` state, `attachFile(uri)` (reads it, uploads at once, 5 files / 15 MB max),
+  `removeAttachment`. **ChatRepository/AlwaysOnAgentClient:** `uploadAttachment`, and `attachmentIds` passed down to
+  the `/api/chat` payload (default empty, so other callers are unchanged). The user bubble lists "📎 name" lines.
+- New model: `data/model/ChatAttachment.kt`. The look follows the existing bar (same circle buttons, slate chips);
+  change it however you like.
 
 ---
 

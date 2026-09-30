@@ -6,6 +6,7 @@ import com.example.data.local.AppDatabase
 import com.example.data.model.AgentTaskItem
 import com.example.data.model.AgentWorkProject
 import com.example.data.model.BridgeConfig
+import com.example.data.model.ChatAttachment
 import com.example.data.model.ChatMessage
 import com.example.data.model.ChatSession
 import com.example.data.model.DaemonStats
@@ -414,19 +415,26 @@ class ChatRepository(
     /**
      * Sends user message, saves to database, streams response, and persists assistant reply.
      */
+    suspend fun uploadAttachment(localId: String, name: String, bytes: ByteArray): ChatAttachment =
+        agentClient.uploadAttachment(getActiveConfig(), localId, name, bytes)
+
     fun sendMessageStream(
         session: ChatSession,
         userText: String,
-        history: List<ChatMessage>
+        history: List<ChatMessage>,
+        attachments: List<ChatAttachment> = emptyList()
     ): Flow<Pair<ChatMessage, String>> = flow {
         val config = getActiveConfig()
         val isCommand = userText.trim().startsWith("/")
+        // The bubble shows what was attached; the agent gets the files by id
+        val shown = if (attachments.isEmpty()) userText.trim()
+            else userText.trim() + "\n" + attachments.joinToString("\n") { "📎 ${it.name}" }
 
         // 1. Insert User Message
         val userMessage = ChatMessage(
             sessionId = session.id,
             role = "user",
-            content = userText.trim(),
+            content = shown,
             status = "sent",
             isCommand = isCommand
         )
@@ -456,7 +464,8 @@ class ChatRepository(
                 config = config,
                 systemPrompt = session.systemPrompt,
                 history = history,
-                userMessage = userText.trim()
+                userMessage = userText.trim(),
+                attachmentIds = attachments.mapNotNull { it.id }
             ).collect { chunk ->
                 currentText += chunk
                 emit(Pair(assistantMessage.copy(content = currentText), currentText))

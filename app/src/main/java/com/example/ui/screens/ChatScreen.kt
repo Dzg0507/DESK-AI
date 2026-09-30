@@ -99,6 +99,7 @@ fun ChatScreen(
     val context = androidx.compose.ui.platform.LocalContext.current
     val daemonStats by viewModel.daemonStats.collectAsStateWithLifecycle()
     val inputText by viewModel.inputText.collectAsStateWithLifecycle()
+    val attachments by viewModel.attachments.collectAsStateWithLifecycle()
     val isStreaming by viewModel.isStreaming.collectAsStateWithLifecycle()
     val streamingDurationMs by viewModel.streamingDurationMs.collectAsStateWithLifecycle()
     val streamingPhase by viewModel.streamingPhase.collectAsStateWithLifecycle()
@@ -411,7 +412,10 @@ fun ChatScreen(
                         onSend = { viewModel.sendMessage() },
                         isStreaming = isStreaming,
                         onStopStreaming = { viewModel.stopStreaming() },
-                        onOpenCommandPalette = { showCommandPalette = true }
+                        onOpenCommandPalette = { showCommandPalette = true },
+                        attachments = attachments,
+                        onAttachFile = { viewModel.attachFile(it) },
+                        onRemoveAttachment = { viewModel.removeAttachment(it) }
                     )
                 }
             }
