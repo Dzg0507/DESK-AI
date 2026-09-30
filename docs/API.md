@@ -152,20 +152,24 @@ Generated images and rendered 3D videos are stored outside the agent repository 
 
 ## Schedules
 
-Videos, phone reminders and background tasks that run by themselves (see AGENT.md, Schedules). Times are 5-field
+Videos, Pinterest pins, phone reminders and background tasks that run by themselves (see AGENT.md, Schedules). Times are 5-field
 cron in the server's local time.
 
 | Method & path | Body | Returns |
 |---|---|---|
-| `GET /api/schedules` | | `{"schedules": [schedule], "timezone": "Central Daylight Time", "kinds": [...], "min_gap_minutes": {"video": 60, "task": 15, "reminder": 5}}` |
+| `GET /api/schedules` | | `{"schedules": [schedule], "timezone": "Central Daylight Time", "kinds": [...], "min_gap_minutes": {"video": 60, "pins": 60, "task": 15, "reminder": 5}}` |
 | `GET /api/schedules/preview?cron=0 9 * * 1-5&kind=video` | | `{"valid": true, "description": "weekdays at 09:00", "next_runs": [iso, iso, iso]}`, or `{"valid": false, "error": "..."}` |
-| `POST /api/schedules` | `{"name", "kind": "video"\|"reminder"\|"task", "cron", "enabled"?, "post_to_tiktok"?, "quote"?, "text"? (reminder), "instruction"? + "project"? (task)}` | `{"status": "success", "schedule": schedule}`; `400` with the reason if the cron is invalid or too frequent. Accepts `Idempotency-Key`. |
+| `POST /api/schedules` | `{"name", "kind": "video"\|"pins"\|"reminder"\|"task", "cron", "enabled"?, "post_to_tiktok"?, "quote"?, "count"? (pins, 1-5), "text"? (reminder), "instruction"? + "project"? (task)}` | `{"status": "success", "schedule": schedule}`; `400` with the reason if the cron is invalid or too frequent. Accepts `Idempotency-Key`. |
 | `PATCH /api/schedules/{id}` | any of the create fields except `kind` | `{"status": "success", "schedule": schedule}`. Changing `cron`, or turning it back on, re-plans the next run. |
 | `DELETE /api/schedules/{id}` | | `{"status": "success", "id": id}` |
 | `POST /api/schedules/{id}/run` | | Runs it once now, even in standby: `{"status": "success", "result": "started task-051", "task_id": "task-051", "ran": true}`. The next run doesn't change. |
 
 A `schedule`: `id`, `name`, `kind`, `cron`, `description` (plain English), `enabled`, `next_run_at`, `last_run_at`,
-`last_result`, `runs`, `post_to_tiktok`, `quote`, `text`, `instruction`, `project`, `created_at`, `source`.
+`last_result`, `runs`, `post_to_tiktok`, `quote`, `text`, `instruction`, `project`, `count`, `created_at`, `source`.
+
+A `pins` schedule posts the next `count` of the site's ready-made pins to Pinterest (SocialPostEngine), each run a
+task with the usual live card (engine `social_posts`). Its `instruction` is filled in for display ("Post 2 pins to
+Pinterest") and can't be set; the app can list it like a task until it has its own icon.
 
 ## Push notifications (Firebase Cloud Messaging)
 
