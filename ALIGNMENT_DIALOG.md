@@ -4,7 +4,22 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-09-29 (DeskAI v2.3.11 / Build 25 — attach files in the chat)
+**Last Updated:** 2026-09-30 (DeskAI v2.3.12 / Build 26 — Action Chips & Task Diff Previews)
+
+---
+
+## 0. Sync Status: DeskAI v2.3.12 (Build 26), Contextual Action Chips & Task Diff Previews (by the AlwaysOnAgent side)
+
+The agent now provides dynamic contextual `actions` on tasks (`GET /api/tasks` and `/api/tasks/{task_id}`, documented in `docs/API.md`), allowing the Android client to trigger actions directly from `LiveTaskCard`:
+- **Contextual Action Chips:**
+  - Tasks now include dynamic interactive chips in `LiveTaskCard`: `🔍 Preview Diff` (invoking `preview_task_diff` tool via chat), `⚡ Apply Update` (applying self-update commits), `💬 Discuss Blockers` (when blocked/needs_input), and `🚀 Post to TikTok` (when video is rendered and tiktok is pending).
+  - Existing native controls (Abort Task while running, Play Video when completed, Retry Task on failure) remain dedicated, and duplicate action chips are automatically filtered out.
+- **Data & Client Layer:**
+  - `TaskAction` model in `AlwaysOnModels.kt` (`label`, `action`, `url`, `command`, `variant`).
+  - Added `actions: List<TaskAction> = emptyList()` to `AgentTaskItem`.
+  - `AlwaysOnAgentClient.kt`: parses `actions` array in `parseTaskJson` resolving relative server URLs.
+  - `LiveTaskCard.kt`: renders styled interactive chips with variant-aware tinting and dispatches commands/URLs to chat and media handlers.
+  - `ChatScreen.kt` & `MessageBubble.kt`: plumbed `onActionClick` callback for action execution.
 
 ---
 

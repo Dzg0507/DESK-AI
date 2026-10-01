@@ -7,6 +7,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,6 +52,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.AgentTaskItem
+import com.example.data.model.TaskAction
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldConnected
 import com.example.ui.theme.RoseError
@@ -67,6 +70,7 @@ fun LiveTaskCard(
     onCancelTask: (suspend (String) -> Result<String>)? = null,
     onRetryTask: (suspend (String) -> Result<String>)? = null,
     onPlayVideo: ((url: String, filename: String) -> Unit)? = null,
+    onActionClick: ((TaskAction) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val scope = rememberCoroutineScope()
@@ -333,6 +337,70 @@ fun LiveTaskCard(
                     color = EmeraldConnected,
                     trackColor = Color(0xFF1E293B)
                 )
+            }
+
+            // Contextual Action Chips (Preview Diff, Apply Update, Discuss Blockers, Post to TikTok, etc.)
+            val taskResult = item?.result
+            val contextualActions = remember(item?.actions, isCompleted, isInProgress, isBacklog, isFailed, taskResult) {
+                item?.actions?.filter { act ->
+                    val isCancel = act.action == "cancel" || act.label.contains("Abort", ignoreCase = true)
+                    val isRetry = act.action == "retry" || act.label.contains("Retry", ignoreCase = true)
+                    val isStreamDuplicate = (act.action == "stream" || act.label.contains("Watch", ignoreCase = true) || act.label.contains("Play", ignoreCase = true)) &&
+                            (isCompleted && taskResult != null && taskResult.url.isNotBlank())
+                    !isCancel && !isRetry && !isStreamDuplicate
+                } ?: emptyList()
+            }
+
+            if (contextualActions.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    contextualActions.forEach { act ->
+                        val chipBg = when (act.variant) {
+                            "primary" -> ElectricCyan.copy(alpha = 0.18f)
+                            "danger" -> RoseError.copy(alpha = 0.18f)
+                            else -> Color(0xFF1E293B)
+                        }
+                        val chipBorder = when (act.variant) {
+                            "primary" -> ElectricCyan.copy(alpha = 0.8f)
+                            "danger" -> RoseError.copy(alpha = 0.8f)
+                            else -> Color(0xFF334155)
+                        }
+                        val chipTextColor = when (act.variant) {
+                            "primary" -> ElectricCyan
+                            "danger" -> RoseError
+                            else -> Color(0xFFE2E8F0)
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(chipBg)
+                                .border(1.dp, chipBorder, RoundedCornerShape(6.dp))
+                                .clickable {
+                                    if (act.action == "stream" && act.url != null && onPlayVideo != null) {
+                                        onPlayVideo(act.url, taskResult?.filename?.ifBlank { "Stream" } ?: "Stream")
+                                    } else {
+                                        onActionClick?.invoke(act)
+                                    }
+                                }
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = act.label,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = chipTextColor
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(4.dp))
             }
 
             // Action Buttons Row (Abort while running, Play video when done, Retry on fail)

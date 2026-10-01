@@ -64,6 +64,7 @@ import com.example.data.model.AgentTaskItem
 import com.example.data.model.ChatMessage
 import com.example.data.model.ChatQuestion
 import com.example.data.model.TaskProposal
+import com.example.data.model.TaskAction
 import com.example.ui.theme.AssistantBubbleBackground
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldConnected
@@ -87,6 +88,7 @@ fun MessageBubble(
     onCancelTask: (suspend (String) -> Result<String>)? = null,
     onRetryTask: (suspend (String) -> Result<String>)? = null,
     onPlayVideo: ((url: String, filename: String) -> Unit)? = null,
+    onActionClick: ((TaskAction) -> Unit)? = null,
     serverBaseUrl: String = "",
     authToken: String = "",
     modifier: Modifier = Modifier
@@ -250,7 +252,8 @@ fun MessageBubble(
                             onGetTask = { tid -> onGetTask?.invoke(tid) ?: Result.failure(Exception("Get task unavailable")) },
                             onCancelTask = onCancelTask,
                             onRetryTask = onRetryTask,
-                            onPlayVideo = onPlayVideo
+                            onPlayVideo = onPlayVideo,
+                            onActionClick = onActionClick
                         )
                     }
 

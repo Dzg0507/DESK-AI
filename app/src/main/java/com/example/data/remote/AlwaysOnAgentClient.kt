@@ -18,6 +18,7 @@ import com.example.data.model.SystemLogEntry
 import com.example.data.model.TaskProgress
 import com.example.data.model.TaskProposal
 import com.example.data.model.TaskResult
+import com.example.data.model.TaskAction
 import com.example.data.model.VideoItem
 import com.example.data.model.ImageItem
 import kotlinx.coroutines.Dispatchers
@@ -423,6 +424,32 @@ class AlwaysOnAgentClient {
             )
         } else null
 
+        val actionsList = mutableListOf<TaskAction>()
+        val actionsArr = item.optJSONArray("actions")
+        if (actionsArr != null) {
+            val cleanBase = baseUrl?.trimEnd('/') ?: ""
+            for (i in 0 until actionsArr.length()) {
+                val actObj = actionsArr.optJSONObject(i) ?: continue
+                val rawUrl = actObj.optString("url", "").trim()
+                val fullUrl = when {
+                    rawUrl.startsWith("http://") || rawUrl.startsWith("https://") -> rawUrl
+                    rawUrl.startsWith("/") && cleanBase.isNotEmpty() -> "$cleanBase$rawUrl"
+                    rawUrl.isNotBlank() && cleanBase.isNotEmpty() -> "$cleanBase/$rawUrl"
+                    rawUrl.isNotBlank() -> rawUrl
+                    else -> null
+                }
+                actionsList.add(
+                    TaskAction(
+                        label = actObj.optString("label", ""),
+                        action = actObj.optString("action", ""),
+                        url = fullUrl,
+                        command = actObj.optString("command", "").takeIf { it.isNotBlank() },
+                        variant = actObj.optString("variant", "secondary")
+                    )
+                )
+            }
+        }
+
         val isCancelled = item.optBoolean("cancelled", false) || optNullableString("phase") == "cancelled"
 
         return AgentTaskItem(
@@ -440,7 +467,8 @@ class AlwaysOnAgentClient {
             statusText = optNullableString("status_text"),
             progress = parsedProgress,
             cancelled = isCancelled,
-            result = parsedResult
+            result = parsedResult,
+            actions = actionsList
         )
     }
 

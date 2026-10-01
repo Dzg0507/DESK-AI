@@ -31,6 +31,14 @@ data class TaskResult(
     val url: String = ""          // resolved against the server URL
 )
 
+data class TaskAction(
+    val label: String = "",
+    val action: String = "",      // "stream", "post", "chat", "cancel", "retry"
+    val url: String? = null,
+    val command: String? = null,
+    val variant: String = "secondary" // "primary", "secondary", "danger"
+)
+
 data class AgentTaskItem(
     val id: String,
     val title: String,
@@ -46,7 +54,8 @@ data class AgentTaskItem(
     val statusText: String? = null,
     val progress: TaskProgress? = null,
     val cancelled: Boolean = false,
-    val result: TaskResult? = null
+    val result: TaskResult? = null,
+    val actions: List<TaskAction> = emptyList()
 )
 
 data class MemoryFactItem(

@@ -372,6 +372,43 @@ fun ChatScreen(
                                             url = fullUrl
                                         )
                                     },
+                                    onActionClick = { action ->
+                                        when (action.action) {
+                                            "chat" -> {
+                                                action.command?.let { cmd ->
+                                                    viewModel.sendMessage(cmd)
+                                                }
+                                            }
+                                            "stream" -> {
+                                                action.url?.let { url ->
+                                                    val cleanBase = config.getResolvedUrl().trimEnd('/')
+                                                    val fullUrl = when {
+                                                        url.startsWith("http://") || url.startsWith("https://") -> url
+                                                        url.startsWith("/") -> "$cleanBase$url"
+                                                        url.isNotBlank() -> "$cleanBase/$url"
+                                                        else -> url
+                                                    }
+                                                    playbackVideo = com.example.data.model.VideoItem(
+                                                        filename = "Stream",
+                                                        sizeMb = 0.0,
+                                                        createdAt = "",
+                                                        url = fullUrl
+                                                    )
+                                                }
+                                            }
+                                            "post" -> {
+                                                action.url?.let { postUrl ->
+                                                    val filename = postUrl.substringAfter("/api/videos/").substringBefore("/publish")
+                                                    if (filename.isNotBlank()) {
+                                                        viewModel.publishVideoToTikTok(filename)
+                                                    }
+                                                }
+                                            }
+                                            else -> {
+                                                action.command?.let { cmd -> viewModel.sendMessage(cmd) }
+                                            }
+                                        }
+                                    },
                                     serverBaseUrl = config.getResolvedUrl(),
                                     authToken = config.apiKey
                                 )
