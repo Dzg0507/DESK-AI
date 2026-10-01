@@ -8,6 +8,13 @@
 
 ---
 
+> [!IMPORTANT]
+> ### Inviolable Rules for AlwaysOnAgent & DeskAI Pairing
+> 1. **No Local Android Build Tools:** Never download, install, or run Gradle / Android SDK on this HP EliteDesk Mini PC. This host only runs Python/FastAPI server tasks. DeskAI compilation and debug signing live exclusively on the owner's workstation where `debug.keystore` is stored.
+> 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
+
+---
+
 ## 0. Sync Status: DeskAI v2.3.12 (Build 26), Contextual Action Chips & Task Diff Previews (by the AlwaysOnAgent side)
 
 The agent now provides dynamic contextual `actions` on tasks (`GET /api/tasks` and `/api/tasks/{task_id}`, documented in `docs/API.md`), allowing the Android client to trigger actions directly from `LiveTaskCard`:
