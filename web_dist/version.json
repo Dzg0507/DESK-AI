@@ -1,7 +1,7 @@
 {
-  "versionCode": 26,
-  "versionName": "2.3.12",
-  "changelog": "DeskAI v2.3.12 (Build 26): Contextual Action Chips & Task Diff Previews. Live task cards now display interactive action chips for previewing git diffs, applying self-updates, discussing task blockers, and posting rendered videos to TikTok.",
+  "versionCode": 25,
+  "versionName": "2.3.11",
+  "changelog": "DeskAI v2.3.11 (Build 25): Attach files in the chat. Tap the paperclip to add PDFs, Word files, text files or images (up to 5, 15 MB each); the agent reads them (images and scans by OCR on the Mini) and answers about them. Each file shows a chip with how it was read.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
   "fileSizeBytes": 24033995
 }

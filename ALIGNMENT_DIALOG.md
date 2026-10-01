@@ -20,6 +20,7 @@ The agent now provides dynamic contextual `actions` on tasks (`GET /api/tasks` a
   - `AlwaysOnAgentClient.kt`: parses `actions` array in `parseTaskJson` resolving relative server URLs.
   - `LiveTaskCard.kt`: renders styled interactive chips with variant-aware tinting and dispatches commands/URLs to chat and media handlers.
   - `ChatScreen.kt` & `MessageBubble.kt`: plumbed `onActionClick` callback for action execution.
+  - `AppUpdaterDialog.kt` & `ChatScreen.kt`: added dynamic timestamp cache-busting (`?t=$now`) to GitHub raw requests to prevent CDN serving stale APKs, and aligned `web_dist/version.json` with the deployed APK to eliminate the infinite update prompt loop.
 
 ---
 

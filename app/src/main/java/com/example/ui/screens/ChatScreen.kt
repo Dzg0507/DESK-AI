@@ -124,9 +124,10 @@ fun ChatScreen(
                     .build()
                 // Updates are published only on GitHub. (The agent's server doesn't host version.json, so asking
                 // it first just logged a rejected request on the Mini at every launch.)
+                val now = System.currentTimeMillis()
                 val checkUrls = mutableListOf<String>()
-                checkUrls.add("https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/web_dist/version.json")
-                checkUrls.add("https://raw.githubusercontent.com/Dzg0507/Desk-ai/master/web_dist/version.json")
+                checkUrls.add("https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/web_dist/version.json?t=$now")
+                checkUrls.add("https://raw.githubusercontent.com/Dzg0507/Desk-ai/master/web_dist/version.json?t=$now")
                 for (u in checkUrls) {
                     try {
                         val req = okhttp3.Request.Builder().url(u).build()

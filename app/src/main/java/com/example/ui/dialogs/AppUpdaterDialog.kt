@@ -144,6 +144,9 @@ fun AppUpdaterDialog(
                             val isLocal = !rawUrl.contains("github")
                             val url = if (authToken.isNotBlank() && isLocal && !rawUrl.contains("token=")) {
                                 if (rawUrl.contains("?")) "$rawUrl&token=${authToken.trim()}" else "$rawUrl?token=${authToken.trim()}"
+                            } else if (rawUrl.contains("github") && !rawUrl.contains("t=")) {
+                                val sep = if (rawUrl.contains("?")) "&" else "?"
+                                "$rawUrl${sep}t=${System.currentTimeMillis()}"
                             } else {
                                 rawUrl
                             }
