@@ -92,6 +92,7 @@ A **task object** (from `GET /api/tasks`, `GET /api/tasks/{id}`, and the stream'
 | `result` | a finished video: `{"type": "video", "filename": "vibe_check_….mp4", "url": "/videos/vibe_check_….mp4"}`. Otherwise `null`: show `output_summary`. It's also `null` once the video has been pruned. |
 | `engine` | `auto`, `antigravity`, `cloud`, `ollama`, `media_pipeline` (TiktokVideos), `agentwork` |
 | `priority` | `low`, `medium`, `high`, `urgent` |
+| `actions` | contextual 1-tap action chips: `[{"label", "action": "stream"|"post"|"chat", "url"|"command", "variant": "primary"|"secondary"|"danger"}]`. e.g. "Preview Diff", "Apply Update", "Discuss Blockers", "Post to TikTok" |
 | `created_at`, `started_at`, `completed_at`, `output_summary`, `last_error`, `exit_code`, `engine_used`, `retry_count`, `worker_pid`, `metadata` | as named; ignore any others |
 
 `progress`:
@@ -106,6 +107,20 @@ A **task object** (from `GET /api/tasks`, `GET /api/tasks/{id}`, and the stream'
 - **`percent`:** 0–99, based on time, so it can dip a point. Clamp it if you want it to only go up.
 - **`eta_seconds`:** the time left as of `updated_at`. Count down locally between updates, which come about
   every 12 s while capturing and every 5 s otherwise, and show "almost done" rather than going negative.
+
+### Action Chips (`actions`)
+Each task object includes a dynamic `actions` array of contextual 1-tap buttons:
+```json
+[
+  {"label": "🔍 Preview Diff", "action": "chat", "command": "Show diff for task-052", "variant": "secondary"},
+  {"label": "⚡ Apply Update", "action": "chat", "command": "apply task-052", "variant": "primary"}
+]
+```
+- **`action` types:**
+  - `stream`: Opens media stream URL in video player (`url`: `/videos/...`).
+  - `post`: Sends an authenticated HTTP POST request directly (`url`: `/api/cancel/{id}`, `/api/retry/{id}`, `/api/videos/{name}/publish`).
+  - `chat`: Sends pre-formatted command/prompt into chat conversation (`command`: `apply task-052`, `Show diff for task-052`, etc.).
+- **`variant` styles:** `primary` (highlight/action), `secondary` (neutral/outline), `danger` (destructive/cancel).
 
 | Method & path | Body | Returns |
 |---|---|---|
@@ -151,15 +166,13 @@ A **task object** (from `GET /api/tasks`, `GET /api/tasks/{id}`, and the stream'
 
 ## Media and Gallery
 
-Generated images and rendered 3D videos are stored outside the agent repository in the dedicated gallery directory (`AGENT_GALLERY_DIR/images`).
+Generated images are stored outside the agent repository in the dedicated gallery directory (`AGENT_GALLERY_DIR/images`), while 3D videos are rendered by TiktokVideos (`TIKTOK_VIDEOS_DIR/videos`, documented under [Videos](#videos-tiktokvideos)).
 
 | Method & path | Body | Returns |
 |---|---|---|
 | `GET /api/images` | | `{"images": [{"filename", "size_mb", "created_at", "mtime", "url"}]}`: lists all generated artwork |
 | `DELETE /api/images/{filename}` | | `{"status": "success", "message": "Deleted <filename>"}`: removes an image from disk |
 | `GET /images/{filename}` | | Static image file (supports token parameter or auth headers) |
-| `GET /api/videos` | | `{"videos": [{"filename", "size_mb", "created_at", "url"}]}`: lists rendered video creations |
-| `POST /api/trigger_media` | `{"type": "video"|"tiktok", "quote": "..."}` | `{"status": "success", "task_id": "..."}`: dispatches a video render task |
 
 ## Agent controls and maintenance
 
@@ -170,7 +183,7 @@ Generated images and rendered 3D videos are stored outside the agent repository 
 | `POST /api/daemon/state` | `{"status": "wake"}` or `{"status": "standby"}` | `{"status", "daemon_status", "message"}` |
 | `POST /api/engine` | `{"engine": "auto"}` (auto, antigravity, cloud, ollama) | `{"status", "default_engine"}` |
 | `POST /api/backup` | | `{"ok", "message"}`: a memory backup now (a few seconds) |
-| `POST /api/cleanup` | | `{"message"}`: TiktokVideos' temp files and old videos, plus stale logs |
+| `POST /api/cleanup` | | `{"message"}`: TiktokVideos' temp files and old videos, stale logs (> 30 days, preserving `affirmations.log`), and abandoned task workspaces (> 7 days, via AgentWork worktree discard) |
 | `POST /api/restart` | | `202 {"status": "restarting"}`: back in about 3 s. Poll `/api/status`. |
 | `GET /api/logs?limit=100` | | `[{"id", "timestamp", "level", "message"}]`, newest last |
 | `GET /api/stream` | | Server-Sent Events, one `data: {json}` per second: `timestamp`, `stats`, `active_task`, `tasks` (30 newest), `blockers`, `new_logs`, `daemon_status`, `overall_phase`, `last_heartbeat`, `default_engine` |
