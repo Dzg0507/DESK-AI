@@ -536,6 +536,7 @@ fun ChatScreen(
     if (showMemorySheet) {
         MemorySheet(
             onDismiss = { showMemorySheet = false },
+            onLoad = { viewModel.fetchMemoryOverview() },
             onAddFact = { fact -> viewModel.addMemoryFact(fact) },
             onDeleteFact = { id -> viewModel.deleteMemoryFact(id) }
         )

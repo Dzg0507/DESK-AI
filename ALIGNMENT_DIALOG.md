@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-04 (DeskAI v2.4.2 / Build 30 shipped — attachment thumbnails)
+**Last Updated:** 2026-10-04 (DeskAI v2.4.3 / Build 31 shipped — Memory sheet loads real memories)
 
 ---
 
@@ -14,6 +14,12 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-04: DeskAI v2.4.3 (build 31), the Memory sheet loads the real memories
+
+- **Bug:** `MemorySheet.kt` started from four hard-coded sample facts (ids 1-4) and never called `/api/memory`, so the owner always saw the same four. Worse, Forget on a sample sent its id to `DELETE /api/memory/facts/{id}?erase=true`, which would have erased the real fact with that id (#4 is the owner's location).
+- **Fix** (laptop Claude Code session): new `onLoad` parameter (`ChatViewModel.fetchMemoryOverview()` → `/api/memory`), loaded when the sheet opens; the banner shows the real profile (max 8 lines); Add reloads from the agent; Forget removes a row only when the agent confirms. Loading and can't-reach-the-agent states in the header. Layout and styling unchanged.
+- **Don't undo:** never seed this sheet with sample data; ids in it must come from the agent.
 
 ## Shipped 2026-10-04: DeskAI v2.4.2 (build 30), attachment thumbnails
 

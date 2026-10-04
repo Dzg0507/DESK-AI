@@ -28,6 +28,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.data.model.MemoryFactItem
+import com.example.data.model.MemoryOverview
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.RoseError
 import kotlinx.coroutines.launch
@@ -50,21 +52,31 @@ import kotlinx.coroutines.launch
 @Composable
 fun MemorySheet(
     onDismiss: () -> Unit,
+    onLoad: suspend () -> MemoryOverview?,
     onAddFact: suspend (String) -> Result<Int>,
     onDeleteFact: suspend (Int) -> Result<Boolean>
 ) {
     val scope = rememberCoroutineScope()
     var newFactText by remember { mutableStateOf("") }
-    var facts by remember {
-        mutableStateOf(
-            listOf(
-                MemoryFactItem(id = 1, content = "User prefers direct, concise answers with Python/Kotlin code blocks.", pinned = true),
-                MemoryFactItem(id = 2, content = "AlwaysOnAgent is running on local workstation with SQLite WAL state.", pinned = true),
-                MemoryFactItem(id = 3, content = "TikTok account is @Thevibecheckproject.", pinned = false),
-                MemoryFactItem(id = 4, content = "AgentWork project directory is managed locally.", pinned = false)
-            )
-        )
+    // The agent's real memories. This sheet used to start from four hard-coded sample facts with ids 1-4 and
+    // never load the real ones, so it always showed the same four, and "forget" on a sample erased the real
+    // fact with that id (2026-10-04).
+    var facts by remember { mutableStateOf(emptyList<MemoryFactItem>()) }
+    var profile by remember { mutableStateOf("") }
+    var loading by remember { mutableStateOf(true) }
+    var loadFailed by remember { mutableStateOf(false) }
+
+    suspend fun reload() {
+        val overview = onLoad()
+        if (overview != null) {
+            facts = overview.facts
+            profile = overview.profile
+        }
+        loadFailed = overview == null
+        loading = false
     }
+
+    LaunchedEffect(Unit) { reload() }
 
     Dialog(onDismissRequest = onDismiss) {
         Box(
@@ -114,10 +126,13 @@ fun MemorySheet(
                         .padding(10.dp)
                 ) {
                     Text(
-                        text = "🧠 Profile: Learned context & facts are permanently preserved in your PC's SQLite database across sessions.",
+                        text = if (profile.isNotBlank()) "🧠 $profile"
+                               else "🧠 Profile: Learned context & facts are permanently preserved in your PC's SQLite database across sessions.",
                         fontSize = 12.sp,
                         color = Color(0xFFCBD5E1),
-                        lineHeight = 16.sp
+                        lineHeight = 16.sp,
+                        maxLines = 8,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                 }
 
@@ -151,10 +166,12 @@ fun MemorySheet(
                             .clickable {
                                 if (newFactText.isNotBlank()) {
                                     scope.launch {
-                                        val res = onAddFact(newFactText)
-                                        val newId = res.getOrDefault(facts.size + 1)
-                                        facts = listOf(MemoryFactItem(id = newId, content = newFactText, pinned = true)) + facts
-                                        newFactText = ""
+                                        if (onAddFact(newFactText).isSuccess) {
+                                            newFactText = ""
+                                            reload()        // the saved fact, with its real id, from the agent
+                                        } else {
+                                            loadFailed = true
+                                        }
                                     }
                                 }
                             },
@@ -167,7 +184,11 @@ fun MemorySheet(
                 Spacer(modifier = Modifier.height(14.dp))
 
                 Text(
-                    text = "STORED FACTS (${facts.size})",
+                    text = when {
+                        loading -> "LOADING MEMORIES…"
+                        loadFailed -> "COULDN'T REACH THE AGENT — SHOWING WHAT WAS LOADED (${facts.size})"
+                        else -> "STORED FACTS (${facts.size})"
+                    },
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF94A3B8),
@@ -213,8 +234,11 @@ fun MemorySheet(
                                 IconButton(
                                     onClick = {
                                         scope.launch {
-                                            onDeleteFact(fact.id)
-                                            facts = facts.filter { it.id != fact.id }
+                                            if (onDeleteFact(fact.id).isSuccess) {
+                                                facts = facts.filter { it.id != fact.id }
+                                            } else {
+                                                loadFailed = true
+                                            }
                                         }
                                     },
                                     modifier = Modifier.size(28.dp)

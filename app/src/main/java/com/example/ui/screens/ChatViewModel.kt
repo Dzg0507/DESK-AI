@@ -545,6 +545,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         return repository.downloadVideo(videoUrl, destinationFile, onProgress)
     }
 
+    suspend fun fetchMemoryOverview(): com.example.data.model.MemoryOverview? = repository.fetchMemoryOverview()
+
     suspend fun addMemoryFact(content: String): Result<Int> {
         return repository.addMemoryFact(content)
     }
