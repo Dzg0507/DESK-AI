@@ -40,7 +40,10 @@ DeskAI repo at `docs/API.md`, updated whenever this one changes.
   ```json
   [{"id": "a1b2c3d4e5", "instruction": "...", "reason": "...", "project": null, "kind": "task"}]
   ```
-  - `kind` is `task`, or `add_project` (register a repo; label the button **Add project**).
+  - `kind` is `task`, `add_project` (register a repo; label the button **Add project**), or a public post the
+    owner asked for in chat: `tiktok` ("Post vibe_check_….mp4 to TikTok") or `pins` ("Post 2 pins to Pinterest").
+    The chat never posts; the owner's tap on Run does. Apps that don't know `tiktok`/`pins` show them as a task
+    card, which works the same.
   - **Run:** `POST /api/proposals/{id}/run` returns `{"status": "success", "task_id": "..."}`. For
     `add_project` it returns `{"status": "success", "project": "...", "message": "..."}` with no `task_id`,
     or 400 with the reason.
@@ -69,7 +72,7 @@ Upload each file first, then send its id with the message (up to 5 per message):
   `.webp`…), and videos (`.mp4`, `.mov`, `.webm`, `.avi`, `.mkv`, `.m4v`). Up to 15 MB.
 - **Visual thumbnails & client perception:** Every uploaded attachment gets a 256×256 `thumb.jpg` and compact
   `thumb_b64` (data URI) in the response. Photos and videos generate frame thumbnails; PDFs extract page 1 covers;
-  documents generate stylish badged preview cards. DeskAI renders thumbnails immediately in `ChatInputBar` without roundtrip delays.
+  documents generate stylish badged preview cards. DeskAI renders thumbnails immediately without roundtrip delays.
 - **Smart token-efficient AI vision downscaling:** Images attached in chat automatically generate an `ai_view.jpg`
   capped at 768px longest dimension (Lanczos downsampling, stripped of EXIF overhead, quality 85). This reduces
   raw 4MB–10MB phone camera uploads down to ~50KB, slashing vision token overhead and CPU memory consumption.
@@ -162,7 +165,7 @@ Each task object includes a dynamic `actions` array of contextual 1-tap buttons:
 
 | Method & path | Notes |
 |---|---|
-| `GET /api/memory` | stats, profile, facts, summaries, categories; add `?query=` to search |
+| `GET /api/memory` | stats, profile, facts, summaries, categories; add `?query=` to search. `profile` is a few paragraphs of plain prose about the owner, by name (show it in full); facts are written with the owner's name too |
 | `GET /api/memory/search?q=...` | matching facts and archived messages |
 | `GET /api/memory/conversation?limit=50&before_id=` | chat history, oldest first |
 | `POST /api/memory/facts` | `{"content", "category": "fact", "importance": 5, "pinned": true}`. Categories: profile, preference, project, plan, person, instruction, fact. |
