@@ -1,7 +1,7 @@
 {
-  "versionCode": 29,
-  "versionName": "2.4.1",
-  "changelog": "DeskAI v2.4.1 (Build 29): One tap to go live. When a website change (or a change to the agent itself) is finished, its card shows \"🚀 Push live\" (or \"⚡ Apply update\"): tap it and the agent builds, tests and publishes it, then notifies you. Just say \"push it live\" in chat to bring up the card. Includes the canvas (2.4.0) and the agent's morning brief and questions (2.3.13).",
+  "versionCode": 30,
+  "versionName": "2.4.2",
+  "changelog": "DeskAI v2.4.2 (Build 30): Attachments show a thumbnail. Pictures, PDFs and videos you attach in the chat now show a small preview in the input bar, and you can attach videos too. Includes one-tap go-live (2.4.1) and the canvas (2.4.0).",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24083156
+  "fileSizeBytes": 24083157
 }

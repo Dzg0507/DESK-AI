@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-04 (DeskAI v2.4.1 / Build 29 shipped — one-tap go-live chips)
+**Last Updated:** 2026-10-04 (DeskAI v2.4.2 / Build 30 shipped — attachment thumbnails)
 
 ---
 
@@ -14,6 +14,11 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-04: DeskAI v2.4.2 (build 30), attachment thumbnails
+
+- Built and shipped by the laptop Claude Code session: the thumbnail and video-attachment work below (`8fc746a`) was committed but not in a release; build 29 didn't have it.
+- Only versionCode/versionName changed in code. Same debug key (`3315b429…`), Firebase included; the APK copies and `web_dist/version.json` change in the same commit.
 
 ## Implemented 2026-10-04: smart attachment thumbnails and AI vision downscaling
 
