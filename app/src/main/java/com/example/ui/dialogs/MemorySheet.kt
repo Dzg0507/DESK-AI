@@ -117,27 +117,6 @@ fun MemorySheet(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Profile Summary Banner
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0xFF1E293B))
-                        .padding(10.dp)
-                ) {
-                    Text(
-                        text = if (profile.isNotBlank()) "🧠 $profile"
-                               else "🧠 Profile: Learned context & facts are permanently preserved in your PC's SQLite database across sessions.",
-                        fontSize = 12.sp,
-                        color = Color(0xFFCBD5E1),
-                        lineHeight = 16.sp,
-                        maxLines = 8,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
                 // Add New Fact Input
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -183,23 +162,53 @@ fun MemorySheet(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                Text(
-                    text = when {
-                        loading -> "LOADING MEMORIES…"
-                        loadFailed -> "COULDN'T REACH THE AGENT — SHOWING WHAT WAS LOADED (${facts.size})"
-                        else -> "STORED FACTS (${facts.size})"
-                    },
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF94A3B8),
-                    letterSpacing = 0.5.sp
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-
                 LazyColumn(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    // The profile, in full: the agent writes it as a few short paragraphs about the owner and
+                    // sends it with every message. It scrolls with the facts so nothing is cut off.
+                    if (profile.isNotBlank()) {
+                        item {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(Color(0xFF1E293B))
+                                    .border(1.dp, Color(0xFF334155), RoundedCornerShape(10.dp))
+                                    .padding(12.dp)
+                            ) {
+                                Text(
+                                    text = "🧠 PROFILE",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = ElectricCyan,
+                                    letterSpacing = 0.5.sp
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = profile,
+                                    fontSize = 13.sp,
+                                    color = Color(0xFFE2E8F0),
+                                    lineHeight = 19.sp
+                                )
+                            }
+                        }
+                    }
+                    item {
+                        Text(
+                            text = when {
+                                loading -> "LOADING MEMORIES…"
+                                loadFailed -> "COULDN'T REACH THE AGENT — SHOWING WHAT WAS LOADED (${facts.size})"
+                                else -> "STORED FACTS (${facts.size})"
+                            },
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF94A3B8),
+                            letterSpacing = 0.5.sp,
+                            modifier = Modifier.padding(top = 6.dp)
+                        )
+                    }
                     items(facts) { fact ->
                         Box(
                             modifier = Modifier

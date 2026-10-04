@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-04 (DeskAI v2.4.3 / Build 31 shipped — Memory sheet loads real memories)
+**Last Updated:** 2026-10-04 (DeskAI v2.4.4 / Build 32 shipped — full profile in the Memory sheet)
 
 ---
 
@@ -14,6 +14,11 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-04: DeskAI v2.4.4 (build 32), the full profile in the Memory sheet
+
+- The owner couldn't read the profile (it was a banner capped at 8 lines). It's now the first item of the sheet's scrolling list, a "🧠 PROFILE" card with the full text; the facts follow.
+- Agent side (AlwaysOnAgent `6a77cf8`): the profile is now written as a few paragraphs of prose about the owner by name ("Devin…", not "The user…"), and facts use the name too. Not editable, at the owner's call: the agent rewrites it.
 
 ## Shipped 2026-10-04: DeskAI v2.4.3 (build 31), the Memory sheet loads the real memories
 
