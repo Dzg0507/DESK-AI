@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -43,6 +44,7 @@ import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -58,12 +60,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.data.model.ChatAttachment
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.UserBubbleBackground
@@ -194,7 +198,7 @@ fun ChatInputBar(
                     try {
                         fileLauncher.launch(arrayOf("application/pdf",
                             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                            "text/*", "application/json", "image/*"))
+                            "text/*", "application/json", "image/*", "video/*"))
                     } catch (_: Exception) {
                         // No document picker on this device
                     }
@@ -302,20 +306,40 @@ private fun AttachmentChip(a: ChatAttachment, onRemove: () -> Unit) {
             .clip(RoundedCornerShape(12.dp))
             .background(Color(0xFF1E293B))
             .border(1.dp, borderColor, RoundedCornerShape(12.dp))
-            .padding(start = 8.dp, end = 4.dp, top = 5.dp, bottom = 5.dp),
+            .padding(start = 6.dp, end = 4.dp, top = 5.dp, bottom = 5.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         val lower = a.name.lowercase()
-        Icon(
-            imageVector = when {
-                a.kind == "pdf" || lower.endsWith(".pdf") -> Icons.Default.PictureAsPdf
-                a.kind == "image" || Regex("\\.(png|jpe?g|webp|gif|bmp|tiff?)$").containsMatchIn(lower) -> Icons.Default.Image
-                else -> Icons.Default.Description
-            },
-            contentDescription = null,
-            tint = ElectricCyan,
-            modifier = Modifier.size(16.dp)
-        )
+        val thumbModel = a.thumbB64 ?: a.thumbUrl
+        if (!thumbModel.isNullOrBlank()) {
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(Color(0xFF0F172A))
+                    .border(1.dp, ElectricCyan.copy(alpha = 0.3f), RoundedCornerShape(6.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                AsyncImage(
+                    model = thumbModel,
+                    contentDescription = a.name,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        } else {
+            Icon(
+                imageVector = when {
+                    a.kind == "pdf" || lower.endsWith(".pdf") -> Icons.Default.PictureAsPdf
+                    a.kind == "image" || Regex("\\.(png|jpe?g|webp|gif|bmp|tiff?)$").containsMatchIn(lower) -> Icons.Default.Image
+                    a.kind == "video" || Regex("\\.(mp4|mov|webm|avi|mkv|m4v)$").containsMatchIn(lower) -> Icons.Default.Videocam
+                    else -> Icons.Default.Description
+                },
+                contentDescription = null,
+                tint = ElectricCyan,
+                modifier = Modifier.size(18.dp)
+            )
+        }
         Spacer(modifier = Modifier.width(6.dp))
         Column(modifier = Modifier.width(150.dp)) {
             Text(a.name, color = Color(0xFFF8FAFC), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)

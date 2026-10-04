@@ -611,6 +611,10 @@ class AlwaysOnAgentClient {
                     if (resp.isSuccessful) {
                         val a = JSONObject(body).getJSONObject("attachment")
                         val warnings = a.optJSONArray("warnings")
+                        val thumbUrlRaw = a.optString("thumb_url").ifBlank { null }
+                        val fullThumbUrl = if (thumbUrlRaw != null && thumbUrlRaw.startsWith("/")) {
+                            "$baseUrl$thumbUrlRaw"
+                        } else thumbUrlRaw
                         ChatAttachment(
                             localId = localId,
                             name = a.optString("name", name),
@@ -619,7 +623,10 @@ class AlwaysOnAgentClient {
                             kind = a.optString("kind").ifBlank { null },
                             method = a.optString("method").ifBlank { null },
                             confidence = if (a.isNull("confidence") || !a.has("confidence")) null else a.optDouble("confidence"),
-                            warnings = (0 until (warnings?.length() ?: 0)).map { warnings!!.getString(it) }
+                            warnings = (0 until (warnings?.length() ?: 0)).map { warnings!!.getString(it) },
+                            thumbUrl = fullThumbUrl,
+                            thumbB64 = a.optString("thumb_b64").ifBlank { null },
+                            hasThumb = a.optBoolean("has_thumb", false) || thumbUrlRaw != null
                         )
                     } else {
                         // 422: the agent's reason (unsupported type, too big, can't be read)
