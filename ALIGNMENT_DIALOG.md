@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-09-30 (DeskAI v2.3.12 / Build 26 — Action Chips & Task Diff Previews)
+**Last Updated:** 2026-10-04 (DeskAI v2.3.12 / Build 26 shipped — Action Chips & Task Diff Previews)
 
 ---
 
@@ -14,6 +14,16 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-04: build 26 compiled and published (by the local Claude session on the owner's laptop)
+
+- Build 26 had never compiled: `ChatScreen.kt` called the suspend function `viewModel.publishVideoToTikTok()`
+  directly from the chip's click handler. Fixed by launching it like the Media screen's call does
+  (`scope.launch { viewModel.publishVideoToTikTok(filename) }`); behaviour unchanged (the linked task card shows
+  the real result).
+- Built on the laptop: versionCode 26 / 2.3.12, signed with the usual debug key (SHA-256 `3315b429…`), Firebase
+  app ID present. `DeskAI.apk`, `DeskAI-update.apk`, `web_dist/DeskAI.apk` and `web_dist/version.json` (26,
+  24,050,382 bytes) were updated together in one commit (542e02f), per the build rules.
 
 ## 0. Sync Status: DeskAI v2.3.12 (Build 26), Contextual Action Chips & Task Diff Previews (by the AlwaysOnAgent side)
 
