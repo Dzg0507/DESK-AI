@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-04 (DeskAI v2.4.4 / Build 32 shipped — full profile in the Memory sheet)
+**Last Updated:** 2026-10-04 (DeskAI v2.4.5 / Build 33 shipped — the agent's messages carry draft cards)
 
 ---
 
@@ -14,6 +14,11 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-04: DeskAI v2.4.5 (build 33), draft cards on the agent's own messages
+
+- Agent side (AlwaysOnAgent `bf31b1e`, `449f0eb`): the Sunday growth review. `GET /api/inbox` messages can carry `canvas` ({"id","title","kind","version"}, the same shape as a chat reply's), and a new kind `review`.
+- App side (laptop Claude Code session): `InboxMessage.canvasJson`, parsed from `canvas`; the inbox sync stores it on the `agent-<id>` chat message, so the existing `CanvasCard` in `MessageBubble` shows it; the label "📊 Weekly review". No UI redesign.
 
 ## Shipped 2026-10-04: DeskAI v2.4.4 (build 32), the full profile in the Memory sheet
 

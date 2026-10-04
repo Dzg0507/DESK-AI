@@ -39,12 +39,14 @@ data class CanvasRef(
     val version: Int
 )
 
-/** A message the agent started itself (GET /api/inbox): kind is brief, notice, suggestion or question. */
+/** A message the agent started itself (GET /api/inbox): kind is brief, notice, suggestion, question or review.
+ *  canvasJson: a draft card ({"id","title","kind","version"}), e.g. the Sunday growth review. */
 data class InboxMessage(
     val id: Long,
     val kind: String,
     val text: String,
-    val createdAt: String
+    val createdAt: String,
+    val canvasJson: String? = null
 )
 
 data class TaskAction(

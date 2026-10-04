@@ -1,7 +1,7 @@
 {
-  "versionCode": 32,
-  "versionName": "2.4.4",
-  "changelog": "DeskAI v2.4.4 (Build 32): Your profile, in full. The Memory screen shows the profile the agent keeps about you as a few readable paragraphs (no longer cut off), and it scrolls with your saved facts. Includes the real memories (2.4.3) and attachment thumbnails (2.4.2).",
+  "versionCode": 33,
+  "versionName": "2.4.5",
+  "changelog": "DeskAI v2.4.5 (Build 33): Your weekly review. On Sundays the agent turns the week's numbers into a short growth review: a message in the chat with a card that opens the full review, which you can refine by chatting. Includes the full profile (2.4.4) and real memories (2.4.3).",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24083159
+  "fileSizeBytes": 24083166
 }

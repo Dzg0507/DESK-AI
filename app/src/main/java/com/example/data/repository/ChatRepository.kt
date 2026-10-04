@@ -373,6 +373,7 @@ class ChatRepository(
                 "brief" -> "☀️ Morning brief"
                 "question" -> "💬 Question"
                 "suggestion" -> "💡 Suggestion"
+                "review" -> "📊 Weekly review"
                 else -> "🔔 Heads up"
             }
             // java.time needs Android 8; older phones just use the arrival time
@@ -391,7 +392,8 @@ class ChatRepository(
                     content = m.text,
                     timestamp = at,
                     status = "sent",
-                    modelUsed = "AlwaysOnAgent · $label"
+                    modelUsed = "AlwaysOnAgent · $label",
+                    canvasJson = m.canvasJson       // the draft card (the Sunday review), as on a chat reply
                 )
             )
             if (row != -1L) added++

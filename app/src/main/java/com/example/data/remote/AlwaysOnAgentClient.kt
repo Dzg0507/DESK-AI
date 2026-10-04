@@ -400,7 +400,8 @@ class AlwaysOnAgentClient {
                             id = m.optLong("id"),
                             kind = m.optString("kind", "notice"),
                             text = m.optString("text", ""),
-                            createdAt = m.optString("created_at", "")
+                            createdAt = m.optString("created_at", ""),
+                            canvasJson = m.optJSONObject("canvas")?.toString()
                         )
                     }.filter { it.text.isNotBlank() }
                 }
