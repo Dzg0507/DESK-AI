@@ -60,20 +60,28 @@ Upload each file first, then send its id with the message (up to 5 per message):
 
 | Method & path | Body | Returns |
 |---|---|---|
-| `POST /api/chat/attachments` | `{"name": "notes.pdf", "data_b64": "<the file, base64>", "conversation_id"?}` | `{"status": "success", "attachment": {"id": "att-1a2b3c4d5e6f", "name", "kind": "pdf"\|"word"\|"text"\|"image", "method": "text"\|"ocr"\|"mixed", "chars", "pages"?, "confidence"?, "warnings": [...], "seconds", ...}, "preview": "first 300 characters"}`; `422` with the reason (unsupported type, empty, over 15 MB, can't be read); `400` bad base64 |
+| `POST /api/chat/attachments` | `{"name": "notes.pdf", "data_b64": "<the file, base64>", "conversation_id"?}` | `{"status": "success", "attachment": {"id": "att-1a2b3c4d5e6f", "name", "kind": "pdf"\|"word"\|"text"\|"image"\|"video", "method": "text"\|"ocr"\|"mixed"\|"video", "chars", "pages"?, "confidence"?, "warnings": [...], "has_thumb": true, "thumb_url": "/api/chat/attachments/att-.../thumb", "thumb_b64": "data:image/jpeg;base64,...", "seconds", ...}, "preview": "first 300 characters"}`; `422` with the reason (unsupported type, empty, over 15 MB, can't be read); `400` bad base64 |
 | `GET /api/chat/attachments?conversation_id=&limit=10` | | `{"attachments": [attachment]}`, newest first |
+| `GET /api/chat/attachments/{id}/thumb` | | Visual thumbnail (`thumb.jpg`, JPEG) for images, videos (frame capture), PDFs (page 1 cover), and documents (badged card) |
+| `GET /api/chat/attachments/{id}/file` | | The original uploaded attachment binary file |
 
-- **Types:** PDF, Word `.docx`, text-like files (`.txt`, `.md`, `.csv`, `.json`, code…) and images (`.png`,
-  `.jpg`, `.webp`…). Up to 15 MB.
+- **Types:** PDF, Word `.docx`, text-like files (`.txt`, `.md`, `.csv`, `.json`, code…), images (`.png`, `.jpg`,
+  `.webp`…), and videos (`.mp4`, `.mov`, `.webm`, `.avi`, `.mkv`, `.m4v`). Up to 15 MB.
+- **Visual thumbnails & client perception:** Every uploaded attachment gets a 256×256 `thumb.jpg` and compact
+  `thumb_b64` (data URI) in the response. Photos and videos generate frame thumbnails; PDFs extract page 1 covers;
+  documents generate stylish badged preview cards. DeskAI renders thumbnails immediately in `ChatInputBar` without roundtrip delays.
+- **Smart token-efficient AI vision downscaling:** Images attached in chat automatically generate an `ai_view.jpg`
+  capped at 768px longest dimension (Lanczos downsampling, stripped of EXIF overhead, quality 85). This reduces
+  raw 4MB–10MB phone camera uploads down to ~50KB, slashing vision token overhead and CPU memory consumption.
 - **How the text is read:** documents directly; images and scanned PDF pages by OCR (Tesseract, on the agent's
-  PC), which takes a few seconds and can misread words. `method` says which; `warnings` flags an uncertain
-  OCR reading or no text found. Show them on the file's chip.
+  PC), which takes a few seconds and can misread words; videos by frame extraction. `method` says which; `warnings`
+  flags an uncertain OCR reading or no text found. Show them on the file's chip.
 - **In the chat:** `POST /api/chat` with `"attachments": ["att-…"]`. The message itself is required (send
   e.g. "What's in this file?" if the owner typed nothing). The history stores the message plus
   `[attached: name (id …)]`; the document's text goes to the model beside it, and the assistant can read further
   into it later in the conversation. `404` if an id is unknown. Uploads are kept 30 days.
-- **Images also get a scene note** from a small vision model on the agent's PC (Ollama, `gemma3:4b`), in the
-  background, about 40 s per image. A chat turn that carries an image waits up to 50 s for its note; without
+- **Images and videos also get a scene note** from a small vision model on the agent's PC (Ollama, `gemma3:4b`),
+  in the background, about 40 s per item. A chat turn that carries an image waits up to 50 s for its note; without
   one the assistant says it can't see the image rather than guessing. Every 5 noted images, anything durable
   (things that repeat, or clearly matter) goes into long-term memory as facts with source `images`.
 

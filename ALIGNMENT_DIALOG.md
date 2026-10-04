@@ -15,6 +15,19 @@
 
 ---
 
+## Implemented 2026-10-04: smart attachment thumbnails and AI vision downscaling
+
+- **Chat attachment thumbnails & preview in ChatInputBar:**
+  - `ChatAttachment.kt` updated with `thumbUrl`, `thumbB64`, `hasThumb`, and video method status support.
+  - `AlwaysOnAgentClient.kt` parses `thumb_url`, `thumb_b64`, `has_thumb`, and resolves relative thumbnail URLs against `baseUrl`.
+  - `ChatInputBar.kt`:
+    - File picker launcher now allows `video/*` in addition to PDF, Word, text, and images.
+    - `AttachmentChip` renders a clipped thumbnail with Coil's `AsyncImage` whenever a thumbnail (base64 or URL) is available, with an electric cyan border accent and smooth fallback to category icons (`PictureAsPdf`, `Image`, `Videocam`, `Description`).
+- **AlwaysOnAgent side:**
+  - `core/documents.py`: Generates `thumb.jpg` (256×256) and `ai_view.jpg` (768px Lanczos, quality 85, EXIF-transposed, metadata stripped) for images, videos (via FFmpeg), PDFs (page 1 cover), and documents (badged card).
+  - `interfaces/hud/chat.py`: Exposes `GET /api/chat/attachments/{id}/thumb` and `GET /api/chat/attachments/{id}/file`.
+  - Zero-touch housekeeping: `documents.prune()` deletes all thumbnail and vision view variants alongside the original attachment.
+
 ## Shipped 2026-10-04: build 29, one-tap go-live chips (by the local Claude session)
 
 - Finished AgentWork jobs on `website` and `alwaysonagent` now carry a go-live chip: `🚀 Push live` / `⚡ Apply
