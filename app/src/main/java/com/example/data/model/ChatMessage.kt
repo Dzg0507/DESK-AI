@@ -23,8 +23,19 @@ data class ChatMessage(
     val proposalState: String? = null, // "pending", "run", "dismissed"
     val linkedTaskId: String? = null,
     val proposalsJson: String? = null,
-    val questionJson: String? = null
+    val questionJson: String? = null,
+    val canvasJson: String? = null          // the draft this reply wrote or changed: {"id","title","kind","version"}
 ) {
+    fun getCanvas(): CanvasRef? {
+        if (canvasJson.isNullOrBlank()) return null
+        return try {
+            val o = org.json.JSONObject(canvasJson)
+            CanvasRef(o.getLong("id"), o.optString("title", "Draft"), o.optString("kind", "document"), o.optInt("version", 1))
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     fun getProposals(): List<TaskProposal> {
         if (!proposalsJson.isNullOrBlank()) {
             try {

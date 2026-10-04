@@ -417,6 +417,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    suspend fun fetchCanvasVersions(canvasId: Long): List<Int> = repository.fetchCanvasVersions(canvasId)
+
     suspend fun publishVideoToTikTok(filename: String): Result<String> {
         val res = repository.publishVideoToTikTok(filename)
         val tid = res.getOrNull()

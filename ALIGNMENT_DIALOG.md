@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-04 (DeskAI v2.3.13 / Build 27 shipped — the agent's own messages in the chat)
+**Last Updated:** 2026-10-04 (DeskAI v2.4.0 / Build 28 shipped — the canvas)
 
 ---
 
@@ -14,6 +14,20 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-04: build 28, the canvas (by the local Claude session)
+
+Drafts the owner and the agent refine together (AlwaysOnAgent `docs/CANVAS.md`): documents (guides, scripts,
+plans, emails) and website page previews. The app side:
+- **The chat reply's `canvas`** (`{"id","title","kind","version"}`) is stored in the new `chat_messages.canvasJson`
+  column (Room 4→5, `MIGRATION_4_5`). `MessageBubble` shows a `CanvasCard` ("📄/🌐 title · version N · Open").
+- **`CanvasDialog`** (`ui/components/CanvasViewer.kt`): full screen, a version strip (from `GET /api/canvas/{id}`)
+  and a WebView on `GET /api/canvas/{id}/preview?version=`, with JavaScript off and no file access. The token goes
+  in the `X-HUD-Token` header, never the URL. "💬 Discuss" prefills the chat input with "About the draft …".
+- The agent serves previews with a script-free, sandboxed CSP. A page preview uses the website's live stylesheets.
+- Version 28 / 2.4.0; `docs/API.md` synced ("Canvas (drafts)").
+
+**Don't undo:** JavaScript off in the canvas WebView, and the token in a header, never in the URL.
 
 ## Shipped 2026-10-04: build 27, the agent's own messages in the chat (by the local Claude session)
 

@@ -58,6 +58,7 @@ class AlwaysOnAgentClient {
         }
 
     var lastReceivedQuestion: ChatQuestion? = null
+    var lastReceivedCanvas: String? = null      // the reply's "canvas" object, as JSON
     var lastReceivedTaskId: String? = null
 
     private fun addAuth(builder: Request.Builder, config: BridgeConfig): Request.Builder {
@@ -361,6 +362,22 @@ class AlwaysOnAgentClient {
                         list.add(parseTaskJson(array.getJSONObject(i), baseUrl))
                     }
                     list
+                }
+            }
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    /** A draft's version numbers, oldest first (GET /api/canvas/{id}); empty if it can't be reached. */
+    suspend fun fetchCanvasVersions(config: BridgeConfig, canvasId: Long): List<Int> = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                val req = addAuth(Request.Builder().url("$baseUrl/api/canvas/$canvasId"), config).build()
+                httpClient.newCall(req).execute().use { resp ->
+                    if (!resp.isSuccessful) return@executeWithFailover emptyList()
+                    val arr = JSONObject(resp.body?.string() ?: "{}").optJSONArray("versions") ?: JSONArray()
+                    (0 until arr.length()).mapNotNull { arr.optJSONObject(it)?.optInt("version") }
                 }
             }
         } catch (_: Exception) {
@@ -1784,6 +1801,9 @@ class AlwaysOnAgentClient {
                             } else {
                                 lastReceivedQuestion = null
                             }
+
+                            // A draft this reply wrote or changed: the bubble shows a card that opens it
+                            lastReceivedCanvas = json.optJSONObject("canvas")?.toString()
 
                             // Read JSON field task_id for chat-created tasks (e.g. /task, /cancel)
                             val taskId = if (json.has("task_id") && !json.isNull("task_id")) {

@@ -31,6 +31,14 @@ data class TaskResult(
     val url: String = ""          // resolved against the server URL
 )
 
+/** A draft in the agent's canvas (the chat reply's `canvas`): kind is document or page. */
+data class CanvasRef(
+    val id: Long,
+    val title: String,
+    val kind: String,
+    val version: Int
+)
+
 /** A message the agent started itself (GET /api/inbox): kind is brief, notice, suggestion or question. */
 data class InboxMessage(
     val id: Long,

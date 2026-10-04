@@ -113,6 +113,7 @@ fun ChatScreen(
     var showUpdaterDialog by remember { mutableStateOf(false) }
     var hasUpdateAvailable by remember { mutableStateOf(false) }
     var playbackVideo by remember { mutableStateOf<com.example.data.model.VideoItem?>(null) }
+    var openCanvas by remember { mutableStateOf<com.example.data.model.CanvasRef?>(null) }
 
     // Check for updates in background
     LaunchedEffect(config.getResolvedUrl()) {
@@ -410,6 +411,7 @@ fun ChatScreen(
                                             }
                                         }
                                     },
+                                    onOpenCanvas = { ref -> openCanvas = ref },
                                     serverBaseUrl = config.getResolvedUrl(),
                                     authToken = config.apiKey
                                 )
@@ -569,6 +571,18 @@ fun ChatScreen(
             onFetchProjects = { viewModel.fetchAgentWorkProjects() },
             onDispatchJob = { project, instruction -> viewModel.dispatchAgentWorkJob(project, instruction) },
             onAddProject = { name, repo, desc -> viewModel.addAgentWorkProject(name, repo, desc) }
+        )
+    }
+
+    // The canvas: a draft full screen, with its versions (from a draft card in the chat)
+    openCanvas?.let { ref ->
+        com.example.ui.components.CanvasDialog(
+            ref = ref,
+            serverBaseUrl = config.getResolvedUrl(),
+            authToken = config.apiKey,
+            loadVersions = { id -> viewModel.fetchCanvasVersions(id) },
+            onDiscuss = { r -> viewModel.onInputTextChange("About the draft \"${r.title}\": ") },
+            onDismiss = { openCanvas = null }
         )
     }
 

@@ -259,6 +259,18 @@ missed push loses nothing. Using `agent-<id>` as the message's id in the app's c
 twice. The settings (on/off, brief time, quiet hours, caps) are changed in chat; the agent uses its
 `proactive_settings` tool.
 
+## Canvas (drafts)
+
+Drafts the owner and the agent refine together (design: [CANVAS.md](CANVAS.md)). When a chat reply wrote or changed
+one, `/api/chat` returns `"canvas": {"id": 3, "title": "Grief cards guide", "kind": "document"|"page", "version": 2}`
+and the app shows a card that opens the canvas screen.
+
+| Method & path | Returns |
+|---|---|
+| `GET /api/canvas?limit=20` | `{"canvases": [{"id", "title", "kind", "version", "updated_at"}]}`, newest first |
+| `GET /api/canvas/{id}?version=` | `{"id", "title", "kind", "version", "latest", "versions": [{"version", "note", "created_at"}], "created_at", "updated_at"}` (no content: that's the preview) |
+| `GET /api/canvas/{id}/preview?version=` | the draft as a full HTML page: a document in a clean reading layout, a page with the website's own stylesheets. Sent with `Content-Security-Policy: default-src 'none'; script-src 'none'; … sandbox`, so nothing in it can run. Load it with the token in a header, not in the URL. |
+
 ## Connection check
 
 `GET /` returns `{"status": "online", "message": "AlwaysOnAgent is running"}`, or `401` with a missing or wrong

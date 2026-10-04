@@ -1,7 +1,7 @@
 {
-  "versionCode": 27,
-  "versionName": "2.3.13",
-  "changelog": "DeskAI v2.3.13 (Build 27): The agent can now message you first: a morning brief, heads-ups, suggestions, and questions to get to know you better. They arrive as a notification and show up in your chat; just reply to answer. Change it any time in chat, e.g. \"brief at 7\" or \"no questions for a while\".",
+  "versionCode": 28,
+  "versionName": "2.4.0",
+  "changelog": "DeskAI v2.4.0 (Build 28): The canvas. Ask the agent to draft something (a guide, a TikTok script, an email, a plan) or to show how a website page would look, and it opens as a card you can tap. Refine it in chat (\"punchier intro\"), flip between versions, and say \"publish it\" when it's ready. Also includes build 27: the agent's morning brief and questions in your chat.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24050383
+  "fileSizeBytes": 24083161
 }

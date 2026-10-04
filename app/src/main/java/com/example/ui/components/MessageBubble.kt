@@ -89,6 +89,7 @@ fun MessageBubble(
     onRetryTask: (suspend (String) -> Result<String>)? = null,
     onPlayVideo: ((url: String, filename: String) -> Unit)? = null,
     onActionClick: ((TaskAction) -> Unit)? = null,
+    onOpenCanvas: ((com.example.data.model.CanvasRef) -> Unit)? = null,
     serverBaseUrl: String = "",
     authToken: String = "",
     modifier: Modifier = Modifier
@@ -242,6 +243,13 @@ fun MessageBubble(
                             onAnswer = { opt -> onAnswerQuestion(message, opt) },
                             onFocusOther = onFocusInput
                         )
+                    }
+
+                    // A draft this reply wrote or changed: opens the canvas
+                    val canvasRef = message.getCanvas()
+                    if (canvasRef != null && onOpenCanvas != null) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        CanvasCard(ref = canvasRef, onOpen = onOpenCanvas)
                     }
 
                     // Section 7.7 Live Task Card (Progress, ETA, Abort, Video Result)

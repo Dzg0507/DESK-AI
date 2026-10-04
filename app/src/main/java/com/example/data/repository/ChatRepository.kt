@@ -352,6 +352,10 @@ class ChatRepository(
      * Called when an agent_message push arrives and while the chat is open, so a missed push loses nothing.
      * Returns how many were added.
      */
+    suspend fun fetchCanvasVersions(canvasId: Long): List<Int> = withContext(Dispatchers.IO) {
+        agentClient.fetchCanvasVersions(getActiveConfig(), canvasId)
+    }
+
     suspend fun syncInbox(sessionId: String? = null): Int = withContext(Dispatchers.IO) {
         val prefs = context?.getSharedPreferences("deskai_inbox", Context.MODE_PRIVATE) ?: return@withContext 0
         val lastId = prefs.getLong("last_id", 0L)
@@ -525,6 +529,8 @@ class ChatRepository(
             agentClient.lastReceivedQuestion = null
             val receivedTaskId = agentClient.lastReceivedTaskId
             agentClient.lastReceivedTaskId = null
+            val receivedCanvas = agentClient.lastReceivedCanvas
+            agentClient.lastReceivedCanvas = null
 
             val finalProposals: List<TaskProposal> = if (structuredProps.isNotEmpty()) {
                 // Agent-issued structured proposals (preserves all proposals from agent)
@@ -566,6 +572,7 @@ class ChatRepository(
                 proposalToken = if (firstProp != null && !firstProp.isLocal) firstProp.id else null,
                 proposalState = if (firstProp != null) firstProp.state else null,
                 questionJson = if (receivedQuestion != null) ChatMessage.serializeQuestion(receivedQuestion) else null,
+                canvasJson = receivedCanvas,
                 linkedTaskId = detectedTaskId
             )
             chatDao.updateMessage(finalAssistantMessage)
