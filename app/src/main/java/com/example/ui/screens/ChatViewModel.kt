@@ -124,6 +124,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun pollStatsPeriodically() {
         viewModelScope.launch {
+            var tick = 0
             while (true) {
                 try {
                     val stats = repository.fetchDaemonStats()
@@ -134,6 +135,15 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 } catch (_: Exception) {
                     // Ignore transient errors
                 }
+                // The agent's own messages (brief, questions…): on opening, then once a minute, so a missed push
+                // loses nothing (a push also syncs right away)
+                if (tick % 10 == 0) {
+                    try {
+                        repository.syncInbox(_currentSession.value?.id)
+                    } catch (_: Exception) {
+                    }
+                }
+                tick++
                 delay(6000)
             }
         }

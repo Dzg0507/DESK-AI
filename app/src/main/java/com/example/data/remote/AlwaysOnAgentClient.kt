@@ -368,6 +368,31 @@ class AlwaysOnAgentClient {
         }
     }
 
+    /** Messages the agent started (brief, notices, suggestions, questions) newer than [after], oldest first.
+     *  Their push carries no text (it passes through Google), so the text comes from here. */
+    suspend fun fetchInbox(config: BridgeConfig, after: Long): List<com.example.data.model.InboxMessage> = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                val req = addAuth(Request.Builder().url("$baseUrl/api/inbox?after=$after"), config).build()
+                httpClient.newCall(req).execute().use { resp ->
+                    if (!resp.isSuccessful) return@executeWithFailover emptyList()
+                    val arr = JSONObject(resp.body?.string() ?: "{}").optJSONArray("messages") ?: JSONArray()
+                    (0 until arr.length()).mapNotNull { i ->
+                        val m = arr.optJSONObject(i) ?: return@mapNotNull null
+                        com.example.data.model.InboxMessage(
+                            id = m.optLong("id"),
+                            kind = m.optString("kind", "notice"),
+                            text = m.optString("text", ""),
+                            createdAt = m.optString("created_at", "")
+                        )
+                    }.filter { it.text.isNotBlank() }
+                }
+            }
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
     suspend fun getTask(config: BridgeConfig, taskId: String): Result<AgentTaskItem> = withContext(Dispatchers.IO) {
         try {
             executeWithFailover(config) { baseUrl ->

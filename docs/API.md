@@ -224,11 +224,13 @@ display.
 
 Messages are **data-only and high priority**, and the app builds the notification. The `data` map (all
 strings):
-- `type`: `task_completed`, `task_failed`, `alert`, `reminder` or `test`;
+- `type`: `task_completed`, `task_failed`, `alert`, `reminder`, `agent_message` or `test`;
 - `task_id`;
 - `title` and `body`, both short. They pass through Google's servers, so they never carry memory or chat
   content. The one exception is a reminder's body: the text the owner wrote for that reminder.
-- `channel`: `tasks`, `alerts` or `reminders`. Apps older than 2.3.9 show reminders on the alerts channel.
+- `channel`: `tasks`, `alerts`, `reminders` or `assistant`. Apps older than 2.3.9 show reminders on the alerts
+  channel.
+- `agent_message` only: `message_id` and `kind` (see "Messages the agent starts").
 
 **When pushes are sent:**
 - `task_completed` for every finished task. One that needs the owner's input (`needs_input`) has the title
@@ -236,8 +238,26 @@ strings):
 - `task_failed` for every failure except cancels.
 - `alert` for backup failures, stuck tasks and safety-check failures.
 - `reminder` when a reminder schedule runs.
+- `agent_message` when the agent starts a message (below). The push has no text of its own, only what kind of
+  message is waiting.
 
 Tokens that FCM rejects are removed automatically.
+
+## Messages the agent starts (proactive)
+
+The agent reaches out by itself: a morning brief, notices, suggestions, and questions to get to know the owner
+(design: [PROACTIVE.md](PROACTIVE.md)). Each one is announced by an `agent_message` push carrying `message_id`
+and `kind`, but **not the text**. The app fetches the text here and shows it in the chat as an assistant
+message, and the owner simply replies in the chat.
+
+| Method & path | Returns |
+|---|---|
+| `GET /api/inbox?after=<id>&limit=50` | `{"messages": [{"id": 12, "kind": "brief"\|"notice"\|"suggestion"\|"question", "text", "created_at"}], "last_id": 12}`, oldest first, only ids greater than `after` |
+
+The app keeps the highest id it has shown and asks for newer ones when a push arrives and whenever it opens, so a
+missed push loses nothing. Using `agent-<id>` as the message's id in the app's chat keeps a message from showing
+twice. The settings (on/off, brief time, quiet hours, caps) are changed in chat; the agent uses its
+`proactive_settings` tool.
 
 ## Connection check
 

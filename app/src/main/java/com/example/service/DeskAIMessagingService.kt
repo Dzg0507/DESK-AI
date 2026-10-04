@@ -48,6 +48,17 @@ class DeskAIMessagingService : FirebaseMessagingService() {
             val body = data["body"] ?: if (taskId.isNotBlank()) "Task [$taskId] updated" else "Important alert from AlwaysOnAgent"
             val channel = data["channel"] ?: if (type.startsWith("task")) "tasks" else "alerts"
 
+            if (type == "agent_message") {
+                // The push carries no text (it passes through Google): fetch the message into the chat
+                scope.launch {
+                    try {
+                        val db = AppDatabase.getDatabase(applicationContext)
+                        com.example.data.repository.ChatRepository(applicationContext, db).syncInbox()
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Inbox sync after push failed: ${e.message}")
+                    }
+                }
+            }
             showNotification(title, body, channel, taskId, type)
         }
     }
@@ -61,15 +72,22 @@ class DeskAIMessagingService : FirebaseMessagingService() {
     ) {
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        val channelId = when (channelKey) { "tasks" -> CHANNEL_TASKS; "reminders" -> CHANNEL_REMINDERS; else -> CHANNEL_ALERTS }
-        val channelName = when (channelKey) { "tasks" -> "Tasks Updates"; "reminders" -> "Reminders"; else -> "System Alerts" }
+        val channelId = when (channelKey) {
+            "tasks" -> CHANNEL_TASKS; "reminders" -> CHANNEL_REMINDERS; "assistant" -> CHANNEL_ASSISTANT; else -> CHANNEL_ALERTS
+        }
+        val channelName = when (channelKey) {
+            "tasks" -> "Tasks Updates"; "reminders" -> "Reminders"; "assistant" -> "Assistant messages"; else -> "System Alerts"
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val importance = if (channelKey == "tasks") NotificationManager.IMPORTANCE_DEFAULT else NotificationManager.IMPORTANCE_HIGH
+            // The agent's own messages (brief, questions) are normal, not heads-up alerts
+            val calm = channelKey == "tasks" || channelKey == "assistant"
+            val importance = if (calm) NotificationManager.IMPORTANCE_DEFAULT else NotificationManager.IMPORTANCE_HIGH
             val channel = NotificationChannel(channelId, channelName, importance).apply {
                 description = when (channelKey) {
                     "tasks" -> "Notifications when tasks complete or fail"
                     "reminders" -> "Reminders you scheduled with the agent"
+                    "assistant" -> "Your morning brief, heads-ups, suggestions and questions from the agent"
                     else -> "Critical warnings, backups and supervisor alerts"
                 }
                 enableLights(true)
@@ -98,7 +116,8 @@ class DeskAIMessagingService : FirebaseMessagingService() {
             .setContentText(body)
             .setAutoCancel(true)
             .setSound(soundUri)
-            .setPriority(if (channelKey == "tasks") NotificationCompat.PRIORITY_DEFAULT else NotificationCompat.PRIORITY_HIGH)
+            .setPriority(if (channelKey == "tasks" || channelKey == "assistant") NotificationCompat.PRIORITY_DEFAULT
+                         else NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pendingIntent)
 
         val notificationId = if (taskId.isNotBlank()) taskId.hashCode() else System.currentTimeMillis().toInt()
@@ -129,5 +148,6 @@ class DeskAIMessagingService : FirebaseMessagingService() {
         const val CHANNEL_TASKS = "deskai_tasks_channel"
         const val CHANNEL_ALERTS = "deskai_alerts_channel"
         const val CHANNEL_REMINDERS = "deskai_reminders_channel"
+        const val CHANNEL_ASSISTANT = "deskai_assistant_channel"
     }
 }

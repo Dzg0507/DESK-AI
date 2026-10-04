@@ -31,6 +31,14 @@ data class TaskResult(
     val url: String = ""          // resolved against the server URL
 )
 
+/** A message the agent started itself (GET /api/inbox): kind is brief, notice, suggestion or question. */
+data class InboxMessage(
+    val id: Long,
+    val kind: String,
+    val text: String,
+    val createdAt: String
+)
+
 data class TaskAction(
     val label: String = "",
     val action: String = "",      // "stream", "post", "chat", "cancel", "retry"

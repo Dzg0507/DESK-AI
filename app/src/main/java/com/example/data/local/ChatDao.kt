@@ -36,6 +36,14 @@ interface ChatDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMessage(message: ChatMessage)
 
+    // An agent-started message arrives by push and again on the next sync: keep the first copy
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertMessageIfAbsent(message: ChatMessage): Long
+
+    // The conversation the app opens on (the same order as the session list): where the agent's own messages go
+    @Query("SELECT * FROM chat_sessions ORDER BY pinned DESC, updatedAt DESC LIMIT 1")
+    suspend fun getLatestSession(): ChatSession?
+
     @Update
     suspend fun updateMessage(message: ChatMessage)
 

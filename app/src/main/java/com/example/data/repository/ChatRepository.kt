@@ -346,6 +346,53 @@ class ChatRepository(
         chatDao.updateMessage(message)
     }
 
+    /**
+     * Brings in the messages the agent started (brief, notices, suggestions, questions) that the app hasn't shown
+     * yet, as assistant messages: in [sessionId] (the conversation on screen) or else the one the app opens on.
+     * Called when an agent_message push arrives and while the chat is open, so a missed push loses nothing.
+     * Returns how many were added.
+     */
+    suspend fun syncInbox(sessionId: String? = null): Int = withContext(Dispatchers.IO) {
+        val prefs = context?.getSharedPreferences("deskai_inbox", Context.MODE_PRIVATE) ?: return@withContext 0
+        val lastId = prefs.getLong("last_id", 0L)
+        val messages = agentClient.fetchInbox(getActiveConfig(), lastId)
+        if (messages.isEmpty()) return@withContext 0
+        val session = sessionId?.let { chatDao.getSessionById(it).firstOrNull() }
+            ?: chatDao.getLatestSession() ?: ensureDefaultSession()
+        var added = 0
+        for (m in messages) {
+            val label = when (m.kind) {
+                "brief" -> "☀️ Morning brief"
+                "question" -> "💬 Question"
+                "suggestion" -> "💡 Suggestion"
+                else -> "🔔 Heads up"
+            }
+            // java.time needs Android 8; older phones just use the arrival time
+            val at = try {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O)
+                    java.time.OffsetDateTime.parse(m.createdAt).toInstant().toEpochMilli()
+                else System.currentTimeMillis()
+            } catch (_: Exception) {
+                System.currentTimeMillis()
+            }
+            val row = chatDao.insertMessageIfAbsent(
+                ChatMessage(
+                    id = "agent-${m.id}",           // the same message from a push and a later sync is stored once
+                    sessionId = session.id,
+                    role = "assistant",
+                    content = m.text,
+                    timestamp = at,
+                    status = "sent",
+                    modelUsed = "AlwaysOnAgent · $label"
+                )
+            )
+            if (row != -1L) added++
+        }
+        prefs.edit().putLong("last_id", messages.maxOf { it.id }).apply()
+        if (added > 0) chatDao.updateSession(session.copy(updatedAt = System.currentTimeMillis()))
+        added
+    }
+
     suspend fun ensureDefaultSession(): ChatSession = withContext(Dispatchers.IO) {
         val existing = chatDao.getAllSessions().firstOrNull()?.firstOrNull()
         val welcomeContent = """

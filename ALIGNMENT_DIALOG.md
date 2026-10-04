@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-04 (DeskAI v2.3.12 / Build 26 shipped — Action Chips & Task Diff Previews)
+**Last Updated:** 2026-10-04 (DeskAI v2.3.13 / Build 27 shipped — the agent's own messages in the chat)
 
 ---
 
@@ -14,6 +14,27 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-04: build 27, the agent's own messages in the chat (by the local Claude session)
+
+The agent now reaches out first (AlwaysOnAgent `docs/PROACTIVE.md`): a morning brief, notices, suggestions and
+questions to get to know the owner. The app side:
+- **Push `agent_message`** (channel `assistant`, with `message_id` and `kind`) carries **no text**, because pushes
+  pass through Google. `DeskAIMessagingService` shows the notification on a new "Assistant messages" channel at
+  normal importance, not heads-up, and calls `ChatRepository.syncInbox()`.
+- **`ChatRepository.syncInbox(sessionId?)`** fetches `GET /api/inbox?after=<last id>` (`AlwaysOnAgentClient.fetchInbox`)
+  and stores each message as an assistant `ChatMessage` with id `agent-<id>`. It uses
+  `ChatDao.insertMessageIfAbsent` (IGNORE), so a push plus a later sync never shows it twice. Messages go into
+  the conversation on screen, else the one the app opens on (`ChatDao.getLatestSession`, same order as the list).
+  The last id is in SharedPreferences `deskai_inbox`. `modelUsed` labels the kind ("AlwaysOnAgent · ☀️ Morning
+  brief", "· 💬 Question", …).
+- **`ChatViewModel`** also syncs when the chat opens and then once a minute (every 10th stats poll), so a missed
+  push loses nothing.
+- The owner answers a question by replying in the chat as usual; the agent has the question in its own
+  conversation history.
+- Version 27 / 2.3.13; `docs/API.md` synced ("Messages the agent starts").
+
+**Don't undo:** no message text in pushes (the app fetches it), and the `agent-<id>` ids with insert-if-absent.
 
 ## Shipped 2026-10-04: build 26 compiled and published (by the local Claude session on the owner's laptop)
 
