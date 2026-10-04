@@ -514,6 +514,25 @@ class AlwaysOnAgentClient {
         )
     }
 
+    /** A task card's "post" chip (e.g. "🚀 Push live" → /api/tasks/{id}/apply): the agent's `message`, or its
+     *  refusal reason (`detail`) as the failure. [path] is relative to the server, like the chip's url. */
+    suspend fun postChipAction(config: BridgeConfig, path: String): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                val url = if (path.startsWith("http")) path else "$baseUrl/${path.trimStart('/')}"
+                val req = addAuth(Request.Builder().url(url).post("".toRequestBody(jsonMediaType)), config).build()
+                httpClient.newCall(req).execute().use { resp ->
+                    val body = resp.body?.string() ?: ""
+                    val json = try { JSONObject(body) } catch (_: Exception) { JSONObject() }
+                    if (resp.isSuccessful) Result.success(json.optString("message", "Done."))
+                    else Result.failure(Exception(json.optString("detail", "HTTP ${resp.code}")))
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun retryTask(config: BridgeConfig, taskId: String): Result<String> = withContext(Dispatchers.IO) {
         try {
             executeWithFailover(config) { baseUrl ->

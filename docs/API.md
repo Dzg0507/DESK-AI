@@ -92,7 +92,7 @@ A **task object** (from `GET /api/tasks`, `GET /api/tasks/{id}`, and the stream'
 | `result` | a finished video: `{"type": "video", "filename": "vibe_check_….mp4", "url": "/videos/vibe_check_….mp4"}`. Otherwise `null`: show `output_summary`. It's also `null` once the video has been pruned. |
 | `engine` | `auto`, `antigravity`, `cloud`, `ollama`, `media_pipeline` (TiktokVideos), `agentwork` |
 | `priority` | `low`, `medium`, `high`, `urgent` |
-| `actions` | contextual 1-tap action chips: `[{"label", "action": "stream"|"post"|"chat", "url"|"command", "variant": "primary"|"secondary"|"danger"}]`. e.g. "Preview Diff", "Apply Update", "Discuss Blockers", "Post to TikTok" |
+| `actions` | contextual 1-tap action chips: `[{"label", "action": "stream"|"post"|"chat"|"none", "url"|"command", "variant": "primary"|"secondary"|"danger"}]`. e.g. "Preview diff", "🚀 Push live", "⚡ Apply update", "Discuss Blockers", "Post to TikTok" |
 | `created_at`, `started_at`, `completed_at`, `output_summary`, `last_error`, `exit_code`, `engine_used`, `retry_count`, `worker_pid`, `metadata` | as named; ignore any others |
 
 `progress`:
@@ -112,15 +112,23 @@ A **task object** (from `GET /api/tasks`, `GET /api/tasks/{id}`, and the stream'
 Each task object includes a dynamic `actions` array of contextual 1-tap buttons:
 ```json
 [
-  {"label": "🔍 Preview Diff", "action": "chat", "command": "Show diff for task-052", "variant": "secondary"},
-  {"label": "⚡ Apply Update", "action": "chat", "command": "apply task-052", "variant": "primary"}
+  {"label": "🔍 Preview diff", "action": "chat", "command": "Show diff for task-052", "variant": "secondary"},
+  {"label": "🚀 Push live", "action": "post", "url": "/api/tasks/task-052/apply", "variant": "primary"}
 ]
 ```
 - **`action` types:**
   - `stream`: Opens media stream URL in video player (`url`: `/videos/...`).
-  - `post`: Sends an authenticated HTTP POST request directly (`url`: `/api/cancel/{id}`, `/api/retry/{id}`, `/api/videos/{name}/publish`).
-  - `chat`: Sends pre-formatted command/prompt into chat conversation (`command`: `apply task-052`, `Show diff for task-052`, etc.).
+  - `post`: Sends an authenticated HTTP POST request directly (`url`: `/api/tasks/{id}/apply`, `/api/videos/{name}/publish`, …). For anything but a TikTok publish, show the response's `message` (or, on an error, its `detail`) in the chat.
+  - `chat`: Sends pre-formatted command/prompt into chat conversation (`command`: `Show diff for task-052`, etc.).
+  - `none`: A status label with nothing to tap (`⏳ Going live…`, `✅ Live`).
 - **`variant` styles:** `primary` (highlight/action), `secondary` (neutral/outline), `danger` (destructive/cancel).
+- **Going live:** a finished `alwaysonagent` or `website` job shows `🔍 Preview diff` and its go-live chip (`⚡ Apply
+  update` / `🚀 Push live`), which then becomes `⏳ Going live…`, then `✅ Live`, `↩️ Rolled back`, or `🔁 Try again`
+  after a failed attempt that pushed nothing. The tap is the owner's go-ahead.
+
+| Method & path | Returns |
+|---|---|
+| `POST /api/tasks/{id}/apply` | `202 {"status": "applying", "task_id", "project", "message"}`: the go-live program has started; the outcome comes as a push notification. `409 {"detail": "<why not>"}` if it can't go live (not finished, changed nothing, already live, another go-live running, …). |
 
 | Method & path | Body | Returns |
 |---|---|---|

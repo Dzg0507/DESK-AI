@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-04 (DeskAI v2.4.0 / Build 28 shipped — the canvas)
+**Last Updated:** 2026-10-04 (DeskAI v2.4.1 / Build 29 shipped — one-tap go-live chips)
 
 ---
 
@@ -14,6 +14,18 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-04: build 29, one-tap go-live chips (by the local Claude session)
+
+- Finished AgentWork jobs on `website` and `alwaysonagent` now carry a go-live chip: `🚀 Push live` / `⚡ Apply
+  update`, with `action: "post"` and `url: /api/tasks/{id}/apply`. The tap is the owner's go-ahead (no chat turn).
+  The chip then shows `⏳ Going live…` / `✅ Live` (`action: "none"`) or `🔁 Try again`.
+- `ChatScreen` "post" chips: only a real `/api/videos/…/publish` URL goes to the TikTok path. Before this, Kotlin's
+  `substringAfter` returned the whole URL when the marker was missing, so any other post chip would have been
+  "published" as a video. Every other post chip calls `ChatViewModel.runChipAction(label, url)` →
+  `AlwaysOnAgentClient.postChipAction`, which shows the agent's `message` (or its 409 `detail`) as a chat message.
+  `"none"` chips do nothing.
+- Version 29 / 2.4.1; `docs/API.md` synced (chip types, "Going live", `POST /api/tasks/{id}/apply`).
 
 ## Shipped 2026-10-04: build 28, the canvas (by the local Claude session)
 

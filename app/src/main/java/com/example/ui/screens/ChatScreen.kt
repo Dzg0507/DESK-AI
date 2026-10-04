@@ -400,12 +400,20 @@ fun ChatScreen(
                                             }
                                             "post" -> {
                                                 action.url?.let { postUrl ->
-                                                    val filename = postUrl.substringAfter("/api/videos/").substringBefore("/publish")
-                                                    if (filename.isNotBlank()) {
-                                                        scope.launch { viewModel.publishVideoToTikTok(filename) }
+                                                    if (postUrl.contains("/api/videos/") && postUrl.contains("/publish")) {
+                                                        // (substringAfter returns the whole string when the marker
+                                                        // is missing, so only parse a real publish URL)
+                                                        val filename = postUrl.substringAfter("/api/videos/").substringBefore("/publish")
+                                                        if (filename.isNotBlank()) {
+                                                            scope.launch { viewModel.publishVideoToTikTok(filename) }
+                                                        }
+                                                    } else {
+                                                        // Any other endpoint chip, e.g. "🚀 Push live" / "⚡ Apply update"
+                                                        viewModel.runChipAction(action.label, postUrl)
                                                     }
                                                 }
                                             }
+                                            "none" -> { /* a status label, e.g. "✅ Live" */ }
                                             else -> {
                                                 action.command?.let { cmd -> viewModel.sendMessage(cmd) }
                                             }

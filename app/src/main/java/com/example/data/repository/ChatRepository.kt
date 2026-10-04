@@ -352,6 +352,10 @@ class ChatRepository(
      * Called when an agent_message push arrives and while the chat is open, so a missed push loses nothing.
      * Returns how many were added.
      */
+    suspend fun postChipAction(path: String): Result<String> = withContext(Dispatchers.IO) {
+        agentClient.postChipAction(getActiveConfig(), path)
+    }
+
     suspend fun fetchCanvasVersions(canvasId: Long): List<Int> = withContext(Dispatchers.IO) {
         agentClient.fetchCanvasVersions(getActiveConfig(), canvasId)
     }

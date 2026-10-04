@@ -1,7 +1,7 @@
 {
-  "versionCode": 28,
-  "versionName": "2.4.0",
-  "changelog": "DeskAI v2.4.0 (Build 28): The canvas. Ask the agent to draft something (a guide, a TikTok script, an email, a plan) or to show how a website page would look, and it opens as a card you can tap. Refine it in chat (\"punchier intro\"), flip between versions, and say \"publish it\" when it's ready. Also includes build 27: the agent's morning brief and questions in your chat.",
+  "versionCode": 29,
+  "versionName": "2.4.1",
+  "changelog": "DeskAI v2.4.1 (Build 29): One tap to go live. When a website change (or a change to the agent itself) is finished, its card shows \"🚀 Push live\" (or \"⚡ Apply update\"): tap it and the agent builds, tests and publishes it, then notifies you. Just say \"push it live\" in chat to bring up the card. Includes the canvas (2.4.0) and the agent's morning brief and questions (2.3.13).",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24083161
+  "fileSizeBytes": 24083156
 }

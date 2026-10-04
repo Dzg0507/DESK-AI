@@ -419,6 +419,23 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     suspend fun fetchCanvasVersions(canvasId: Long): List<Int> = repository.fetchCanvasVersions(canvasId)
 
+    /** A task card's "post" chip (e.g. "🚀 Push live"): calls the agent and shows its answer in the chat. */
+    fun runChipAction(label: String, path: String) {
+        val session = _currentSession.value ?: return
+        viewModelScope.launch {
+            val res = repository.postChipAction(path)
+            repository.insertMessage(
+                ChatMessage(
+                    sessionId = session.id,
+                    role = "assistant",
+                    content = res.fold({ "$label: $it" }, { "⚠️ $label didn't start: ${it.message}" }),
+                    status = "sent",
+                    modelUsed = "AlwaysOnAgent Bridge"
+                )
+            )
+        }
+    }
+
     suspend fun publishVideoToTikTok(filename: String): Result<String> {
         val res = repository.publishVideoToTikTok(filename)
         val tid = res.getOrNull()
