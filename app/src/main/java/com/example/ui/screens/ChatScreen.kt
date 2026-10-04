@@ -401,7 +401,7 @@ fun ChatScreen(
                                                 action.url?.let { postUrl ->
                                                     val filename = postUrl.substringAfter("/api/videos/").substringBefore("/publish")
                                                     if (filename.isNotBlank()) {
-                                                        viewModel.publishVideoToTikTok(filename)
+                                                        scope.launch { viewModel.publishVideoToTikTok(filename) }
                                                     }
                                                 }
                                             }
