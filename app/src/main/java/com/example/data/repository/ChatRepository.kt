@@ -481,6 +481,9 @@ class ChatRepository(
     /**
      * Sends user message, saves to database, streams response, and persists assistant reply.
      */
+    /** The user stopped this reply: the agent drops it instead of keeping it in its memory. */
+    suspend fun cancelChat(turnId: String): Boolean = agentClient.cancelChat(getActiveConfig(), turnId)
+
     suspend fun uploadAttachment(localId: String, name: String, bytes: ByteArray): ChatAttachment =
         agentClient.uploadAttachment(getActiveConfig(), localId, name, bytes)
 
@@ -488,7 +491,8 @@ class ChatRepository(
         session: ChatSession,
         userText: String,
         history: List<ChatMessage>,
-        attachments: List<ChatAttachment> = emptyList()
+        attachments: List<ChatAttachment> = emptyList(),
+        turnId: String? = null
     ): Flow<Pair<ChatMessage, String>> = flow {
         val config = getActiveConfig()
         val isCommand = userText.trim().startsWith("/")
@@ -535,7 +539,8 @@ class ChatRepository(
                 systemPrompt = session.systemPrompt,
                 history = history,
                 userMessage = agentText,
-                attachmentIds = attachments.mapNotNull { it.id }
+                attachmentIds = attachments.mapNotNull { it.id },
+                turnId = turnId
             ).collect { chunk ->
                 currentText += chunk
                 emit(Pair(assistantMessage.copy(content = currentText), currentText))

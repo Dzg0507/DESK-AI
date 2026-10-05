@@ -22,7 +22,15 @@ import com.example.data.model.TaskResult
 import com.example.data.model.TaskAction
 import com.example.data.model.VideoItem
 import com.example.data.model.ImageItem
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.Response
+import java.io.IOException
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -101,6 +109,8 @@ class AlwaysOnAgentClient {
                 val result = block(url)
                 lastWorkingUrl = url
                 return result
+            } catch (e: CancellationException) {
+                throw e                       // the user stopped it: don't try the next address
             } catch (e: Exception) {
                 lastException = e
             }
@@ -1438,7 +1448,8 @@ class AlwaysOnAgentClient {
         systemPrompt: String,
         history: List<ChatMessage>,
         userMessage: String,
-        attachmentIds: List<String> = emptyList()
+        attachmentIds: List<String> = emptyList(),
+        turnId: String? = null
     ): Flow<String> = flow {
         val trimmed = userMessage.trim()
 
@@ -1470,7 +1481,7 @@ class AlwaysOnAgentClient {
         }
 
         // 3. Real conversational chat with the computer assistant
-        executeRealConversation(config, systemPrompt, history, trimmed, attachmentIds) { chunk ->
+        executeRealConversation(config, systemPrompt, history, trimmed, attachmentIds, turnId) { chunk ->
             emit(chunk)
         }
     }.flowOn(Dispatchers.IO)
@@ -1599,7 +1610,7 @@ class AlwaysOnAgentClient {
                 if (arg.isBlank()) {
                     onChunk("🎨 **AI Image Generation:**\n\nUsage: `/image <prompt>`\nExample: `/image futuristic cyberpunk workstation with neon cyan glow, 8k`")
                 } else {
-                    streamAlwaysOnAgentChat(config, "You are AlwaysOnAgent AI assistant.", emptyList(), "/image $arg", emptyList(), onChunk)
+                    streamAlwaysOnAgentChat(config, "You are AlwaysOnAgent AI assistant.", emptyList(), "/image $arg", emptyList(), null, onChunk)
                 }
             }
 
@@ -1766,6 +1777,7 @@ class AlwaysOnAgentClient {
         history: List<ChatMessage>,
         userMessage: String,
         attachmentIds: List<String> = emptyList(),
+        turnId: String? = null,
         onChunk: suspend (String) -> Unit
     ) {
         val protocol = try {
@@ -1775,9 +1787,39 @@ class AlwaysOnAgentClient {
         }
 
         when (protocol) {
-            BridgeProtocol.ALWAYSON_AGENT -> streamAlwaysOnAgentChat(config, systemPrompt, history, userMessage, attachmentIds, onChunk)
+            BridgeProtocol.ALWAYSON_AGENT -> streamAlwaysOnAgentChat(config, systemPrompt, history, userMessage, attachmentIds, turnId, onChunk)
             BridgeProtocol.OPENAI_COMPATIBLE -> streamOpenAiChat(config, systemPrompt, history, userMessage, onChunk)
             BridgeProtocol.OLLAMA_NATIVE -> streamOllamaChat(config, systemPrompt, history, userMessage, onChunk)
+        }
+    }
+
+    private suspend fun awaitResponse(call: Call): Response = suspendCancellableCoroutine { cont ->
+        cont.invokeOnCancellation { call.cancel() }
+        call.enqueue(object : Callback {
+            override fun onResponse(call: Call, response: Response) = cont.resume(response)
+            override fun onFailure(call: Call, e: IOException) {
+                if (cont.isActive) cont.resumeWithException(e)
+            }
+        })
+    }
+
+    /**
+     * Tells the agent the user stopped this message's reply (POST /api/chat/cancel): when the reply is ready the
+     * agent drops it instead of keeping it in its memory.
+     */
+    suspend fun cancelChat(config: BridgeConfig, turnId: String): Boolean = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                val req = addAuth(
+                    Request.Builder()
+                        .url("$baseUrl/api/chat/cancel")
+                        .post(JSONObject().put("turn_id", turnId).toString().toRequestBody(jsonMediaType)),
+                    config
+                ).build()
+                httpClient.newCall(req).execute().use { it.isSuccessful }
+            }
+        } catch (e: Exception) {
+            false
         }
     }
 
@@ -1787,11 +1829,13 @@ class AlwaysOnAgentClient {
         history: List<ChatMessage>,
         userMessage: String,
         attachmentIds: List<String>,
+        turnId: String?,
         onChunk: suspend (String) -> Unit
     ) {
         executeWithFailover(config) { baseUrl ->
             val payload = JSONObject().apply {
                 put("message", userMessage)
+                if (turnId != null) put("turn_id", turnId)
                 if (attachmentIds.isNotEmpty()) put("attachments", JSONArray(attachmentIds))
                 put("prompt", userMessage)
                 put("model", if (config.selectedModel.isNotBlank()) config.selectedModel else "auto")
@@ -1814,7 +1858,8 @@ class AlwaysOnAgentClient {
                 config
             ).build()
 
-            httpClient.newCall(req).execute().use { resp ->
+            // Cancellable: Stop aborts the request (a blocking execute() kept waiting for the whole reply)
+            awaitResponse(httpClient.newCall(req)).use { resp ->
                 if (resp.isSuccessful) {
                     val contentType = resp.header("Content-Type") ?: ""
                     if (contentType.contains("text/event-stream")) {

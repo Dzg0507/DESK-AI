@@ -223,6 +223,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         null
     }
 
+    private var currentTurnId: String? = null     // the message whose reply is on its way (for Stop)
+
     fun removeAttachment(localId: String) {
         _attachments.value = _attachments.value.filterNot { it.localId == localId }
     }
@@ -235,6 +237,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         if ((textToSend.isBlank() && ready.isEmpty()) || _isStreaming.value) return
 
         val session = _currentSession.value ?: return
+        val turnId = UUID.randomUUID().toString()
+        currentTurnId = turnId
         _inputText.value = ""
         if (textOverride == null) _attachments.value = emptyList()
         _isStreaming.value = true
@@ -260,12 +264,13 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         streamJob = viewModelScope.launch {
             try {
                 val history = _messages.value
-                repository.sendMessageStream(session, textToSend, history, ready).collect { (msg, _) ->
+                repository.sendMessageStream(session, textToSend, history, ready, turnId).collect { (msg, _) ->
                     if (msg.content.isNotEmpty()) {
                         _streamingPhase.value = "📡 Streaming response from AlwaysOnAgent..."
                     }
                 }
             } finally {
+                if (currentTurnId == turnId) currentTurnId = null
                 _isStreaming.value = false
                 timerJob.cancel()
             }
@@ -274,6 +279,9 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     fun stopStreaming() {
         streamJob?.cancel()
+        // The agent finishes the reply anyway: tell it to drop it rather than keep it in its memory
+        currentTurnId?.let { id -> viewModelScope.launch { repository.cancelChat(id) } }
+        currentTurnId = null
         _isStreaming.value = false
         _streamingDurationMs.value = 0L
     }

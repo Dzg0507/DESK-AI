@@ -1,7 +1,7 @@
 {
-  "versionCode": 37,
-  "versionName": "2.4.9",
-  "changelog": "DeskAI v2.4.9 (Build 37): pictures in chat. An attached image shows in the chat bar right away and in your message bubble (tap it for full screen); other files show as an icon and name. Sending a file with no text no longer puts \"What's in this file?\" in your bubble.",
+  "versionCode": 38,
+  "versionName": "2.4.10",
+  "changelog": "DeskAI v2.4.10 (Build 38): Stop really stops. When you stop a reply, the app now aborts the request and tells the agent, so the cancelled answer is no longer saved in the agent's memory.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24132285
+  "fileSizeBytes": 24132297
 }

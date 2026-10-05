@@ -19,7 +19,7 @@ DeskAI repo at `docs/API.md`, updated whenever this one changes.
 ## Chat
 
 **`POST /api/chat`** `{"message": "...", "model": "auto", "engine": "auto", "conversation_id": null,
-"attachments": []}` →
+"attachments": [], "turn_id": "<the app's id for this message>"}` →
 
 ```json
 {"success": true, "reply": "...", "model": "...", "agent_status": "idle|working|waiting_for_approval|error",
@@ -56,6 +56,9 @@ DeskAI repo at `docs/API.md`, updated whenever this one changes.
   - Show the options as buttons.
   - A tap sends that option's text as the next ordinary chat message. **Other…** focuses the text box.
   - A reply never has both a `question` and `proposals`.
+- **Stop:** `POST /api/chat/cancel` `{"turn_id": "..."}` returns `{"ok": true}`. Send it when the user stops a
+  reply. The agent finishes the turn anyway but doesn't keep the reply or learn from it, and that `/api/chat`
+  call returns `{"success": false, "reply": "(cancelled)"}`. Also abort the HTTP request.
 
 ### Attaching documents
 

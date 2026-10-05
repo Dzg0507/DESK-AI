@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-05 (DeskAI v2.4.9 / Build 37 shipped — images in chat)
+**Last Updated:** 2026-10-05 (DeskAI v2.4.10 / Build 38 shipped — Stop cancels the reply on the agent too)
 
 ---
 
@@ -14,6 +14,13 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-05: DeskAI v2.4.10 (build 38), Stop cancels the reply on the agent too
+
+- Owner's case: they stopped a reply and retyped. The agent still finished the old reply and stored it, so a stale answer landed in its history.
+- `ChatViewModel` gives each send a `turnId` (UUID). `/api/chat` carries it as `turn_id`. `stopStreaming()` calls `ChatRepository.cancelChat(turnId)` → `POST /api/chat/cancel` (agent e6a8a27).
+- `AlwaysOnAgentClient`: the chat call goes through `awaitResponse()` (enqueue + `suspendCancellableCoroutine`, so cancelling aborts the OkHttp call; `execute()` blocked until the reply). `executeWithFailover` rethrows `CancellationException` instead of trying the next address.
+- docs/API.md synced from the agent (Stop section).
 
 ## Shipped 2026-10-05: DeskAI v2.4.9 (build 37), images in chat
 
