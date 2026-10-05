@@ -310,8 +310,8 @@ private fun AttachmentChip(a: ChatAttachment, onRemove: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         val lower = a.name.lowercase()
-        val thumbModel = a.thumbB64 ?: a.thumbUrl
-        if (!thumbModel.isNullOrBlank()) {
+        val thumbModel = remember(a.localPath, a.thumbB64, a.thumbUrl) { a.thumbModel() }
+        if (thumbModel != null) {
             Box(
                 modifier = Modifier
                     .size(28.dp)

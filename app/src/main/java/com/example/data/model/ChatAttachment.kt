@@ -16,8 +16,19 @@ data class ChatAttachment(
     val error: String? = null,
     val thumbUrl: String? = null,
     val thumbB64: String? = null,
-    val hasThumb: Boolean = false
+    val hasThumb: Boolean = false,
+    val localPath: String? = null        // a small copy of a picked image on the phone (chip + chat bubble)
 ) {
+    /** What the chip's thumbnail loads: the phone's copy, else the agent's thumbnail (Coil 2 can't load data: URIs). */
+    fun thumbModel(): Any? = localPath?.let { java.io.File(it) }
+        ?: thumbB64?.substringAfter("base64,", "")?.takeIf { it.isNotEmpty() }?.let {
+            try { java.nio.ByteBuffer.wrap(android.util.Base64.decode(it, android.util.Base64.DEFAULT)) } catch (_: Exception) { null }
+        }
+        ?: thumbUrl
+
+    /** For the message's attachment list. */
+    fun toMessageAttachment() = MessageAttachment(name, kind ?: MessageAttachment.kindOf(name), localPath)
+
     /** A few words for the chip under the file name. */
     fun statusLine(): String = when (status) {
         "uploading" -> "Reading…"

@@ -1801,7 +1801,7 @@ class AlwaysOnAgentClient {
                 history.takeLast(10).forEach { msg ->
                     histArray.put(JSONObject().apply {
                         put("role", msg.role)
-                        put("content", msg.content)
+                        put("content", msg.historyText())
                     })
                 }
                 put("history", histArray)

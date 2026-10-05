@@ -1,7 +1,7 @@
 {
-  "versionCode": 36,
-  "versionName": "2.4.8",
-  "changelog": "DeskAI v2.4.8 (Build 36): Restart tells you when it's done. After Restart in the Maintenance screen, the app watches for the agent to come back and shows \"Back online\" (it used to say \"restarting\" forever). If a task is running, it shows what the agent is waiting for.",
+  "versionCode": 37,
+  "versionName": "2.4.9",
+  "changelog": "DeskAI v2.4.9 (Build 37): pictures in chat. An attached image shows in the chat bar right away and in your message bubble (tap it for full screen); other files show as an icon and name. Sending a file with no text no longer puts \"What's in this file?\" in your bubble.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24115914
+  "fileSizeBytes": 24132285
 }

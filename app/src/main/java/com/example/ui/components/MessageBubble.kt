@@ -73,6 +73,18 @@ import com.example.ui.theme.UserBubbleBackground
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.PictureAsPdf
+import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import coil.compose.AsyncImage
+import com.example.data.model.MessageAttachment
+import java.io.File
 
 @Composable
 fun MessageBubble(
@@ -185,9 +197,14 @@ fun MessageBubble(
                     .padding(horizontal = 14.dp, vertical = 10.dp)
             ) {
                 Column {
+                    val attached = remember(message.attachmentsJson) { message.getAttachments() }
+                    if (attached.isNotEmpty()) {
+                        SentAttachments(attached)
+                        if (message.content.isNotBlank()) Spacer(modifier = Modifier.height(8.dp))
+                    }
                     if (message.status == "sending" && message.content.isEmpty()) {
                         ThinkingIndicator()
-                    } else {
+                    } else if (message.content.isNotBlank() || attached.isEmpty()) {
                         MarkdownContent(
                             content = message.content,
                             textColor = if (isUser) Color.White else Color(0xFFF1F5F9),
@@ -692,6 +709,65 @@ private fun ThinkingIndicator() {
                     .clip(CircleShape)
                     .background(if (lit) ElectricCyan else Color(0xFF475569))
             )
+        }
+    }
+}
+
+/** The files a message carried: images drawn (tap for full screen), other files as a small labelled row. */
+@Composable
+private fun SentAttachments(attached: List<MessageAttachment>) {
+    var fullScreen by remember { mutableStateOf<String?>(null) }
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        attached.forEach { a ->
+            val file = a.localPath?.let { File(it) }?.takeIf { it.exists() }
+            if (a.isImage && file != null) {
+                AsyncImage(
+                    model = file,
+                    contentDescription = a.name,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .widthIn(max = 260.dp)
+                        .heightIn(max = 320.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .clickable { fullScreen = file.absolutePath }
+                )
+            } else {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0x33000000))
+                        .padding(horizontal = 8.dp, vertical = 6.dp)
+                ) {
+                    Icon(
+                        imageVector = when (a.kind) {
+                            "image" -> Icons.Default.Image
+                            "pdf" -> Icons.Default.PictureAsPdf
+                            "video" -> Icons.Default.Videocam
+                            else -> Icons.Default.Description
+                        },
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(a.name, color = Color.White, fontSize = 13.sp, maxLines = 1)
+                }
+            }
+        }
+    }
+    fullScreen?.let { path ->
+        Dialog(onDismissRequest = { fullScreen = null }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black)
+                    .clickable { fullScreen = null },
+                contentAlignment = Alignment.Center
+            ) {
+                AsyncImage(model = File(path), contentDescription = null, contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize())
+            }
         }
     }
 }

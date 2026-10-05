@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-05 (DeskAI v2.4.8 / Build 36 shipped — Restart reports when the agent is back)
+**Last Updated:** 2026-10-05 (DeskAI v2.4.9 / Build 37 shipped — images in chat)
 
 ---
 
@@ -14,6 +14,14 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-05: DeskAI v2.4.9 (build 37), images in chat
+
+- Owner's report: the chip's thumbnail stayed blank, the bubble only showed "📎 name", and a file sent without text showed "What's in this file?" as if they'd typed it.
+- Cause of the blank thumbnail: the agent sends `thumb_b64` as a `data:` URI, which Coil 2.7 can't load. `ChatAttachment.thumbModel()` now gives Coil the phone's copy (File) or the decoded bytes (ByteBuffer).
+- Picked images are saved at most 1280 px, upright (EXIF), in `filesDir/chat_images/<localId>.jpg` (`ChatAttachment.localPath`).
+- New column `chat_messages.attachmentsJson` (Room v6, MIGRATION_5_6): `[{name, kind, path}]`, via `MessageAttachment`. `MessageBubble` draws images (tap = full screen) and other files as an icon row.
+- The user message stores only the typed text; `ChatRepository` sends the agent "What's in this file?" when it's blank. `ChatMessage.historyText()` puts "[attached: name]" in the history for file-only messages.
 
 ## Shipped 2026-10-05: DeskAI v2.4.8 (build 36), Restart reports when it's done
 

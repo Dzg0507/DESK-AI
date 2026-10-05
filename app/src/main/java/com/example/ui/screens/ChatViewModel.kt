@@ -3,6 +3,12 @@ package com.example.ui.screens
 import android.net.Uri
 import android.provider.OpenableColumns
 import com.example.data.model.ChatAttachment
+import com.example.data.model.MessageAttachment
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import android.media.ExifInterface
+import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.UUID
@@ -163,11 +169,19 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         val localId = UUID.randomUUID().toString()
         _attachments.value = _attachments.value + ChatAttachment(localId = localId, name = name)
         viewModelScope.launch {
+            var localPath: String? = null
             val result = try {
                 val bytes = withContext(Dispatchers.IO) {
                     resolver.openInputStream(uri)?.use { input ->
                         val buf = input.readBytes()
                         if (buf.size > MAX_ATTACHMENT_BYTES) null else buf
+                    }
+                }
+                if (bytes != null && MessageAttachment.kindOf(name) == "image") {
+                    // The chip shows the picture at once, and the sent message keeps it for the bubble
+                    localPath = withContext(Dispatchers.IO) { saveImageCopy(bytes, localId) }
+                    if (localPath != null) _attachments.value = _attachments.value.map {
+                        if (it.localId == localId) it.copy(localPath = localPath) else it
                     }
                 }
                 if (bytes == null) ChatAttachment(localId = localId, name = name, status = "error",
@@ -177,8 +191,36 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 ChatAttachment(localId = localId, name = name, status = "error", error = e.message ?: "Couldn't read the file")
             }
             // Only if it wasn't removed while it uploaded
-            _attachments.value = _attachments.value.map { if (it.localId == localId) result else it }
+            _attachments.value = _attachments.value.map {
+                if (it.localId == localId) result.copy(localPath = localPath) else it
+            }
         }
+    }
+
+    /** A copy of a picked image, at most 1280 px and upright, in the app's files (the picker's link expires). */
+    private fun saveImageCopy(bytes: ByteArray, localId: String): String? = try {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+        var sample = 1
+        while (maxOf(bounds.outWidth, bounds.outHeight) / (sample * 2) >= 1280) sample *= 2
+        var bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, BitmapFactory.Options().apply { inSampleSize = sample })
+        val degrees = when (ExifInterface(bytes.inputStream()).getAttributeInt(ExifInterface.TAG_ORIENTATION, 1)) {
+            ExifInterface.ORIENTATION_ROTATE_90 -> 90f
+            ExifInterface.ORIENTATION_ROTATE_180 -> 180f
+            ExifInterface.ORIENTATION_ROTATE_270 -> 270f
+            else -> 0f
+        }
+        if (bmp != null && degrees != 0f) {
+            bmp = Bitmap.createBitmap(bmp, 0, 0, bmp.width, bmp.height, Matrix().apply { postRotate(degrees) }, true)
+        }
+        bmp?.let { b ->
+            val dir = File(getApplication<Application>().filesDir, "chat_images").apply { mkdirs() }
+            val file = File(dir, "$localId.jpg")
+            file.outputStream().use { b.compress(Bitmap.CompressFormat.JPEG, 85, it) }
+            file.absolutePath
+        }
+    } catch (_: Exception) {
+        null
     }
 
     fun removeAttachment(localId: String) {
@@ -188,10 +230,9 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     fun sendMessage(textOverride: String? = null) {
         val ready = if (textOverride == null) _attachments.value.filter { it.status == "ready" } else emptyList()
         if (textOverride == null && _attachments.value.any { it.status == "uploading" }) return
-        // A file on its own is a question about it
+        // A file may go on its own (the repository asks the agent about it)
         val textToSend = (textOverride ?: _inputText.value).trim()
-            .ifBlank { if (ready.isNotEmpty()) "What's in ${if (ready.size == 1) "this file" else "these files"}?" else "" }
-        if (textToSend.isBlank() || _isStreaming.value) return
+        if ((textToSend.isBlank() && ready.isEmpty()) || _isStreaming.value) return
 
         val session = _currentSession.value ?: return
         _inputText.value = ""

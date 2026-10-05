@@ -9,6 +9,7 @@ import com.example.data.model.BridgeConfig
 import com.example.data.model.ChatAttachment
 import com.example.data.model.ChatMessage
 import com.example.data.model.ChatSession
+import com.example.data.model.MessageAttachment
 import com.example.data.model.DaemonStats
 import com.example.data.model.MemoryOverview
 import com.example.data.model.PushRegistrationResult
@@ -491,17 +492,21 @@ class ChatRepository(
     ): Flow<Pair<ChatMessage, String>> = flow {
         val config = getActiveConfig()
         val isCommand = userText.trim().startsWith("/")
-        // The bubble shows what was attached; the agent gets the files by id
-        val shown = if (attachments.isEmpty()) userText.trim()
-            else userText.trim() + "\n" + attachments.joinToString("\n") { "📎 ${it.name}" }
+        // The bubble shows only what the user typed, plus the files (images drawn); the agent gets the files by
+        // id, and a file sent on its own reaches it as a question about the file (never shown as the user's words)
+        val agentText = userText.trim().ifBlank {
+            if (attachments.size == 1) "What's in this file?" else "What's in these files?"
+        }
 
         // 1. Insert User Message
         val userMessage = ChatMessage(
             sessionId = session.id,
             role = "user",
-            content = shown,
+            content = userText.trim(),
             status = "sent",
-            isCommand = isCommand
+            isCommand = isCommand,
+            attachmentsJson = if (attachments.isEmpty()) null
+                else MessageAttachment.toJson(attachments.map { it.toMessageAttachment() })
         )
         chatDao.insertMessage(userMessage)
 
@@ -529,7 +534,7 @@ class ChatRepository(
                 config = config,
                 systemPrompt = session.systemPrompt,
                 history = history,
-                userMessage = userText.trim(),
+                userMessage = agentText,
                 attachmentIds = attachments.mapNotNull { it.id }
             ).collect { chunk ->
                 currentText += chunk
@@ -593,7 +598,7 @@ class ChatRepository(
 
             // Update session title if first message
             val title = if (session.title == "Mission Control" && history.size <= 2) {
-                userText.take(28).trim().replace("\n", " ")
+                userText.trim().ifBlank { attachments.firstOrNull()?.name ?: "" }.take(28).trim().replace("\n", " ")
             } else {
                 session.title
             }

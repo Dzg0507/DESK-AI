@@ -24,8 +24,16 @@ data class ChatMessage(
     val linkedTaskId: String? = null,
     val proposalsJson: String? = null,
     val questionJson: String? = null,
-    val canvasJson: String? = null          // the draft this reply wrote or changed: {"id","title","kind","version"}
+    val canvasJson: String? = null,         // the draft this reply wrote or changed: {"id","title","kind","version"}
+    val attachmentsJson: String? = null     // files the user sent with it: [{"name","kind","path"}]
 ) {
+    fun getAttachments(): List<MessageAttachment> = MessageAttachment.fromJson(attachmentsJson)
+
+    /** The text the agent gets for this message in the history (a file-only message has no typed text). */
+    fun historyText(): String = content.ifBlank {
+        getAttachments().joinToString("\n") { "[attached: ${it.name}]" }
+    }
+
     fun getCanvas(): CanvasRef? {
         if (canvasJson.isNullOrBlank()) return null
         return try {
