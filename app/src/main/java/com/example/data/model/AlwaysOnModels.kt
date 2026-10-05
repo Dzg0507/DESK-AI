@@ -82,8 +82,35 @@ data class MemoryFactItem(
     val category: String = "fact",
     val importance: Int = 5,
     val pinned: Boolean = false,
-    val updatedAt: String = ""
-)
+    val updatedAt: String = "",
+    // Where the agent learned it (GET /api/memory): source chat / hud / images, the owner's words, their message
+    val source: String = "",
+    val evidence: String? = null,
+    val sourceAt: String? = null,
+    val sourceExcerpt: String? = null
+) {
+    /** "From your message on Oct 4: “…”", "Added by you", … or null when the agent doesn't know. */
+    fun origin(): String? {
+        val day = sourceAt?.let { shortDate(it) }
+        val words = evidence?.takeIf { it.isNotBlank() } ?: sourceExcerpt?.takeIf { it.isNotBlank() }
+        return when {
+            words != null && day != null -> "From your message on $day: “$words”"
+            words != null -> "From your words: “$words”"
+            source == "hud" -> "Added by you"
+            source == "images" -> "From an image you shared"
+            else -> null
+        }
+    }
+
+    private fun shortDate(iso: String): String? {
+        val parts = iso.take(10).split("-")
+        if (parts.size != 3) return null
+        val months = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+        val m = parts[1].toIntOrNull() ?: return null
+        val d = parts[2].toIntOrNull() ?: return null
+        return if (m in 1..12) "${months[m - 1]} $d" else null
+    }
+}
 
 data class MemoryOverview(
     val profile: String = "",

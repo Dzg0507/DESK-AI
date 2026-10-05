@@ -13,7 +13,7 @@ DeskAI repo at `docs/API.md`, updated whenever this one changes.
 | Token in a URL | `?token=<token>` also works, for media links opened outside the app |
 | Errors | `401`: missing or wrong token. Otherwise `{"detail": "..."}` with a normal HTTP code. |
 | JSON | `snake_case`; timestamps are ISO 8601 in the server's local time |
-| CORS | none on purpose (it would let any website read the owner's memory). Native HTTP clients are unaffected. |
+| CORS | none on purpose (it would let any website read the owner's memory). Native HTTP clients are unaffected. A request carrying a browser's `Origin` header needs the token even from the Mini itself, so a web page open in a browser there can't use the loopback trust (until 2026-10-04 chat, videos and images answered wildcard preflights). `tests/test_api_contract.py` checks that every route is in this file and every route here exists. |
 | Retries | send `Idempotency-Key: <uuid>` on task-creating requests: one UUID per user action, reused on every retry or failover. A repeat within 24 h returns the first `task_id` plus `"duplicate": true`. Accepted by `POST /api/tasks`, `/api/tasks/run`, `/api/trigger_media` and `/api/agentwork/jobs`. |
 
 ## Chat
@@ -165,7 +165,7 @@ Each task object includes a dynamic `actions` array of contextual 1-tap buttons:
 
 | Method & path | Notes |
 |---|---|
-| `GET /api/memory` | stats, profile, facts, summaries, categories; add `?query=` to search. `profile` is a few paragraphs of plain prose about the owner, by name (show it in full); facts are written with the owner's name too |
+| `GET /api/memory` | stats, profile, facts, summaries, categories; add `?query=` to search. `profile` is a few paragraphs of plain prose about the owner, by name (show it in full); facts are written with the owner's name too. Each fact also says where it came from: `source` (`chat`, `hud` = added in the app, `images`), `evidence` (the owner's own words backing it, or null), and `source_message` (`{"id", "at", "excerpt"}`, when the message is known) |
 | `GET /api/memory/search?q=...` | matching facts and archived messages |
 | `GET /api/memory/conversation?limit=50&before_id=` | chat history, oldest first |
 | `POST /api/memory/facts` | `{"content", "category": "fact", "importance": 5, "pinned": true}`. Categories: profile, preference, project, plan, person, instruction, fact. |

@@ -1,7 +1,7 @@
 {
-  "versionCode": 33,
-  "versionName": "2.4.5",
-  "changelog": "DeskAI v2.4.5 (Build 33): Your weekly review. On Sundays the agent turns the week's numbers into a short growth review: a message in the chat with a card that opens the full review, which you can refine by chatting. Includes the full profile (2.4.4) and real memories (2.4.3).",
+  "versionCode": 34,
+  "versionName": "2.4.6",
+  "changelog": "DeskAI v2.4.6 (Build 34): Where each memory came from. In the Memory screen, every saved fact now shows the message it was learned from (\"From your message on Sep 24: ...\"). Includes the weekly review (2.4.5).",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24083166
+  "fileSizeBytes": 24083136
 }

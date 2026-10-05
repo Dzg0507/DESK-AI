@@ -233,6 +233,16 @@ fun MemorySheet(
                                         fontSize = 12.sp,
                                         color = Color(0xFFF1F5F9)
                                     )
+                                    fact.origin()?.let { origin ->
+                                        Text(
+                                            text = origin,
+                                            fontSize = 11.sp,
+                                            color = Color(0xFF94A3B8),
+                                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                                            lineHeight = 15.sp,
+                                            modifier = Modifier.padding(top = 2.dp)
+                                        )
+                                    }
                                     Text(
                                         text = "#${fact.id} • category: ${fact.category}",
                                         fontSize = 10.sp,

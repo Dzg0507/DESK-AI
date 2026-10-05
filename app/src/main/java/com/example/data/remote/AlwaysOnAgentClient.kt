@@ -1267,7 +1267,11 @@ class AlwaysOnAgentClient {
                                     category = f.optString("category", "fact"),
                                     importance = f.optInt("importance", 5),
                                     pinned = f.optBoolean("pinned", false),
-                                    updatedAt = f.optString("updated_at", "")
+                                    updatedAt = f.optString("updated_at", ""),
+                                    source = f.optString("source", ""),
+                                    evidence = f.optString("evidence", "").takeIf { it.isNotBlank() && it != "null" },
+                                    sourceAt = f.optJSONObject("source_message")?.optString("at"),
+                                    sourceExcerpt = f.optJSONObject("source_message")?.optString("excerpt")
                                 )
                             )
                         }

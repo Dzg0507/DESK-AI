@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-04 (DeskAI v2.4.5 / Build 33 shipped — the agent's messages carry draft cards)
+**Last Updated:** 2026-10-04 (DeskAI v2.4.6 / Build 34 shipped — where each memory came from)
 
 ---
 
@@ -14,6 +14,11 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-04: DeskAI v2.4.6 (build 34), where each memory came from
+
+- Agent side (AlwaysOnAgent `560eb33`): each fact in `/api/memory` has `source`, `evidence` and `source_message` {id, at, excerpt}.
+- App: `MemoryFactItem` parses them; `origin()` makes the line under each fact in the Memory sheet ("From your message on Sep 24: ...", "Added by you"). No redesign.
 
 ## Shipped 2026-10-04: DeskAI v2.4.5 (build 33), draft cards on the agent's own messages
 
