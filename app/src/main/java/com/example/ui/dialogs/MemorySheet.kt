@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.data.model.MemoryFactItem
 import com.example.data.model.MemoryOverview
+import com.example.data.model.RecipeItem
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.RoseError
 import kotlinx.coroutines.launch
@@ -54,7 +55,9 @@ fun MemorySheet(
     onDismiss: () -> Unit,
     onLoad: suspend () -> MemoryOverview?,
     onAddFact: suspend (String) -> Result<Int>,
-    onDeleteFact: suspend (Int) -> Result<Boolean>
+    onDeleteFact: suspend (Int) -> Result<Boolean>,
+    onUpdateRecipe: suspend (Int, Boolean?, String?) -> Result<Boolean> = { _, _, _ -> Result.success(false) },
+    onDeleteRecipe: suspend (Int) -> Result<Boolean> = { Result.success(false) }
 ) {
     val scope = rememberCoroutineScope()
     var newFactText by remember { mutableStateOf("") }
@@ -63,6 +66,7 @@ fun MemorySheet(
     // fact with that id (2026-10-04).
     var facts by remember { mutableStateOf(emptyList<MemoryFactItem>()) }
     var profile by remember { mutableStateOf("") }
+    var recipes by remember { mutableStateOf(emptyList<RecipeItem>()) }
     var loading by remember { mutableStateOf(true) }
     var loadFailed by remember { mutableStateOf(false) }
 
@@ -71,6 +75,7 @@ fun MemorySheet(
         if (overview != null) {
             facts = overview.facts
             profile = overview.profile
+            recipes = overview.recipes
         }
         loadFailed = overview == null
         loading = false
@@ -195,6 +200,46 @@ fun MemorySheet(
                             }
                         }
                     }
+                    // Learned recipes ("when X, do Y"): how the agent does a kind of job, with where each came
+                    // from and its track record. Pin keeps one in use for good; retired ones kept failing.
+                    if (recipes.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = "📘 RECIPES (${recipes.count { !it.retired }})",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF94A3B8),
+                                letterSpacing = 0.5.sp,
+                                modifier = Modifier.padding(top = 6.dp)
+                            )
+                        }
+                        items(recipes, key = { "recipe-${it.id}" }) { recipe ->
+                            RecipeCard(
+                                recipe = recipe,
+                                onTogglePin = {
+                                    scope.launch {
+                                        if (onUpdateRecipe(recipe.id, !recipe.pinned, null).isSuccess) {
+                                            recipes = recipes.map { if (it.id == recipe.id) it.copy(pinned = !it.pinned) else it }
+                                        } else loadFailed = true
+                                    }
+                                },
+                                onRestore = {
+                                    scope.launch {
+                                        if (onUpdateRecipe(recipe.id, null, "active").isSuccess) {
+                                            recipes = recipes.map { if (it.id == recipe.id) it.copy(status = "active") else it }
+                                        } else loadFailed = true
+                                    }
+                                },
+                                onDelete = {
+                                    scope.launch {
+                                        if (onDeleteRecipe(recipe.id).isSuccess) {
+                                            recipes = recipes.filter { it.id != recipe.id }
+                                        } else loadFailed = true
+                                    }
+                                }
+                            )
+                        }
+                    }
                     item {
                         Text(
                             text = when {
@@ -273,6 +318,71 @@ fun MemorySheet(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RecipeCard(recipe: RecipeItem, onTogglePin: () -> Unit, onRestore: () -> Unit, onDelete: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .background(Color(0xFF1E293B))
+            .border(1.dp, if (recipe.pinned) ElectricCyan.copy(alpha = 0.5f) else Color(0xFF334155), RoundedCornerShape(10.dp))
+            .padding(10.dp)
+    ) {
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "When ${recipe.whenText.trimEnd('.')}:",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (recipe.retired) Color(0xFF64748B) else ElectricCyan
+                )
+                Text(
+                    text = recipe.doText,
+                    fontSize = 12.sp,
+                    color = if (recipe.retired) Color(0xFF64748B) else Color(0xFFF1F5F9)
+                )
+                Text(
+                    text = recipe.origin(),
+                    fontSize = 11.sp,
+                    color = Color(0xFF94A3B8),
+                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                    lineHeight = 15.sp,
+                    modifier = Modifier.padding(top = 2.dp)
+                )
+                Text(
+                    text = "${recipe.area} • ${recipe.track()}",
+                    fontSize = 10.sp,
+                    color = Color(0xFF64748B),
+                    fontFamily = FontFamily.Monospace
+                )
+            }
+            if (recipe.retired) {
+                Text(
+                    text = "↺",
+                    fontSize = 15.sp,
+                    color = Color(0xFF94A3B8),
+                    modifier = Modifier.clickable(onClick = onRestore).padding(6.dp)
+                )
+            } else {
+                Text(
+                    text = "📌",
+                    fontSize = 13.sp,
+                    color = Color.White.copy(alpha = if (recipe.pinned) 1f else 0.35f),
+                    modifier = Modifier.clickable(onClick = onTogglePin).padding(6.dp)
+                )
+            }
+            IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Delete recipe",
+                    tint = RoseError.copy(alpha = 0.7f),
+                    modifier = Modifier.size(15.dp)
+                )
             }
         }
     }

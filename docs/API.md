@@ -171,9 +171,13 @@ Each task object includes a dynamic `actions` array of contextual 1-tap buttons:
 | `POST /api/memory/facts` | `{"content", "category": "fact", "importance": 5, "pinned": true}`. Categories: profile, preference, project, plan, person, instruction, fact. |
 | `PATCH /api/memory/facts/{id}` | any of `content`, `category`, `importance` (1–5), `pinned`, `status` (`active`/`faded`) |
 | `DELETE /api/memory/facts/{id}?erase=true` | forgets it everywhere, including old messages |
+| `GET /api/memory/procedures?status=` | learned recipes ("when X, do Y"): `{"procedures": [{"id", "area", "when", "do", "source", "source_ref", "evidence", "status", "pinned", "uses", "helped", "failed", "created_at", "updated_at", "last_used_at"}]}`. `source`: `owner` (taught in chat or added in the app), `seed`, `tool` (a chat tool that failed then worked), `task` (a task that succeeded on retry). `status`: `active` or `retired` (a learned recipe that kept failing). Show `evidence` as where it came from, and `uses`/`helped`/`failed` as its track record |
+| `POST /api/memory/procedures` | `{"area": "tiktok videos", "when": "...", "do": "...", "pinned": false}`: an owner recipe (trusted, never retired by itself) |
+| `PATCH /api/memory/procedures/{id}` | any of `area`, `when`, `do`, `pinned`, `status` (`active`/`retired`) |
+| `DELETE /api/memory/procedures/{id}` | deletes a recipe |
 | `POST /api/memory/profile/rebuild` | rebuilds the owner profile now |
 | `GET /api/memory/usage` | AI token usage by purpose over the last day |
-| `GET /api/memory/budget` | today's calls and tokens per model, with countdowns to Google (Pacific) and Cloudflare (UTC) daily resets |
+| `GET /api/memory/budget` | today's calls and tokens per model, with countdowns to Google (Pacific) and Cloudflare (UTC) daily resets; for each Gemini model, `since_reset` and `learned_daily_limit`; `chat_health`: the last 24 h of chat replies per model, the share answered by the best model, and failures per model and kind |
 
 ## AgentWork (project jobs)
 
@@ -203,7 +207,7 @@ Generated images are stored outside the agent repository in the dedicated galler
 | `POST /api/engine` | `{"engine": "auto"}` (auto, antigravity, cloud, ollama) | `{"status", "default_engine"}` |
 | `POST /api/backup` | | `{"ok", "message"}`: a memory backup now (a few seconds) |
 | `POST /api/cleanup` | | `{"message"}`: TiktokVideos' temp files and old videos, stale logs (> 30 days, preserving `affirmations.log`), and abandoned task workspaces (> 7 days, via AgentWork worktree discard) |
-| `POST /api/restart` | | `202 {"status": "restarting"}`: back in about 3 s. Poll `/api/status`. |
+| `POST /api/restart` | `?now=true` (optional) | `202 {"status": "restarting", "message"}`: back in about 3 s. Poll `/api/status`. While a task runs: `202 {"status": "draining", "waiting_for": [titles], "message"}`, and the agent restarts when the task finishes (at most 30 min), starting nothing new meanwhile. `now=true` restarts at once. |
 | `GET /api/logs?limit=100` | | `[{"id", "timestamp", "level", "message"}]`, newest last |
 | `GET /api/stream` | | Server-Sent Events, one `data: {json}` per second: `timestamp`, `stats`, `active_task`, `tasks` (30 newest), `blockers`, `new_logs`, `daemon_status`, `overall_phase`, `last_heartbeat`, `default_engine` |
 

@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-04 (DeskAI v2.4.6 / Build 34 shipped — where each memory came from)
+**Last Updated:** 2026-10-04 (DeskAI v2.4.7 / Build 35 shipped — learned recipes in the Memory screen)
 
 ---
 
@@ -14,6 +14,11 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-04: DeskAI v2.4.7 (build 35), learned recipes
+
+- Agent side (AlwaysOnAgent `10c3c90`, `60cf693`): procedural memory. `GET/POST /api/memory/procedures`, `PATCH/DELETE /api/memory/procedures/{id}` (docs/API.md, synced here).
+- App: `RecipeItem` (origin(), track()); `getMemoryOverview` also loads the recipes (empty from an older agent); the Memory sheet has a RECIPES section above the facts: "When X:" / what to do / where it came from / area and track record, with pin, restore (retired ones) and delete. No redesign.
 
 ## Shipped 2026-10-04: DeskAI v2.4.6 (build 34), where each memory came from
 

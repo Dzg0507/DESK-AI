@@ -538,7 +538,9 @@ fun ChatScreen(
             onDismiss = { showMemorySheet = false },
             onLoad = { viewModel.fetchMemoryOverview() },
             onAddFact = { fact -> viewModel.addMemoryFact(fact) },
-            onDeleteFact = { id -> viewModel.deleteMemoryFact(id) }
+            onDeleteFact = { id -> viewModel.deleteMemoryFact(id) },
+            onUpdateRecipe = { id, pinned, status -> viewModel.updateRecipe(id, pinned, status) },
+            onDeleteRecipe = { id -> viewModel.deleteRecipe(id) }
         )
     }
 

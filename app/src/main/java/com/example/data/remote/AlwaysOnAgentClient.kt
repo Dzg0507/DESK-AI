@@ -11,6 +11,7 @@ import com.example.data.model.ChatQuestion
 import com.example.data.model.DaemonStats
 import com.example.data.model.MemoryFactItem
 import com.example.data.model.MemoryOverview
+import com.example.data.model.RecipeItem
 import com.example.data.model.PushRegistrationResult
 import com.example.data.model.ScheduleList
 import com.example.data.model.SchedulePreview
@@ -1282,12 +1283,76 @@ class AlwaysOnAgentClient {
                         factsPinned = stats?.optInt("facts_pinned") ?: 0,
                         messagesCount = stats?.optInt("messages") ?: 0,
                         summariesCount = stats?.optInt("summaries") ?: 0,
-                        facts = factList
+                        facts = factList,
+                        recipes = fetchRecipes(baseUrl, config)
                     )
                 }
             }
         } catch (_: Exception) {
             null
+        }
+    }
+
+    /** The agent's learned recipes; empty from an agent that doesn't have them yet. */
+    private fun fetchRecipes(baseUrl: String, config: BridgeConfig): List<RecipeItem> = try {
+        val req = addAuth(Request.Builder().url("$baseUrl/api/memory/procedures"), config).build()
+        httpClient.newCall(req).execute().use { resp ->
+            if (!resp.isSuccessful) return emptyList()
+            val arr = JSONObject(resp.body?.string() ?: "").optJSONArray("procedures") ?: return emptyList()
+            (0 until arr.length()).map { i ->
+                val p = arr.getJSONObject(i)
+                RecipeItem(
+                    id = p.optInt("id"),
+                    area = p.optString("area", "general"),
+                    whenText = p.optString("when"),
+                    doText = p.optString("do"),
+                    source = p.optString("source", ""),
+                    evidence = p.optString("evidence", "").takeIf { it.isNotBlank() && it != "null" },
+                    status = p.optString("status", "active"),
+                    pinned = p.optBoolean("pinned", false),
+                    uses = p.optInt("uses"),
+                    helped = p.optInt("helped"),
+                    failed = p.optInt("failed")
+                )
+            }
+        }
+    } catch (_: Exception) {
+        emptyList()
+    }
+
+    /** PATCH a recipe: pin or unpin, or bring back a retired one (status "active"). */
+    suspend fun updateRecipe(config: BridgeConfig, id: Int, pinned: Boolean? = null, status: String? = null): Result<Boolean> =
+        withContext(Dispatchers.IO) {
+            try {
+                executeWithFailover(config) { baseUrl ->
+                    val payload = JSONObject().apply {
+                        pinned?.let { put("pinned", it) }
+                        status?.let { put("status", it) }
+                    }
+                    val req = addAuth(
+                        Request.Builder().url("$baseUrl/api/memory/procedures/$id")
+                            .patch(payload.toString().toRequestBody(jsonMediaType)),
+                        config
+                    ).build()
+                    httpClient.newCall(req).execute().use { resp ->
+                        if (resp.isSuccessful) Result.success(true) else Result.failure(Exception("HTTP ${resp.code}"))
+                    }
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+
+    suspend fun deleteRecipe(config: BridgeConfig, id: Int): Result<Boolean> = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                val req = addAuth(Request.Builder().url("$baseUrl/api/memory/procedures/$id").delete(), config).build()
+                httpClient.newCall(req).execute().use { resp ->
+                    if (resp.isSuccessful) Result.success(true) else Result.failure(Exception("HTTP ${resp.code}"))
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 

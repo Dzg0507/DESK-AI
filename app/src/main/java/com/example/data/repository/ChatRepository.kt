@@ -298,6 +298,12 @@ class ChatRepository(
         agentClient.deleteMemoryFact(config, id)
     }
 
+    suspend fun updateRecipe(id: Int, pinned: Boolean? = null, status: String? = null): Result<Boolean> =
+        withContext(Dispatchers.IO) { agentClient.updateRecipe(getActiveConfig(), id, pinned, status) }
+
+    suspend fun deleteRecipe(id: Int): Result<Boolean> =
+        withContext(Dispatchers.IO) { agentClient.deleteRecipe(getActiveConfig(), id) }
+
     fun getMessages(sessionId: String): Flow<List<ChatMessage>> =
         chatDao.getMessagesForSession(sessionId)
 

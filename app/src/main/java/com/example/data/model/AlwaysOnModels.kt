@@ -112,13 +112,45 @@ data class MemoryFactItem(
     }
 }
 
+/** A learned recipe, "when X, do Y" (GET /api/memory/procedures): how the agent does a kind of job. */
+data class RecipeItem(
+    val id: Int,
+    val area: String,
+    val whenText: String,
+    val doText: String,
+    val source: String = "",
+    val evidence: String? = null,
+    val status: String = "active",
+    val pinned: Boolean = false,
+    val uses: Int = 0,
+    val helped: Int = 0,
+    val failed: Int = 0
+) {
+    val retired: Boolean get() = status == "retired"
+
+    /** Where it came from, in the owner's terms. */
+    fun origin(): String = when (source) {
+        "owner" -> evidence?.takeIf { it.isNotBlank() && it != "Added in DeskAI" }
+            ?.let { "You taught this: “${it.take(120)}”" } ?: "Added by you"
+        "tool" -> "Learned when a tool failed and then worked"
+        "task" -> "Learned from a task that succeeded on retry"
+        else -> "Set up for the agent"
+    }
+
+    /** "Used 5 times · helped 4 · failed 1", or "Not used yet". */
+    fun track(): String = if (uses == 0) "Not used yet" else
+        "Used $uses time${if (uses == 1) "" else "s"} · helped $helped · failed $failed" +
+            if (retired) " · retired (kept failing)" else ""
+}
+
 data class MemoryOverview(
     val profile: String = "",
     val factsActive: Int = 0,
     val factsPinned: Int = 0,
     val messagesCount: Int = 0,
     val summariesCount: Int = 0,
-    val facts: List<MemoryFactItem> = emptyList()
+    val facts: List<MemoryFactItem> = emptyList(),
+    val recipes: List<RecipeItem> = emptyList()
 )
 
 data class VideoItem(
