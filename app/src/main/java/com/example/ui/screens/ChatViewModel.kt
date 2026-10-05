@@ -484,6 +484,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         return repository.restartAgent()
     }
 
+    suspend fun agentUptime(): Long? = repository.agentUptime()
+
     suspend fun fetchSystemLogs(limit: Int = 100): List<com.example.data.model.SystemLogEntry> {
         return repository.fetchSystemLogs(limit)
     }

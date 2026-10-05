@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-04 (DeskAI v2.4.7 / Build 35 shipped — learned recipes in the Memory screen)
+**Last Updated:** 2026-10-05 (DeskAI v2.4.8 / Build 36 shipped — Restart reports when the agent is back)
 
 ---
 
@@ -14,6 +14,11 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-05: DeskAI v2.4.8 (build 36), Restart reports when it's done
+
+- Owner's report: after Restart in the Maintenance sheet the status said "restarting" forever.
+- `restartAgent` shows the agent's own answer (`message`; `status: "draining"` = it waits for a running task, shown with ⏳). New `getAgentUptime` (GET /api/status). The sheet polls every 3 s until the agent is online with an uptime shorter than the time since the tap (3 min, or 32 min while draining), then shows "✅ Back online" or a warning, and refreshes the logs.
 
 ## Shipped 2026-10-04: DeskAI v2.4.7 (build 35), learned recipes
 

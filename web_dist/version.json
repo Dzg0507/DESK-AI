@@ -1,7 +1,7 @@
 {
-  "versionCode": 35,
-  "versionName": "2.4.7",
-  "changelog": "DeskAI v2.4.7 (Build 35): Recipes. The Memory screen now shows what the agent has learned about doing its own work (\"when X, do Y\"): where each recipe came from, how often it helped, and buttons to pin, restore or delete it.",
+  "versionCode": 36,
+  "versionName": "2.4.8",
+  "changelog": "DeskAI v2.4.8 (Build 36): Restart tells you when it's done. After Restart in the Maintenance screen, the app watches for the agent to come back and shows \"Back online\" (it used to say \"restarting\" forever). If a task is running, it shows what the agent is waiting for.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24099516
+  "fileSizeBytes": 24115914
 }

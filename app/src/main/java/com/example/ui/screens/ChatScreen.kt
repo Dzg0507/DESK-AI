@@ -617,6 +617,7 @@ fun ChatScreen(
             onRunBackup = { viewModel.runBackup() },
             onRunCleanup = { viewModel.runCleanup() },
             onRestartAgent = { viewModel.restartAgent() },
+            onCheckUptime = { viewModel.agentUptime() },
             onFetchLogs = { limit -> viewModel.fetchSystemLogs(limit) },
             onTestPush = { viewModel.testPush() }
         )

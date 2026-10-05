@@ -235,6 +235,8 @@ class ChatRepository(
         agentClient.restartAgent(config)
     }
 
+    suspend fun agentUptime(): Long? = withContext(Dispatchers.IO) { agentClient.getAgentUptime(getActiveConfig()) }
+
     suspend fun fetchSystemLogs(limit: Int = 100): List<SystemLogEntry> = withContext(Dispatchers.IO) {
         val config = getActiveConfig()
         agentClient.getSystemLogs(config, limit)

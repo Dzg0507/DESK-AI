@@ -60,6 +60,7 @@ fun MaintenanceSheet(
     onRunBackup: suspend () -> Result<String>,
     onRunCleanup: suspend () -> Result<String>,
     onRestartAgent: suspend () -> Result<String>,
+    onCheckUptime: suspend () -> Long? = { null },
     onFetchLogs: suspend (limit: Int) -> List<SystemLogEntry>,
     onTestPush: suspend () -> Result<String>
 ) {
@@ -212,11 +213,39 @@ fun MaintenanceSheet(
                     ) {
                         scope.launch {
                             isOperating = true
-                            actionStatus = "Dispatching restart signal (202 Accepted)..."
+                            actionStatus = "Asking the agent to restart..."
+                            val sentAt = System.currentTimeMillis()
                             val res = onRestartAgent()
                             actionSuccess = res.isSuccess
-                            actionStatus = if (res.isSuccess) "🔄 ${res.getOrNull()}" else "⚠️ ${res.exceptionOrNull()?.message}"
+                            if (res.isFailure) {
+                                actionStatus = "⚠️ ${res.exceptionOrNull()?.message}"
+                                isOperating = false
+                                return@launch
+                            }
+                            // Watch for it to come back: up again with an uptime shorter than the time since we
+                            // asked. It used to say "restarting" forever. While a task finishes ("draining") the
+                            // agent waits up to 30 minutes before restarting.
+                            val answer = res.getOrNull().orEmpty()
+                            val draining = answer.startsWith("⏳")
+                            val deadline = sentAt + if (draining) 32 * 60_000L else 3 * 60_000L
+                            var back = false
+                            while (System.currentTimeMillis() < deadline) {
+                                val waited = (System.currentTimeMillis() - sentAt) / 1000
+                                actionStatus = (if (draining) answer else "🔄 $answer") +
+                                    "\nWaiting for it to come back… ${waited}s"
+                                kotlinx.coroutines.delay(3000)
+                                val uptime = onCheckUptime()
+                                val sinceAsked = (System.currentTimeMillis() - sentAt) / 1000
+                                if (uptime != null && uptime <= sinceAsked + 2) {
+                                    back = true
+                                    break
+                                }
+                            }
+                            actionSuccess = back
+                            actionStatus = if (back) "✅ Back online. The agent restarted and is running."
+                                else "⚠️ The agent hasn't come back yet. Check the logs, or try again in a minute."
                             isOperating = false
+                            refreshLogs()
                         }
                     }
 

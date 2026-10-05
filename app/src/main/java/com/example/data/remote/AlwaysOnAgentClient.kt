@@ -949,7 +949,11 @@ class AlwaysOnAgentClient {
                 httpClient.newCall(req).execute().use { resp ->
                     val body = resp.body?.string() ?: ""
                     if (resp.isSuccessful || resp.code == 202) {
-                        Result.success("Agent restarting... Standby for re-connection.")
+                        // The agent's own answer: "Restarting now." or, while a task runs, "Restarting once X
+                        // finishes. Nothing new starts until then." (status "draining")
+                        val json = try { JSONObject(body) } catch (_: Exception) { JSONObject() }
+                        val message = json.optString("message").ifBlank { "Restarting now." }
+                        Result.success(if (json.optString("status") == "draining") "⏳ $message" else message)
                     } else {
                         Result.failure(Exception("HTTP ${resp.code}: $body"))
                     }
@@ -957,6 +961,22 @@ class AlwaysOnAgentClient {
             }
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    /** Seconds since the agent last started (GET /api/status), or null while it can't be reached. */
+    suspend fun getAgentUptime(config: BridgeConfig): Long? = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                val req = addAuth(Request.Builder().url("$baseUrl/api/status"), config).build()
+                httpClient.newCall(req).execute().use { resp ->
+                    if (!resp.isSuccessful) return@executeWithFailover null
+                    val json = JSONObject(resp.body?.string() ?: "")
+                    if (json.optString("status") == "online") json.optLong("uptime_seconds", -1).takeIf { it >= 0 } else null
+                }
+            }
+        } catch (_: Exception) {
+            null
         }
     }
 
