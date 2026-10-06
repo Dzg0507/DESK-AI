@@ -61,6 +61,15 @@ class DeskAIMessagingService : FirebaseMessagingService() {
                 return
             }
 
+            if (type == "needs_you_cancel") {
+                // A computer task was cancelled or finished: dismiss the loud alert immediately
+                val cancelId = data["cancel_request_id"] ?: data["request_id"]
+                if (!cancelId.isNullOrBlank()) {
+                    NeedsYou.cancel(applicationContext, cancelId)
+                }
+                return
+            }
+
             if (type == "agent_message") {
                 // The push carries no text (it passes through Google): fetch the message into the chat
                 scope.launch {
