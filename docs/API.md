@@ -148,7 +148,8 @@ Each task object includes a dynamic `actions` array of contextual 1-tap buttons:
 - **`variant` styles:** `primary` (highlight/action), `secondary` (neutral/outline), `danger` (destructive/cancel).
 - **Going live:** a finished `alwaysonagent` or `website` job shows `🔍 Preview diff` and its go-live chip (`⚡ Apply
   update` / `🚀 Push live`), which then becomes `⏳ Going live…`, then `✅ Live`, `↩️ Rolled back`, or `🔁 Try again`
-  after a failed attempt that pushed nothing. The tap is the owner's go-ahead.
+  after a failed attempt that pushed nothing. The tap is the owner's go-ahead. A finished job on any other AgentWork
+  project (e.g. one set up from the Repos screen) shows only `🔍 Preview diff`: its change stays on its branch.
 
 | Method & path | Returns |
 |---|---|
