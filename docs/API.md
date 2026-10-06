@@ -254,13 +254,16 @@ display.
 
 Messages are **data-only and high priority**, and the app builds the notification. The `data` map (all
 strings):
-- `type`: `task_completed`, `task_failed`, `alert`, `reminder`, `agent_message` or `test`;
+- `type`: `task_completed`, `task_failed`, `alert`, `reminder`, `agent_message`, `needs_you` or `test`;
 - `task_id`;
 - `title` and `body`, both short. They pass through Google's servers, so they never carry memory or chat
   content. The one exception is a reminder's body: the text the owner wrote for that reminder.
-- `channel`: `tasks`, `alerts`, `reminders` or `assistant`. Apps older than 2.3.9 show reminders on the alerts
-  channel.
+- `channel`: `tasks`, `alerts`, `reminders`, `assistant` or `needs_you`. Apps older than 2.3.9 show reminders on
+  the alerts channel; apps that don't know `needs_you` show it on the alerts channel.
 - `agent_message` only: `message_id` and `kind` (see "Messages the agent starts").
+- `needs_you` only: `request_id`, `request_kind` (`approve`, `choice` or `text`), `choices` (a JSON list, as a
+  string), `screenshot` (a path on this API, empty when there's none), `url` (the page's address), and
+  `reminder` ("1", "2", …) on reminders. See "Computer tasks: Needs you".
 
 **When pushes are sent:**
 - `task_completed` for every finished task. One that needs the owner's input (`needs_input`) has the title
@@ -270,8 +273,29 @@ strings):
 - `reminder` when a reminder schedule runs.
 - `agent_message` when the agent starts a message (below). The push has no text of its own, only what kind of
   message is waiting.
+- `needs_you` when a computer task waits for the owner, then reminders (after 1, 2, 3, 4 and 5 minutes, then
+  every 10) until it's answered; the task pauses safely after 30 minutes. It should be a loud notification.
 
 Tokens that FCM rejects are removed automatically.
+
+## Computer tasks: Needs you
+
+A computer task (AgentComputerUse, proposal kind `computer`) never submits, sends, pays or posts by itself, and
+some questions only the owner can answer. Then it **waits** and the owner gets a `needs_you` push. The task
+card's progress says `Needs you: …` with the `request_id`.
+
+| Method & path | Body | Returns |
+|---|---|---|
+| `GET /api/computer/requests` | | `{"requests": [{"id", "kind": "approve"\|"choice"\|"text", "question", "choices": [...], "url", "screenshot", "created", "pending": true}]}`, newest first |
+| `GET /api/computer/requests/{id}/screenshot` | | PNG: the window as it was, the spot in question outlined in red; `404` without one |
+| `POST /api/computer/requests/{id}/answer` | `{"answer": "Approve"}` | `{"status": "ok", "id", "kind", "answer"}`. `approve`: `Approve` or `Deny`; `choice`: one of `choices` exactly; `text`: up to 1,000 characters. `400` for an answer that doesn't fit, `409` when it was already answered or has closed |
+
+- `approve`: a step that submits, sends, pays, buys, deletes, posts or signs up. Approve: it's clicked and the
+  task carries on; Deny: the task stops with nothing done.
+- `choice`: a pop-up without a harmless answer; the owner picks one of its own buttons.
+- `text`: a question (a detail it doesn't know, or "I'm stuck, what should I do?"); the answer becomes part of
+  the task.
+- Show the screenshot above the answer, and the page's address in words.
 
 ## Messages the agent starts (proactive)
 
