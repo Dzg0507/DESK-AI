@@ -261,9 +261,11 @@ strings):
 - `channel`: `tasks`, `alerts`, `reminders`, `assistant` or `needs_you`. Apps older than 2.3.9 show reminders on
   the alerts channel; apps that don't know `needs_you` show it on the alerts channel.
 - `agent_message` only: `message_id` and `kind` (see "Messages the agent starts").
-- `needs_you` only: `request_id`, `request_kind` (`approve`, `choice` or `text`), `choices` (a JSON list, as a
-  string), `screenshot` (a path on this API, empty when there's none), `url` (the page's address), and
+- `needs_you` only: `request_id`, `request_kind` (`approve`, `choice`, `text` or `secret`), `choices` (a JSON
+  list, as a string), `screenshot` (a path on this API, empty when there's none), `url` (the page's address), and
   `reminder` ("1", "2", …) on reminders. See "Computer tasks: Needs you".
+- `needs_you_cancel` (channel `needs_you`): `request_id` (also `cancel_request_id`) and `reason`. The request was
+  answered elsewhere, or its task ended: remove its notification.
 
 **When pushes are sent:**
 - `task_completed` for every finished task. One that needs the owner's input (`needs_input`) has the title
@@ -286,15 +288,20 @@ card's progress says `Needs you: …` with the `request_id`.
 
 | Method & path | Body | Returns |
 |---|---|---|
-| `GET /api/computer/requests` | | `{"requests": [{"id", "kind": "approve"\|"choice"\|"text", "question", "choices": [...], "url", "screenshot", "created", "pending": true}]}`, newest first |
+| `GET /api/computer/requests` | | `{"requests": [{"id", "kind": "approve"\|"choice"\|"text"\|"secret", "question", "choices": [...], "url", "screenshot", "created", "pending": true}]}`, newest first |
 | `GET /api/computer/requests/{id}/screenshot` | | PNG: the window as it was, the spot in question outlined in red; `404` without one |
-| `POST /api/computer/requests/{id}/answer` | `{"answer": "Approve"}` | `{"status": "ok", "id", "kind", "answer"}`. `approve`: `Approve` or `Deny`; `choice`: one of `choices` exactly; `text`: up to 1,000 characters. `400` for an answer that doesn't fit, `409` when it was already answered or has closed |
+| `POST /api/computer/requests/{id}/answer` | `{"answer": "Approve"}` | `{"status": "ok", "id", "kind", "answer"}`. `approve`: `Approve` or `Deny`; `choice`: one of `choices` exactly; `text`: up to 1,000 characters; `secret`: up to 200, kept exactly as typed, and the response's `answer` is `(sent)`. `400` for an answer that doesn't fit, `409` when it was already answered or has closed |
 
 - `approve`: a step that submits, sends, pays, buys, deletes, posts or signs up. Approve: it's clicked and the
   task carries on; Deny: the task stops with nothing done.
 - `choice`: a pop-up without a harmless answer; the owner picks one of its own buttons.
 - `text`: a question (a detail it doesn't know, or "I'm stuck, what should I do?"); the answer becomes part of
   the task.
+- `secret`: a password or verification code for the box outlined on the screenshot. The tool types the answer
+  straight into that box; it never goes to the AI, a log or memory. The app answers it only on its own screen,
+  in a hidden (password) field, never in a notification reply box, and blocks screenshots while it's shown.
+- On a sign-in page, a `choice` can offer `Type my password` next to the page's own options (`Try another way`
+  and the like). Picking `Type my password` brings a `secret` request for the password box.
 - Show the screenshot above the answer, and the page's address in words.
 
 ## Messages the agent starts (proactive)

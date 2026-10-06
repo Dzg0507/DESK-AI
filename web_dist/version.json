@@ -1,7 +1,7 @@
 {
-  "versionCode": 39,
-  "versionName": "2.5.0",
-  "changelog": "DeskAI v2.5.0 (Build 39): Needs you. When a computer task on the Mini needs you (approve a step, pick a choice, answer a question), you get a loud alert with a screenshot of what it sees, and can answer right in the notification. A banner in the chat shows anything still waiting.",
+  "versionCode": 40,
+  "versionName": "2.5.1",
+  "changelog": "DeskAI v2.5.1 (Build 40): sign-ins for computer tasks. When a site asks for a password or code, you can pick 'Type my password' or the site's own options like 'Try another way'. A password or code is typed on DeskAI's own screen, in a hidden field with screenshots blocked; it goes straight into the box on the Mini and the AI never sees it. Alerts for cancelled or answered requests now clear from your phone.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24165119
+  "fileSizeBytes": 24181492
 }

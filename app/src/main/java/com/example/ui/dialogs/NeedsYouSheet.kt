@@ -59,8 +59,13 @@ fun NeedsYouSheet(
     onScreenshot: suspend (path: String) -> ByteArray?
 ) {
     LaunchedEffect(Unit) { onRefresh() }
+    // A password or code on screen: no screenshots, screen recording or recent-apps preview of this sheet
+    val secure = requests.any { it.kind == "secret" }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-                     containerColor = Color(0xFF0F172A)) {
+                     containerColor = Color(0xFF0F172A),
+                     properties = androidx.compose.material3.ModalBottomSheetProperties(
+                         securePolicy = if (secure) androidx.compose.ui.window.SecureFlagPolicy.SecureOn
+                                        else androidx.compose.ui.window.SecureFlagPolicy.Inherit)) {
         Column(modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 24.dp)) {
             Text("⚠️ Needs you", color = Color(0xFFFCD34D), fontSize = 20.sp, fontWeight = FontWeight.Bold)
             Text("A computer task on the Mini is waiting for your answer.", color = Color(0xFF94A3B8), fontSize = 13.sp)
@@ -127,6 +132,27 @@ private fun RequestCard(
                 Button(onClick = { send("Approve") }, enabled = !sending,
                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF16A34A))) { Text("✅ Approve") }
                 OutlinedButton(onClick = { send("Deny") }, enabled = !sending) { Text("✋ Deny", color = Color(0xFFFCA5A5)) }
+            }
+            "secret" -> Column {
+                var shown by remember { mutableStateOf(false) }
+                OutlinedTextField(
+                    value = reply, onValueChange = { reply = it }, modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("Password or code") }, enabled = !sending, singleLine = true,
+                    visualTransformation = if (shown) androidx.compose.ui.text.input.VisualTransformation.None
+                                           else androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Password),
+                    trailingIcon = {
+                        androidx.compose.material3.TextButton(onClick = { shown = !shown }) {
+                            Text(if (shown) "Hide" else "Show", color = Color(0xFF94A3B8), fontSize = 12.sp)
+                        }
+                    }
+                )
+                Text("🔒 Typed straight into the outlined box on the Mini. The AI never sees it, and it isn't saved.",
+                     color = Color(0xFF94A3B8), fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
+                Spacer(Modifier.height(6.dp))
+                Button(onClick = { val v = reply; reply = ""; send(v) }, enabled = !sending && reply.isNotEmpty(),
+                       modifier = Modifier.align(Alignment.End)) { Text("Send") }
             }
             "choice" -> Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 req.choices.forEach { c ->

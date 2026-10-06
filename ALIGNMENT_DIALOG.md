@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-05 (DeskAI v2.5.0 / Build 39 shipped — Needs you alerts for computer tasks)
+**Last Updated:** 2026-10-06 (DeskAI v2.5.1 / Build 40 shipped — secret answers for sign-ins; needs_you_cancel)
 
 ---
 
@@ -14,6 +14,12 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-06: DeskAI v2.5.1 (build 40), sign-ins
+
+- New request kind `secret` (docs/API.md "Computer tasks: Needs you"): a password or code. `NeedsYouSheet` shows a hidden (password) field with Show/Hide and blocks screenshots on the sheet (`SecureFlagPolicy.SecureOn` whenever a secret is listed); the field is cleared on Send. The notification has no reply box for it (a RemoteInput shows what's typed), only "Type it in DeskAI", which opens the sheet. The tool types the value into the outlined box; the AI never sees it. Please keep it that way: never put a secret in a notification, a log or the chat.
+- On a sign-in page a `choice` request can offer `Type my password` next to the page's own options (`Try another way`).
+- `needs_you_cancel` push (c758b7d): removes the request's notification when it was answered elsewhere or its task ended.
 
 ## Shipped 2026-10-05: DeskAI v2.5.0 (build 39), Needs you
 

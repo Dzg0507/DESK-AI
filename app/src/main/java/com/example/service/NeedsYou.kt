@@ -105,6 +105,9 @@ object NeedsYou {
             "choice" -> choices.take(3).forEachIndexed { i, c ->
                 builder.addAction(0, c, answerIntent(context, requestId, c, 10 + i))
             }
+            // A password or code: typed only on DeskAI's own screen, in a hidden field (a notification's reply
+            // box shows what's typed and can't block screenshots). Tapping the alert opens that screen.
+            "secret" -> builder.addAction(0, "🔒 Type it in DeskAI", open)
             else -> {
                 val remote = RemoteInput.Builder(KEY_REPLY).setLabel("Your answer").build()
                 val reply = NotificationCompat.Action.Builder(0, "Reply", answerIntent(context, requestId, null, 3, mutable = true))
