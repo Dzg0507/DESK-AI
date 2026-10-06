@@ -138,6 +138,17 @@ fun TakeOverScreen(
     // sit above them (with the default they ended up under the navigation bar and the keyboard, 2026-10-06)
     Dialog(onDismissRequest = { handBack() },
            properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+        // The dialog's own window: full screen, resized for the keyboard, insets passed to the layout. Without this
+        // the window only slid up and the keyboard covered the text box and keys (owner's screenshot, 2026-10-06)
+        val dialogView = androidx.compose.ui.platform.LocalView.current
+        androidx.compose.runtime.SideEffect {
+            (dialogView.parent as? androidx.compose.ui.window.DialogWindowProvider)?.window?.let { w ->
+                androidx.core.view.WindowCompat.setDecorFitsSystemWindows(w, false)
+                @Suppress("DEPRECATION")
+                w.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+                w.setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT)
+            }
+        }
         Surface(modifier = Modifier.fillMaxSize(), color = Color(0xFF0B1120)) {
             Column(modifier = Modifier.fillMaxSize().systemBarsPadding().imePadding()) {
                 // Who's in control, and Hand back

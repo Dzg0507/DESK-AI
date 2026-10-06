@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-06 (DeskAI v2.6.2 / Build 45 shipped — Take over controls above the keyboard)
+**Last Updated:** 2026-10-06 (DeskAI v2.6.3 / Build 46 shipped — Take over resizes for the keyboard)
 
 ---
 
@@ -14,6 +14,10 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-06: DeskAI v2.6.3 (build 46), Take over keyboard
+
+- Build 45's `decorFitsSystemWindows = false` + `imePadding()` wasn't enough on the owner's phone (screenshot: the keyboard still covered the text box and keys). The dialog's own window (via `DialogWindowProvider`) is now set to `SOFT_INPUT_ADJUST_RESIZE`, `WindowCompat.setDecorFitsSystemWindows(w, false)` and MATCH_PARENT, so the keyboard's insets reach the layout.
 
 ## Shipped 2026-10-06: DeskAI v2.6.2 (build 45), Take over layout
 

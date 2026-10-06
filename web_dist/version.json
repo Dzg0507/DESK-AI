@@ -1,7 +1,7 @@
 {
-  "versionCode": 45,
-  "versionName": "2.6.2",
-  "changelog": "DeskAI v2.6.2 (Build 45): the Take over controls sit above the keyboard and the navigation bar (the text box and Send were cut off).",
+  "versionCode": 46,
+  "versionName": "2.6.3",
+  "changelog": "DeskAI v2.6.3 (Build 46): Take over's controls move above the keyboard (the window now resizes for it; build 45's fix wasn't enough).",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24214256
+  "fileSizeBytes": 24214264
 }
