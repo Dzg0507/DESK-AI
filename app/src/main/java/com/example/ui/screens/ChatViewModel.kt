@@ -581,6 +581,11 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         return result
     }
 
+    /** The repo browser (docs/API.md "Repos"). */
+    suspend fun github(method: String, path: String, body: org.json.JSONObject? = null,
+                       idempotencyKey: String? = null): Result<org.json.JSONObject> =
+        repository.github(method, path, body, idempotencyKey)
+
     suspend fun fetchSystemLogs(limit: Int = 100): List<com.example.data.model.SystemLogEntry> {
         return repository.fetchSystemLogs(limit)
     }

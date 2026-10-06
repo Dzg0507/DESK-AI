@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-06 (DeskAI v2.6.4 / Build 47 shipped — Take over: two containers, no pop-up window)
+**Last Updated:** 2026-10-06 (DeskAI v2.6.5 / Build 48 shipped — Repos: GitHub repos like a file explorer)
 
 ---
 
@@ -14,6 +14,12 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-06: DeskAI v2.6.5 (build 48), Repos (by the laptop Claude session, at the owner's request)
+
+- New `ui/dialogs/ReposScreen.kt`, opened from the command deck's **Repos** card: the owner's GitHub repos (both accounts, filterable) -> folders -> a file's text (monospace, selectable). **Work on this** takes an instruction (with the folder or file being viewed) and calls `POST /api/github/work`; the agent registers the repo with AgentWork by itself when it isn't a project yet. Back goes up one level.
+- Drawn in the activity (not a Dialog), like Take over: pop-ups don't get keyboard insets on the owner's phone.
+- Plumbing: `AlwaysOnAgentClient.githubCall` (uses `scheduleCall`), `ChatRepository.github`, `ChatViewModel.github`. API contract: `docs/API.md` "Repos".
 
 ## Shipped 2026-10-06: DeskAI v2.6.4 (build 47), Take over without a pop-up window
 

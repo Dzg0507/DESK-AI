@@ -1044,6 +1044,11 @@ class AlwaysOnAgentClient {
     suspend fun takeoverCall(config: BridgeConfig, action: String, body: JSONObject? = null): Result<JSONObject> =
         scheduleCall(config, "POST", "/api/computer/takeover/$action", body)
 
+    /** The repo browser's calls (docs/API.md "Repos"): GET /api/github/... and POST /api/github/work. */
+    suspend fun githubCall(config: BridgeConfig, method: String, path: String, body: JSONObject? = null,
+                           idempotencyKey: String? = null): Result<JSONObject> =
+        scheduleCall(config, method, path, body, idempotencyKey)
+
     /** Bytes of a file on the agent's API (e.g. a request's screenshot), with the app's token. */
     suspend fun fetchBytes(config: BridgeConfig, path: String): ByteArray? = withContext(Dispatchers.IO) {
         try {

@@ -250,6 +250,10 @@ class ChatRepository(
     suspend fun takeover(action: String, body: org.json.JSONObject? = null): Result<org.json.JSONObject> =
         agentClient.takeoverCall(getActiveConfig(), action, body)
 
+    suspend fun github(method: String, path: String, body: org.json.JSONObject? = null,
+                       idempotencyKey: String? = null): Result<org.json.JSONObject> =
+        agentClient.githubCall(getActiveConfig(), method, path, body, idempotencyKey)
+
     suspend fun fetchSystemLogs(limit: Int = 100): List<SystemLogEntry> = withContext(Dispatchers.IO) {
         val config = getActiveConfig()
         agentClient.getSystemLogs(config, limit)

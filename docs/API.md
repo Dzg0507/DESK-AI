@@ -14,7 +14,7 @@ DeskAI repo at `docs/API.md`, updated whenever this one changes.
 | Errors | `401`: missing or wrong token. Otherwise `{"detail": "..."}` with a normal HTTP code. |
 | JSON | `snake_case`; timestamps are ISO 8601 in the server's local time |
 | CORS | none on purpose (it would let any website read the owner's memory). Native HTTP clients are unaffected. A request carrying a browser's `Origin` header needs the token even from the Mini itself, so a web page open in a browser there can't use the loopback trust (until 2026-10-04 chat, videos and images answered wildcard preflights). `tests/test_api_contract.py` checks that every route is in this file and every route here exists. |
-| Retries | send `Idempotency-Key: <uuid>` on task-creating requests: one UUID per user action, reused on every retry or failover. A repeat within 24 h returns the first `task_id` plus `"duplicate": true`. Accepted by `POST /api/tasks`, `/api/tasks/run`, `/api/trigger_media` and `/api/agentwork/jobs`. |
+| Retries | send `Idempotency-Key: <uuid>` on task-creating requests: one UUID per user action, reused on every retry or failover. A repeat within 24 h returns the first `task_id` plus `"duplicate": true`. Accepted by `POST /api/tasks`, `/api/tasks/run`, `/api/trigger_media`, `/api/agentwork/jobs` and `/api/github/work`. |
 
 ## Chat
 
@@ -199,6 +199,21 @@ Each task object includes a dynamic `actions` array of contextual 1-tap buttons:
 | `GET /api/agentwork/projects` | | `[{"name", "description", "repo"}]` |
 | `POST /api/agentwork/projects` | `{"name": "recipe-app", "repo": "https://github.com/o/r.git", "description": "..."}` | `{"status", "project": {...}}`, or 400 (bad name, not https, a duplicate, unreachable). It checks the repo first, which takes a few seconds. |
 | `POST /api/agentwork/jobs` | `{"project": "...", "instruction": "at least 8 characters"}` | `{"status": "success", "task_id": "..."}`; 400 for an unknown project |
+
+### Repos (the GitHub repo browser)
+
+The owner's GitHub repos (both accounts), browsed like a file explorer, read-only, through the Mini's own GitHub
+sign-in. **Work on this** starts an AgentWork job on a repo; a repo that isn't an AgentWork project yet is
+registered first, on its default branch, so the owner never adds projects by hand. Each call takes 1-3 s (it
+asks GitHub); the repo list is cached for 2 minutes (`?refresh=true` skips that). GitHub errors come back as `502`
+with the reason in `detail`.
+
+| Method & path | Body | Returns |
+|---|---|---|
+| `GET /api/github/repos` | | `{"repos": [{"repo": "owner/name", "description", "private", "updated": "2026-10-06T21:51", "default_branch", "url", "project": "website" or null}]}`, newest change first. `project` is the AgentWork project already set up for it. |
+| `GET /api/github/tree?repo=owner/name&path=docs` | | `{"repo", "path", "entries": [{"name", "path", "type": "dir"\|"file", "size"}]}`, folders first, then files, A-Z. `path` empty = the repo's top. |
+| `GET /api/github/file?repo=owner/name&path=docs/a.md` | | `{"repo", "path", "name", "size", "url" (on GitHub), "text": "...", "note": null}`; for a file over 300 KB or not text, `text` is null and `note` says why (show it with the GitHub link) |
+| `POST /api/github/work` | `{"repo": "owner/name", "instruction": "at least 8 characters", "path"?: "the folder or file being viewed"}` | `{"status": "success", "task_id", "project", "registered": true if it was just set up}`; 400 (short instruction, or the repo couldn't be set up), 404 (not one of the owner's repos). Accepts `Idempotency-Key`. The task appears like any AgentWork job (its card, Preview diff, go-live). |
 
 ## Media and Gallery
 

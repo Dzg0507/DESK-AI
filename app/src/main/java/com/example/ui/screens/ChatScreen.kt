@@ -143,6 +143,7 @@ fun ChatScreen(
     var showMaintenanceSheet by remember { mutableStateOf(false) }
     var showNeedsYou by remember { mutableStateOf(false) }
     var showTakeOver by remember { mutableStateOf(false) }
+    var showRepos by remember { mutableStateOf(false) }
     var takeOverFor by remember { mutableStateOf<String?>(null) }
     val needsYou by viewModel.needsYou.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { viewModel.startNeedsYouPolling() }
@@ -496,6 +497,7 @@ fun ChatScreen(
             onOpenMaintenance = { showMaintenanceSheet = true },
             onOpenSchedules = { showSchedulesSheet = true },
             onOpenTakeOver = { takeOverFor = null; showTakeOver = true },
+            onOpenRepos = { showRepos = true },
             onSelectCommandTemplate = { template ->
                 viewModel.onInputTextChange(template)
             },
@@ -630,6 +632,14 @@ fun ChatScreen(
             onAnswer = { id, answer -> viewModel.answerComputerRequest(id, answer) },
             onScreenshot = { path -> viewModel.requestScreenshot(path) },
             onTakeOver = { id -> showNeedsYou = false; takeOverFor = id; showTakeOver = true }
+        )
+    }
+
+    // Repos: the owner's GitHub repos like a file explorer, and "Work on this" (docs/API.md "Repos")
+    if (showRepos) {
+        com.example.ui.dialogs.ReposScreen(
+            onClose = { showRepos = false },
+            call = { method, path, body, key -> viewModel.github(method, path, body, key) }
         )
     }
 

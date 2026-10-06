@@ -1,0 +1,296 @@
+package com.example.ui.dialogs
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
+import org.json.JSONObject
+import java.net.URLEncoder
+import java.util.UUID
+
+/**
+ * Repos: the owner's GitHub repos (both accounts) browsed like a file explorer, read-only (docs/API.md "Repos").
+ * Repo list -> folders -> a file's text. "Work on this" sends an instruction for the repo (and the folder or file
+ * being viewed) as an AgentWork job; the agent sets the repo up as a project by itself if it isn't one yet, so
+ * nothing has to be added by hand. The job runs on its own branch and shows up as a task card like any other.
+ *
+ * Drawn in the activity, not a pop-up window: pop-ups don't get the keyboard's size on the owner's phone (the
+ * Take over lesson, builds 45-47). Back goes up one level, and closes from the repo list.
+ */
+@Composable
+fun ReposScreen(
+    onClose: () -> Unit,
+    call: suspend (method: String, path: String, body: JSONObject?, idempotencyKey: String?) -> Result<JSONObject>
+) {
+    val scope = rememberCoroutineScope()
+    var repos by remember { mutableStateOf<List<JSONObject>>(emptyList()) }
+    var filter by remember { mutableStateOf("") }
+    var repo by remember { mutableStateOf<JSONObject?>(null) }       // the open repo (null: the repo list)
+    var path by remember { mutableStateOf("") }                      // the open folder, "" = the repo's top
+    var entries by remember { mutableStateOf<List<JSONObject>>(emptyList()) }
+    var file by remember { mutableStateOf<JSONObject?>(null) }       // the open file
+    var loading by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+    var working by remember { mutableStateOf(false) }                 // the "Work on this" box is open
+    var instruction by remember { mutableStateOf("") }
+    var sending by remember { mutableStateOf(false) }
+    var sent by remember { mutableStateOf<String?>(null) }
+    var refresh by remember { mutableStateOf(0) }
+
+    fun enc(s: String) = URLEncoder.encode(s, "UTF-8")
+    fun list(o: JSONObject?, key: String): List<JSONObject> {
+        val a = o?.optJSONArray(key) ?: return emptyList()
+        return (0 until a.length()).map { a.getJSONObject(it) }
+    }
+
+    // The repo list, once (and on refresh)
+    LaunchedEffect(refresh) {
+        loading = true; error = null
+        val r = call("GET", "/api/github/repos" + if (refresh > 0) "?refresh=true" else "", null, null)
+        repos = list(r.getOrNull(), "repos")
+        error = r.exceptionOrNull()?.message
+        loading = false
+    }
+    // A folder whenever the repo or the path changes
+    LaunchedEffect(repo, path) {
+        val name = repo?.optString("repo") ?: return@LaunchedEffect
+        loading = true; error = null; entries = emptyList()
+        val r = call("GET", "/api/github/tree?repo=${enc(name)}&path=${enc(path)}", null, null)
+        entries = list(r.getOrNull(), "entries")
+        error = r.exceptionOrNull()?.message
+        loading = false
+    }
+
+    fun openFile(p: String) {
+        val name = repo?.optString("repo") ?: return
+        scope.launch {
+            loading = true; error = null
+            val r = call("GET", "/api/github/file?repo=${enc(name)}&path=${enc(p)}", null, null)
+            file = r.getOrNull()
+            error = r.exceptionOrNull()?.message
+            loading = false
+        }
+    }
+
+    fun back() {
+        when {
+            working -> working = false
+            file != null -> file = null
+            repo != null && path.isNotEmpty() -> path = path.substringBeforeLast("/", "")
+            repo != null -> { repo = null; sent = null }
+            else -> onClose()
+        }
+    }
+
+    fun startWork() {
+        val name = repo?.optString("repo") ?: return
+        val where = file?.optString("path") ?: path
+        sending = true
+        scope.launch {
+            val body = JSONObject().put("repo", name).put("instruction", instruction.trim())
+            if (where.isNotEmpty()) body.put("path", where)
+            val r = call("POST", "/api/github/work", body, UUID.randomUUID().toString())
+            sending = false
+            r.onSuccess { o ->
+                sent = "Started ${o.optString("task_id")}" +
+                    (if (o.optBoolean("registered")) " (set up as project '${o.optString("project")}')" else "") +
+                    ". Its card shows the progress; nothing goes live without your tap."
+                working = false
+                instruction = ""
+            }.onFailure { error = it.message ?: "Couldn't start the work" }
+        }
+    }
+
+    androidx.activity.compose.BackHandler { back() }
+    Surface(modifier = Modifier.fillMaxSize(), color = Color(0xFF0B1120)) {
+        Column(modifier = Modifier.fillMaxSize().systemBarsPadding().imePadding()) {
+            // Header: back, where we are, close
+            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = { back() }) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(repo?.optString("repo")?.substringAfter("/") ?: "Repos", color = Color.White,
+                        fontWeight = FontWeight.Bold, fontSize = 17.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    val sub = when {
+                        file != null -> file!!.optString("path")
+                        repo != null -> if (path.isEmpty()) repo!!.optString("repo") else path
+                        else -> "Your GitHub repos"
+                    }
+                    Text(sub, color = Color(0xFF94A3B8), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+                IconButton(onClick = onClose) {
+                    Icon(Icons.Default.Close, contentDescription = "Close", tint = Color(0xFF94A3B8))
+                }
+            }
+            if (loading) {
+                Box(Modifier.fillMaxWidth().padding(8.dp), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(modifier = Modifier.size(22.dp), color = Color(0xFF22D3EE), strokeWidth = 2.dp)
+                }
+            }
+            error?.let {
+                Text(it, color = Color(0xFFF87171), fontSize = 13.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+            }
+            sent?.let {
+                Text(it, color = Color(0xFF4ADE80), fontSize = 13.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+            }
+
+            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                when {
+                    // A file's text
+                    file != null -> {
+                        val f = file!!
+                        val text = if (f.isNull("text")) null else f.optString("text")
+                        if (text == null) {
+                            Text(f.optString("note", "Can't show this file") + "\n" + f.optString("url"),
+                                color = Color(0xFF94A3B8), modifier = Modifier.padding(16.dp))
+                        } else {
+                            SelectionContainer {
+                                Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+                                    .horizontalScroll(rememberScrollState()).padding(12.dp)) {
+                                    Text(text, color = Color(0xFFE2E8F0), fontFamily = FontFamily.Monospace, fontSize = 12.sp)
+                                }
+                            }
+                        }
+                    }
+                    // A folder
+                    repo != null -> LazyColumn(Modifier.fillMaxSize()) {
+                        items(entries) { e ->
+                            val isDir = e.optString("type") == "dir"
+                            Row(modifier = Modifier.fillMaxWidth()
+                                .clickable { if (isDir) path = e.optString("path") else openFile(e.optString("path")) }
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically) {
+                                Icon(if (isDir) Icons.Default.Folder else Icons.Default.Description, contentDescription = null,
+                                    tint = if (isDir) Color(0xFFF59E0B) else Color(0xFF94A3B8), modifier = Modifier.size(20.dp))
+                                Spacer(Modifier.width(12.dp))
+                                Text(e.optString("name"), color = Color.White, fontSize = 15.sp, modifier = Modifier.weight(1f),
+                                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                if (!isDir) Text(size(e.optLong("size")), color = Color(0xFF64748B), fontSize = 12.sp)
+                            }
+                        }
+                    }
+                    // The repo list
+                    else -> Column(Modifier.fillMaxSize()) {
+                        OutlinedTextField(value = filter, onValueChange = { filter = it }, singleLine = true,
+                            placeholder = { Text("Filter repos") },
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp))
+                        val shown = repos.filter {
+                            filter.isBlank() || it.optString("repo").contains(filter.trim(), ignoreCase = true) ||
+                                it.optString("description").contains(filter.trim(), ignoreCase = true)
+                        }
+                        LazyColumn(Modifier.fillMaxSize()) {
+                            items(shown) { r ->
+                                Column(modifier = Modifier.fillMaxWidth()
+                                    .clickable { repo = r; path = ""; file = null; sent = null }
+                                    .padding(horizontal = 16.dp, vertical = 10.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(r.optString("repo").substringAfter("/"), color = Color.White,
+                                            fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                                        if (r.optBoolean("private")) {
+                                            Spacer(Modifier.width(6.dp))
+                                            Icon(Icons.Default.Lock, contentDescription = "Private", tint = Color(0xFF64748B),
+                                                modifier = Modifier.size(13.dp))
+                                        }
+                                        Spacer(Modifier.weight(1f))
+                                        if (!r.isNull("project")) {
+                                            Text("project", color = Color(0xFF22D3EE), fontSize = 11.sp,
+                                                modifier = Modifier.clip(RoundedCornerShape(6.dp))
+                                                    .background(Color(0xFF0E2A33)).padding(horizontal = 6.dp, vertical = 2.dp))
+                                        }
+                                    }
+                                    val desc = r.optString("description")
+                                    Text((r.optString("repo").substringBefore("/")) + (if (desc.isNotBlank()) " · $desc" else ""),
+                                        color = Color(0xFF94A3B8), fontSize = 12.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Bottom: "Work on this" for the open repo, or refresh for the list
+            Column(Modifier.fillMaxWidth().background(Color(0xFF111827)).padding(12.dp)) {
+                if (repo == null) {
+                    OutlinedButton(onClick = { refresh++ }, modifier = Modifier.fillMaxWidth()) { Text("Refresh") }
+                } else if (!working) {
+                    Button(onClick = { working = true; sent = null; error = null }, modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF22D3EE), contentColor = Color(0xFF0B1120))) {
+                        Text("Work on this", fontWeight = FontWeight.Bold)
+                    }
+                } else {
+                    val where = file?.optString("path") ?: path
+                    Text("What should change" + (if (where.isNotEmpty()) " (looking at $where)" else "") + "?",
+                        color = Color(0xFF94A3B8), fontSize = 12.sp)
+                    OutlinedTextField(value = instruction, onValueChange = { instruction = it },
+                        placeholder = { Text("e.g. Fix the typo in the header") }, minLines = 2, maxLines = 5,
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(onClick = { working = false }, modifier = Modifier.weight(1f)) { Text("Cancel") }
+                        Button(onClick = { startWork() }, enabled = !sending && instruction.trim().length >= 8,
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF22D3EE), contentColor = Color(0xFF0B1120))) {
+                            Text(if (sending) "Starting…" else "Start", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun size(bytes: Long): String = when {
+    bytes >= 1_000_000 -> "%.1f MB".format(bytes / 1_000_000.0)
+    bytes >= 1_000 -> "${bytes / 1_000} KB"
+    else -> "$bytes B"
+}

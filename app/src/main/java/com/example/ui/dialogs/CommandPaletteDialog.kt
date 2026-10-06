@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.TouchApp
+import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.Memory
@@ -93,6 +94,7 @@ fun CommandPaletteDialog(
     onOpenMaintenance: () -> Unit = {},
     onOpenSchedules: () -> Unit = {},
     onOpenTakeOver: () -> Unit = {},
+    onOpenRepos: () -> Unit = {},
     onSelectCommandTemplate: (String) -> Unit,
     onExecuteCommand: (String) -> Unit,
     onDismiss: () -> Unit
@@ -558,6 +560,19 @@ fun CommandPaletteDialog(
                                         onClick = {
                                             onDismiss()
                                             onOpenTakeOver()
+                                        }
+                                    )
+
+                                    // 9. Repos: GitHub repos like a file explorer; "Work on this" starts a job
+                                    WorkstationCard(
+                                        title = "Repos",
+                                        subtitle = "Browse your GitHub repos and work on one",
+                                        icon = Icons.Default.FolderOpen,
+                                        accentColor = Color(0xFF4ADE80),
+                                        modifier = Modifier.fillMaxWidth(),
+                                        onClick = {
+                                            onDismiss()
+                                            onOpenRepos()
                                         }
                                     )
                                 }
