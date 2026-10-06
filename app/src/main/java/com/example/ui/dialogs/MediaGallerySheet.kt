@@ -986,10 +986,15 @@ fun VideoPlayerDialog(
                                     ViewGroup.LayoutParams.MATCH_PARENT
                                 )
 
+                                // Centred: VideoView shrinks itself to the video's shape, and without a gravity it
+                                // sat at the top-left, so a video taller than the frame had all the black on the
+                                // right (2026-10-06, the full-screen phone recording). Sizing stays MATCH_PARENT,
+                                // as before: TikTok renders that fill the frame look exactly the same.
                                 val vView = VideoView(ctx).apply {
                                     layoutParams = FrameLayout.LayoutParams(
                                         FrameLayout.LayoutParams.MATCH_PARENT,
-                                        FrameLayout.LayoutParams.MATCH_PARENT
+                                        FrameLayout.LayoutParams.MATCH_PARENT,
+                                        android.view.Gravity.CENTER
                                     )
                                     videoViewRef = this
 

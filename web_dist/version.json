@@ -1,7 +1,7 @@
 {
-  "versionCode": 48,
-  "versionName": "2.6.5",
-  "changelog": "DeskAI v2.6.5 (Build 48): Repos. Browse your GitHub repos like a file explorer (folders, files) and tap Work on this to start a job on one; it's set up as a project by itself.",
+  "versionCode": 49,
+  "versionName": "2.6.6",
+  "changelog": "DeskAI v2.6.6 (Build 49): videos taller than the player (like screen recordings) are centred instead of pushed to the left. TikTok videos look the same as before.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24247035
+  "fileSizeBytes": 24247017
 }
