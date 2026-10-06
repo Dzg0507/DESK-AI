@@ -48,6 +48,12 @@ DeskAI repo at `docs/API.md`, updated whenever this one changes.
     AgentComputerUse does on the Mini's screen with the real mouse and keyboard. Its steps arrive as the task's
     progress (`message`: "Step 2: type - …"); the result is the answer with quotes from the page, or where it
     stopped (it never submits, sends, pays or posts by itself). Shown as a task card by apps that don't know it.
+  - `email` ("Send an email to sam@example.com\nSubject: Late\n\n<the whole text>", or "Reply in Gmail …" / "Save a
+    Gmail draft …") and `calendar_event` ("Add to Google Calendar: Dentist\nWhen: …"): the `instruction` is the
+    exact email or event, shown in full. Run sends it (or saves the draft) or adds the event right away and returns
+    `{"status": "success", "message": "Sent: 'Late' to sam@example.com."}` with no `task_id`; `502` with the reason
+    if Google refused (nothing was sent). Suggested headers: **✉️ Send email** and **📅 Add event** (apps that don't
+    know them show "Suggested Mission", which works the same).
   - **Run:** `POST /api/proposals/{id}/run` returns `{"status": "success", "task_id": "..."}`. For
     `add_project` it returns `{"status": "success", "project": "...", "message": "..."}` with no `task_id`,
     or 400 with the reason.
