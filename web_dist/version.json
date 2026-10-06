@@ -1,7 +1,7 @@
 {
-  "versionCode": 44,
-  "versionName": "2.6.1",
-  "changelog": "DeskAI v2.6.1 (Build 44): Take over the laptop too. The Take over screen has a Mini / Laptop switch, so you can use the laptop (and talk to Claude on it) from anywhere. The laptop needs to be on and awake, with Tailscale running.",
+  "versionCode": 45,
+  "versionName": "2.6.2",
+  "changelog": "DeskAI v2.6.2 (Build 45): the Take over controls sit above the keyboard and the navigation bar (the text box and Send were cut off).",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24214258
+  "fileSizeBytes": 24214256
 }

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -133,9 +134,12 @@ fun TakeOverScreen(
         }
     }
 
-    Dialog(onDismissRequest = { handBack() }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+    // decorFitsSystemWindows = false: the window gets the keyboard's and the system bars' sizes, so the controls can
+    // sit above them (with the default they ended up under the navigation bar and the keyboard, 2026-10-06)
+    Dialog(onDismissRequest = { handBack() },
+           properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
         Surface(modifier = Modifier.fillMaxSize(), color = Color(0xFF0B1120)) {
-            Column(modifier = Modifier.fillMaxSize().imePadding()) {
+            Column(modifier = Modifier.fillMaxSize().systemBarsPadding().imePadding()) {
                 // Who's in control, and Hand back
                 Row(
                     modifier = Modifier.fillMaxWidth().background(Color(0xFF111A2E)).padding(horizontal = 12.dp, vertical = 8.dp),
