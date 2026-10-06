@@ -1,7 +1,7 @@
 {
-  "versionCode": 46,
-  "versionName": "2.6.3",
-  "changelog": "DeskAI v2.6.3 (Build 46): Take over's controls move above the keyboard (the window now resizes for it; build 45's fix wasn't enough).",
+  "versionCode": 47,
+  "versionName": "2.6.4",
+  "changelog": "DeskAI v2.6.4 (Build 47): Take over in two parts: the computer's screen on top, the controls in their own panel at the bottom that sits right above the keyboard.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24214264
+  "fileSizeBytes": 24214257
 }

@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-06 (DeskAI v2.6.3 / Build 46 shipped — Take over resizes for the keyboard)
+**Last Updated:** 2026-10-06 (DeskAI v2.6.4 / Build 47 shipped — Take over: two containers, no pop-up window)
 
 ---
 
@@ -14,6 +14,10 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-06: DeskAI v2.6.4 (build 47), Take over without a pop-up window
+
+- Builds 45-46 tried to make the Dialog's window resize for the keyboard; on the owner's phone it never did (46 was worse). `TakeOverScreen` is no longer a Dialog: it's drawn in the activity (edge-to-edge, so the keyboard's insets arrive), over the chat, with `BackHandler` = Hand back. Owner's design: two containers, the computer's screen (weight 1, shrinks) and the controls panel pinned under it, with `imePadding()` on the column.
 
 ## Shipped 2026-10-06: DeskAI v2.6.3 (build 46), Take over keyboard
 

@@ -49,8 +49,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.json.JSONObject
@@ -134,21 +132,10 @@ fun TakeOverScreen(
         }
     }
 
-    // decorFitsSystemWindows = false: the window gets the keyboard's and the system bars' sizes, so the controls can
-    // sit above them (with the default they ended up under the navigation bar and the keyboard, 2026-10-06)
-    Dialog(onDismissRequest = { handBack() },
-           properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
-        // The dialog's own window: full screen, resized for the keyboard, insets passed to the layout. Without this
-        // the window only slid up and the keyboard covered the text box and keys (owner's screenshot, 2026-10-06)
-        val dialogView = androidx.compose.ui.platform.LocalView.current
-        androidx.compose.runtime.SideEffect {
-            (dialogView.parent as? androidx.compose.ui.window.DialogWindowProvider)?.window?.let { w ->
-                androidx.core.view.WindowCompat.setDecorFitsSystemWindows(w, false)
-                @Suppress("DEPRECATION")
-                w.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
-                w.setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT)
-            }
-        }
+    // Drawn in the app's own screen, not a pop-up window: a pop-up window never got the keyboard's size on the
+    // owner's phone, so the keyboard covered the controls (builds 45-46). The back button hands back.
+    androidx.activity.compose.BackHandler { handBack() }
+    run {
         Surface(modifier = Modifier.fillMaxSize(), color = Color(0xFF0B1120)) {
             Column(modifier = Modifier.fillMaxSize().systemBarsPadding().imePadding()) {
                 // Who's in control, and Hand back
@@ -191,8 +178,11 @@ fun TakeOverScreen(
 
                 // The screen. Pinch and pan on the frame; taps on the picture land where tapped (the picture's
                 // own coordinates, so zooming doesn't throw them off).
+                // Container 1: the computer's screen. It takes whatever room is left, so it shrinks when the keyboard
+                // opens and the controls never move under it.
                 Box(
-                    modifier = Modifier.fillMaxWidth().weight(1f).clipToBounds()
+                    modifier = Modifier.fillMaxWidth().weight(1f).padding(horizontal = 6.dp)
+                        .clip(RoundedCornerShape(10.dp)).background(Color(0xFF020617)).clipToBounds()
                         .pointerInput(Unit) {
                             detectTransformGestures { _, panBy, zoom, _ ->
                                 scale = (scale * zoom).coerceIn(1f, 6f)
@@ -243,6 +233,12 @@ fun TakeOverScreen(
                     }
                 }
 
+                // Container 2: the controls, one panel at the bottom: right above the keyboard when it's open
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(top = 6.dp)
+                        .clip(RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp)).background(Color(0xFF111A2E))
+                        .padding(vertical = 4.dp)
+                ) {
                 // Modes and scrolling
                 Row(
                     modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp, vertical = 4.dp),
@@ -284,6 +280,7 @@ fun TakeOverScreen(
                         .forEach { (label, key) ->
                             KeyButton(label) { send(JSONObject().put("type", "key").put("key", key), "Pressed $label") }
                         }
+                }
                 }
             }
         }
