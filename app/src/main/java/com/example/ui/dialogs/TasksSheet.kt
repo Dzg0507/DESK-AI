@@ -430,6 +430,21 @@ fun TaskRowCard(
                     color = if (task.phase == "failed" && !isCancelled) RoseError else Color(0xFF94A3B8)
                 )
             }
+            // What a finished task produced (the weekly numbers, an answer): the first lines, tap for all of it
+            val summary = task.outputSummary?.trim()
+            if (!summary.isNullOrBlank() && summary != displayStatus && (task.phase == "completed" || task.phase == "failed")) {
+                var expanded by remember(task.id) { mutableStateOf(false) }
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = summary,
+                    fontSize = 11.sp,
+                    color = Color(0xFFCBD5E1),
+                    lineHeight = 15.sp,
+                    maxLines = if (expanded) Int.MAX_VALUE else 6,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    modifier = Modifier.clickable { expanded = !expanded }
+                )
+            }
 
             // Task Progress Bar
             Spacer(modifier = Modifier.height(6.dp))

@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-06 (DeskAI v2.5.1 / Build 40 shipped — secret answers for sign-ins; needs_you_cancel)
+**Last Updated:** 2026-10-06 (DeskAI v2.5.2 / Build 41 shipped — finished tasks show their result)
 
 ---
 
@@ -14,6 +14,11 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-06: DeskAI v2.5.2 (build 41), task results shown
+
+- The owner never saw the weekly numbers: the agent's `status_text` for a finished task is always "Completed", and both `LiveTaskCard` and `TasksSheet` showed `statusText ?: outputSummary`, so `output_summary` (the report, a computer task's answer) was never displayed.
+- `LiveTaskCard`: under the status line, a completed or failed task's `outputSummary` in full (selectable; over 24 lines it collapses with Show all). `TasksSheet`: its first 6 lines under the status, tap to expand.
 
 ## Shipped 2026-10-06: DeskAI v2.5.1 (build 40), sign-ins
 

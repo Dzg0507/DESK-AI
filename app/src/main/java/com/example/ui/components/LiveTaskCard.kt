@@ -235,6 +235,34 @@ fun LiveTaskCard(
                 lineHeight = 15.sp
             )
 
+            // What the task produced (the weekly numbers, a computer task's answer...). Until 2026-10-06 a finished
+            // task showed only "Completed", so reports were never seen.
+            val summary = item?.outputSummary?.trim()
+            if ((isCompleted || isFailed) && !summary.isNullOrBlank() && summary != statusDisplay) {
+                var expanded by remember(item?.id) { mutableStateOf(false) }
+                val long = summary.lines().size > 24 || summary.length > 1200
+                Spacer(modifier = Modifier.height(6.dp))
+                androidx.compose.foundation.text.selection.SelectionContainer {
+                    Text(
+                        text = summary,
+                        fontSize = 12.sp,
+                        color = Color(0xFFE2E8F0),
+                        lineHeight = 17.sp,
+                        maxLines = if (expanded || !long) Int.MAX_VALUE else 24,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
+                }
+                if (long) {
+                    Text(
+                        text = if (expanded) "Show less" else "Show all",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF7DD3FC),
+                        modifier = Modifier.clickable { expanded = !expanded }.padding(top = 4.dp)
+                    )
+                }
+            }
+
             // Progress Bar & ETA
             if (isInProgress) {
                 val prog = item?.progress

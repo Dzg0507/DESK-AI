@@ -1,7 +1,7 @@
 {
-  "versionCode": 40,
-  "versionName": "2.5.1",
-  "changelog": "DeskAI v2.5.1 (Build 40): sign-ins for computer tasks. When a site asks for a password or code, you can pick 'Type my password' or the site's own options like 'Try another way'. A password or code is typed on DeskAI's own screen, in a hidden field with screenshots blocked; it goes straight into the box on the Mini and the AI never sees it. Alerts for cancelled or answered requests now clear from your phone.",
+  "versionCode": 41,
+  "versionName": "2.5.2",
+  "changelog": "DeskAI v2.5.2 (Build 41): finished tasks now show what they produced. The weekly numbers, a computer task's answer and other results appear on the task's card in the chat (select to copy, Show all for long ones) and in the Tasks list (tap to expand). Before, a finished task only said 'Completed'.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24181492
+  "fileSizeBytes": 24181503
 }
