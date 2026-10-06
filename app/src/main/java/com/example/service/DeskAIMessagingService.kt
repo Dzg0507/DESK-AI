@@ -48,6 +48,19 @@ class DeskAIMessagingService : FirebaseMessagingService() {
             val body = data["body"] ?: if (taskId.isNotBlank()) "Task [$taskId] updated" else "Important alert from AlwaysOnAgent"
             val channel = data["channel"] ?: if (type.startsWith("task")) "tasks" else "alerts"
 
+            if (type == "needs_you") {
+                // A computer task is waiting for the owner: the loud alert with its screenshot and answer buttons
+                scope.launch {
+                    try {
+                        NeedsYou.show(applicationContext, data)
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Needs-you alert failed: ${e.message}")
+                        showNotification(title, body, "alerts", taskId, type)
+                    }
+                }
+                return
+            }
+
             if (type == "agent_message") {
                 // The push carries no text (it passes through Google): fetch the message into the chat
                 scope.launch {

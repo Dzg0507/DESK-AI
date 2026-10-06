@@ -990,6 +990,68 @@ class AlwaysOnAgentClient {
         }
     }
 
+    /** What computer tasks are waiting on (GET /api/computer/requests), newest first. */
+    suspend fun getComputerRequests(config: BridgeConfig): List<com.example.data.model.ComputerRequest> =
+        withContext(Dispatchers.IO) {
+            try {
+                executeWithFailover(config) { baseUrl ->
+                    val req = addAuth(Request.Builder().url("$baseUrl/api/computer/requests"), config).build()
+                    httpClient.newCall(req).execute().use { resp ->
+                        if (!resp.isSuccessful) return@executeWithFailover emptyList()
+                        val arr = JSONObject(resp.body?.string() ?: "{}").optJSONArray("requests") ?: JSONArray()
+                        (0 until arr.length()).map { i ->
+                            val o = arr.getJSONObject(i)
+                            val ch = o.optJSONArray("choices") ?: JSONArray()
+                            com.example.data.model.ComputerRequest(
+                                id = o.optString("id"),
+                                kind = o.optString("kind", "text"),
+                                question = o.optString("question"),
+                                choices = (0 until ch.length()).map { ch.getString(it) },
+                                url = o.optString("url").ifBlank { null },
+                                screenshotPath = if (o.optString("screenshot").isNotBlank())
+                                    "/api/computer/requests/${o.optString("id")}/screenshot" else null,
+                                created = o.optString("created").ifBlank { null }
+                            )
+                        }
+                    }
+                }
+            } catch (_: Exception) {
+                emptyList()
+            }
+        }
+
+    /** The owner's answer to a computer task's request: Approve/Deny, one of the choices, or text. */
+    suspend fun answerComputerRequest(config: BridgeConfig, requestId: String, answer: String): Result<String> =
+        withContext(Dispatchers.IO) {
+            try {
+                executeWithFailover(config) { baseUrl ->
+                    val body = JSONObject().put("answer", answer).toString().toRequestBody(jsonMediaType)
+                    val req = addAuth(Request.Builder().url("$baseUrl/api/computer/requests/$requestId/answer")
+                        .post(body), config).build()
+                    httpClient.newCall(req).execute().use { resp ->
+                        val text = resp.body?.string() ?: ""
+                        if (resp.isSuccessful) Result.success(answer)
+                        else Result.failure(Exception(try { JSONObject(text).optString("detail", "HTTP ${resp.code}") }
+                                                      catch (_: Exception) { "HTTP ${resp.code}" }))
+                    }
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+
+    /** Bytes of a file on the agent's API (e.g. a request's screenshot), with the app's token. */
+    suspend fun fetchBytes(config: BridgeConfig, path: String): ByteArray? = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                val req = addAuth(Request.Builder().url("$baseUrl$path"), config).build()
+                httpClient.newCall(req).execute().use { resp -> if (resp.isSuccessful) resp.body?.bytes() else null }
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     suspend fun getSystemLogs(config: BridgeConfig, limit: Int = 100): List<SystemLogEntry> = withContext(Dispatchers.IO) {
         try {
             executeWithFailover(config) { baseUrl ->

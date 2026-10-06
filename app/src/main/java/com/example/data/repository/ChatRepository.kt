@@ -238,6 +238,15 @@ class ChatRepository(
 
     suspend fun agentUptime(): Long? = withContext(Dispatchers.IO) { agentClient.getAgentUptime(getActiveConfig()) }
 
+    // Needs you: what computer tasks are waiting on, and the owner's answers
+    suspend fun computerRequests(): List<com.example.data.model.ComputerRequest> =
+        agentClient.getComputerRequests(getActiveConfig())
+
+    suspend fun answerComputerRequest(requestId: String, answer: String): Result<String> =
+        agentClient.answerComputerRequest(getActiveConfig(), requestId, answer)
+
+    suspend fun fetchBytes(path: String): ByteArray? = agentClient.fetchBytes(getActiveConfig(), path)
+
     suspend fun fetchSystemLogs(limit: Int = 100): List<SystemLogEntry> = withContext(Dispatchers.IO) {
         val config = getActiveConfig()
         agentClient.getSystemLogs(config, limit)

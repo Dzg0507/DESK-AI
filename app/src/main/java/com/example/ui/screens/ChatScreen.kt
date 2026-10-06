@@ -90,6 +90,8 @@ fun ChatScreen(
     viewModel: ChatViewModel = viewModel(),
     openTaskId: String? = null,
     onClearOpenTaskId: () -> Unit = {},
+    openNeedsYou: String? = null,
+    onClearOpenNeedsYou: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val currentSession by viewModel.currentSession.collectAsStateWithLifecycle()
@@ -157,6 +159,17 @@ fun ChatScreen(
     var showAgentWorkSheet by remember { mutableStateOf(false) }
     var showSchedulesSheet by remember { mutableStateOf(false) }
     var showMaintenanceSheet by remember { mutableStateOf(false) }
+    var showNeedsYou by remember { mutableStateOf(false) }
+    val needsYou by viewModel.needsYou.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) { viewModel.startNeedsYouPolling() }
+    // A "Needs you" notification was tapped: the panel with the screenshot and the answer
+    LaunchedEffect(openNeedsYou) {
+        if (!openNeedsYou.isNullOrBlank()) {
+            viewModel.refreshNeedsYou()
+            showNeedsYou = true
+            onClearOpenNeedsYou()
+        }
+    }
 
     // Open Tasks Sheet directly if tapped from push notification
     LaunchedEffect(openTaskId) {
@@ -312,6 +325,19 @@ fun ChatScreen(
                     .background(Color(0xFF080B11))
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
+                    // A computer task is waiting for the owner (also when the alert was missed)
+                    if (needsYou.isNotEmpty()) {
+                        androidx.compose.foundation.layout.Row(
+                            modifier = Modifier.fillMaxWidth()
+                                .background(androidx.compose.ui.graphics.Color(0xFF78350F))
+                                .clickable { showNeedsYou = true }
+                                .padding(horizontal = 14.dp, vertical = 10.dp)
+                        ) {
+                            Text("⚠️ Needs you (${needsYou.size}): ${needsYou.first().question.take(70)}",
+                                 color = androidx.compose.ui.graphics.Color(0xFFFDE68A), fontSize = 13.sp,
+                                 fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, maxLines = 1)
+                        }
+                    }
                     // AlwaysOnAgent Live Status & Pulse Bar
                     AgentStatusBar(
                         stats = daemonStats,
@@ -607,6 +633,17 @@ fun ChatScreen(
                 val filename = playbackVideo?.filename
                 if (filename != null) scope.launch { viewModel.publishVideoToTikTok(filename) }
             }
+        )
+    }
+
+    // Needs you: what computer tasks are waiting on, with their screenshots
+    if (showNeedsYou) {
+        com.example.ui.dialogs.NeedsYouSheet(
+            requests = needsYou,
+            onDismiss = { showNeedsYou = false },
+            onRefresh = { viewModel.refreshNeedsYou() },
+            onAnswer = { id, answer -> viewModel.answerComputerRequest(id, answer) },
+            onScreenshot = { path -> viewModel.requestScreenshot(path) }
         )
     }
 

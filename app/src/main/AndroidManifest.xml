@@ -39,6 +39,10 @@
             </intent-filter>
         </activity>
 
+        <receiver
+            android:name=".service.NeedsYouReceiver"
+            android:exported="false" />
+
         <service
             android:name=".service.DeskAIMessagingService"
             android:exported="false">

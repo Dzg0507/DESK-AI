@@ -1,7 +1,7 @@
 {
-  "versionCode": 38,
-  "versionName": "2.4.10",
-  "changelog": "DeskAI v2.4.10 (Build 38): Stop really stops. When you stop a reply, the app now aborts the request and tells the agent, so the cancelled answer is no longer saved in the agent's memory.",
+  "versionCode": 39,
+  "versionName": "2.5.0",
+  "changelog": "DeskAI v2.5.0 (Build 39): Needs you. When a computer task on the Mini needs you (approve a step, pick a choice, answer a question), you get a loud alert with a screenshot of what it sees, and can answer right in the notification. A banner in the chat shows anything still waiting.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24132297
+  "fileSizeBytes": 24165119
 }

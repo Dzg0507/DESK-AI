@@ -29,10 +29,12 @@ import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
   private var openTaskIdState by mutableStateOf<String?>(null)
+  private var openNeedsYouState by mutableStateOf<String?>(null)
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     openTaskIdState = intent?.getStringExtra("OPEN_TASK_ID")
+    openNeedsYouState = intent?.getStringExtra(com.example.service.NeedsYou.EXTRA_OPEN)
     enableEdgeToEdge()
     setContent {
       MyApplicationTheme(darkTheme = true) {
@@ -80,7 +82,9 @@ class MainActivity : ComponentActivity() {
         ChatScreen(
           modifier = Modifier.fillMaxSize(),
           openTaskId = openTaskIdState,
-          onClearOpenTaskId = { openTaskIdState = null }
+          onClearOpenTaskId = { openTaskIdState = null },
+          openNeedsYou = openNeedsYouState,
+          onClearOpenNeedsYou = { openNeedsYouState = null }
         )
       }
     }
@@ -93,6 +97,7 @@ class MainActivity : ComponentActivity() {
     if (!taskId.isNullOrBlank()) {
       openTaskIdState = taskId
     }
+    intent.getStringExtra(com.example.service.NeedsYou.EXTRA_OPEN)?.let { openNeedsYouState = it }
   }
 }
 

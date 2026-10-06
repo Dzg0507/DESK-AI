@@ -535,6 +535,39 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     suspend fun agentUptime(): Long? = repository.agentUptime()
 
+    // Needs you: what computer tasks on the Mini are waiting on (refreshed every 20 s while the app is open, so a
+    // missed alert still shows as a banner)
+    private val _needsYou = MutableStateFlow<List<com.example.data.model.ComputerRequest>>(emptyList())
+    val needsYou: StateFlow<List<com.example.data.model.ComputerRequest>> = _needsYou.asStateFlow()
+    private var needsYouPolling: Job? = null
+
+    fun refreshNeedsYou() {
+        viewModelScope.launch {
+            _needsYou.value = try { repository.computerRequests() } catch (_: Exception) { _needsYou.value }
+        }
+    }
+
+    fun startNeedsYouPolling() {
+        if (needsYouPolling?.isActive == true) return
+        needsYouPolling = viewModelScope.launch {
+            while (true) {
+                _needsYou.value = try { repository.computerRequests() } catch (_: Exception) { _needsYou.value }
+                delay(20_000)
+            }
+        }
+    }
+
+    suspend fun answerComputerRequest(requestId: String, answer: String): Result<String> {
+        val result = repository.answerComputerRequest(requestId, answer)
+        if (result.isSuccess) {
+            com.example.service.NeedsYou.cancel(getApplication(), requestId)
+            _needsYou.value = _needsYou.value.filterNot { it.id == requestId }
+        }
+        return result
+    }
+
+    suspend fun requestScreenshot(path: String): ByteArray? = repository.fetchBytes(path)
+
     suspend fun fetchSystemLogs(limit: Int = 100): List<com.example.data.model.SystemLogEntry> {
         return repository.fetchSystemLogs(limit)
     }

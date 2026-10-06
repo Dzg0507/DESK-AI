@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-05 (DeskAI v2.4.10 / Build 38 shipped — Stop cancels the reply on the agent too)
+**Last Updated:** 2026-10-05 (DeskAI v2.5.0 / Build 39 shipped — Needs you alerts for computer tasks)
 
 ---
 
@@ -14,6 +14,12 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-05: DeskAI v2.5.0 (build 39), Needs you
+
+- AgentComputerUse (a new tool on the Mini, agent engine `computer`) waits for the owner instead of stopping; the agent pushes `type: needs_you` on `channel: needs_you` (docs/API.md "Computer tasks: Needs you").
+- `service/NeedsYou.kt`: its own loud channel (alarm sound, strong vibration), the screenshot fetched with the token and shown as BigPicture, answer actions in the notification (Approve/Deny, up to 3 choices, or a RemoteInput reply) handled by `NeedsYouReceiver` (POST /api/computer/requests/{id}/answer). Stays until answered; reminders replace it and alert again.
+- `ui/dialogs/NeedsYouSheet.kt`: what's waiting, with screenshot, site, question and answers; opened from the notification (`OPEN_NEEDS_YOU`) or a banner in the chat (`ChatViewModel.needsYou`, polled every 20 s).
 
 ## Shipped 2026-10-05: DeskAI v2.4.10 (build 38), Stop cancels the reply on the agent too
 
