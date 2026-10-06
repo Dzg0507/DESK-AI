@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-06 (DeskAI v2.5.2 / Build 41 shipped — finished tasks show their result)
+**Last Updated:** 2026-10-06 (DeskAI v2.5.3 / Build 42 shipped — tappable links in chat)
 
 ---
 
@@ -14,6 +14,10 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-06: DeskAI v2.5.3 (build 42), tappable links
+
+- `MarkdownText.buildStyledInlineMarkdown` handled only bold and code, so a web address in a chat message was plain text, and chat text can't be long-pressed to copy. Now `appendWithLinks` turns `[label](https://...)` and bare `http(s)://` addresses into `LinkAnnotation.Url` links (underlined, sky blue), opened by Text itself.
 
 ## Shipped 2026-10-06: DeskAI v2.5.2 (build 41), task results shown
 

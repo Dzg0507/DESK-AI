@@ -1,7 +1,7 @@
 {
-  "versionCode": 41,
-  "versionName": "2.5.2",
-  "changelog": "DeskAI v2.5.2 (Build 41): finished tasks now show what they produced. The weekly numbers, a computer task's answer and other results appear on the task's card in the chat (select to copy, Show all for long ones) and in the Tasks list (tap to expand). Before, a finished task only said 'Completed'.",
+  "versionCode": 42,
+  "versionName": "2.5.3",
+  "changelog": "DeskAI v2.5.3 (Build 42): links in chat messages are tappable (web addresses and [label](address) links open in your browser).",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24181503
+  "fileSizeBytes": 24181495
 }

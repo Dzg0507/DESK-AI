@@ -44,6 +44,10 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.withLink
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.clickable
@@ -435,6 +439,26 @@ fun parseMarkdown(text: String): List<MarkdownElement> {
 /**
  * Formats inline bold (`**text**`), italic (`*text*`), and inline code (` `code` `)
  */
+// Links: [label](https://...) and bare web addresses become tappable (opened in the browser by Text itself)
+private val LINK_REGEX = Regex("""\[([^\]\n]+)]\((https?://[^\s)]+)\)|(https?://[^\s<>()]*[^\s<>().,;:!?'"])""")
+
+private fun AnnotatedString.Builder.appendWithLinks(s: String) {
+    var i = 0
+    for (m in LINK_REGEX.findAll(s)) {
+        if (m.range.first > i) append(s.substring(i, m.range.first))
+        val label = m.groups[1]?.value
+        val url = m.groups[2]?.value ?: m.groups[3]?.value ?: m.value
+        withLink(
+            LinkAnnotation.Url(
+                url,
+                TextLinkStyles(style = SpanStyle(color = Color(0xFF38BDF8), textDecoration = TextDecoration.Underline))
+            )
+        ) { append(label ?: url) }
+        i = m.range.last + 1
+    }
+    if (i < s.length) append(s.substring(i))
+}
+
 fun buildStyledInlineMarkdown(text: String, defaultColor: Color): AnnotatedString {
     return buildAnnotatedString {
         var cursor = 0
@@ -451,13 +475,13 @@ fun buildStyledInlineMarkdown(text: String, defaultColor: Color): AnnotatedStrin
             ).sortedBy { it.second }
 
             if (validTokens.isEmpty()) {
-                append(text.substring(cursor))
+                appendWithLinks(text.substring(cursor))
                 break
             }
 
             val (tokenType, tokenIndex) = validTokens.first()
             if (tokenIndex > cursor) {
-                append(text.substring(cursor, tokenIndex))
+                appendWithLinks(text.substring(cursor, tokenIndex))
                 cursor = tokenIndex
             }
 
@@ -466,7 +490,7 @@ fun buildStyledInlineMarkdown(text: String, defaultColor: Color): AnnotatedStrin
                 if (endBold != -1) {
                     val boldContent = text.substring(cursor + 2, endBold)
                     withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append(boldContent)
+                        appendWithLinks(boldContent)
                     }
                     cursor = endBold + 2
                 } else {
