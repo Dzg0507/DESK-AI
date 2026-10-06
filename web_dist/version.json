@@ -1,7 +1,7 @@
 {
-  "versionCode": 43,
-  "versionName": "2.6.0",
-  "changelog": "DeskAI v2.6.0 (Build 43): Take over. Use the Mini's screen from your phone: tap to click, hold to right-click, pinch to zoom, type and press keys; a running computer task waits until you tap Hand back, then looks again. Open it from the menu (Take over), or from any Needs you request (Take over and do it yourself), e.g. for a CAPTCHA. Also: the update check reads the newest release directly, so the badge and the update screen always agree.",
+  "versionCode": 44,
+  "versionName": "2.6.1",
+  "changelog": "DeskAI v2.6.1 (Build 44): Take over the laptop too. The Take over screen has a Mini / Laptop switch, so you can use the laptop (and talk to Claude on it) from anywhere. The laptop needs to be on and awake, with Tailscale running.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24214266
+  "fileSizeBytes": 24214258
 }

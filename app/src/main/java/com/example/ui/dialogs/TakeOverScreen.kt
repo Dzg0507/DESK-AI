@@ -68,7 +68,7 @@ fun TakeOverScreen(
     requestId: String?,
     onClose: () -> Unit,
     call: suspend (action: String, body: JSONObject?) -> Result<JSONObject>,
-    fetchFrame: suspend () -> ByteArray?
+    fetchFrame: suspend (machine: String) -> ByteArray?
 ) {
     val scope = rememberCoroutineScope()
     var active by remember { mutableStateOf(false) }
@@ -82,12 +82,17 @@ fun TakeOverScreen(
     var scale by remember { mutableFloatStateOf(1f) }
     var pan by remember { mutableStateOf(Offset.Zero) }
     var closing by remember { mutableStateOf(false) }
+    // Which computer: the Mini, or the owner's laptop (a request is always the Mini's)
+    var machine by remember { mutableStateOf("mini") }
 
-    fun body(): JSONObject = JSONObject().apply { if (requestId != null) put("request_id", requestId) }
+    fun body(m: String = machine): JSONObject = JSONObject().apply {
+        put("machine", m)
+        if (requestId != null && m == "mini") put("request_id", requestId)
+    }
 
     fun send(ev: JSONObject, label: String) {
         scope.launch {
-            val r = call("input", ev)
+            val r = call("input", ev.put("machine", machine))
             note = if (r.isSuccess) label else "Not sent: ${r.exceptionOrNull()?.message ?: "no connection"}"
         }
     }
@@ -104,13 +109,24 @@ fun TakeOverScreen(
 
     fun spotJson(type: String, s: Offset) = JSONObject().put("type", type).put("x", s.x.toDouble()).put("y", s.y.toDouble())
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(machine) {
+        active = false
+        error = null
+        frame = null
+        scale = 1f
+        pan = Offset.Zero
         val r = call("start", body())
         if (r.isSuccess) active = true else error = r.exceptionOrNull()?.message ?: "Couldn't take over"
     }
-    LaunchedEffect(active) {
+    fun switchTo(m: String) {
+        if (m == machine || closing) return
+        val old = machine
+        scope.launch { call("stop", body(old)) }       // hand the one we're leaving back
+        machine = m
+    }
+    LaunchedEffect(active, machine) {
         while (active) {
-            fetchFrame()?.let { bytes ->
+            fetchFrame(machine)?.let { bytes ->
                 BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.let { frame = it.asImageBitmap() }
             }
             delay(600)
@@ -134,6 +150,20 @@ fun TakeOverScreen(
                         color = if (error != null) Color(0xFFFCA5A5) else Color(0xFFF1F5F9),
                         fontWeight = FontWeight.SemiBold, fontSize = 15.sp, modifier = Modifier.weight(1f)
                     )
+                    if (requestId == null) {
+                        listOf("mini" to "Mini", "laptop" to "Laptop").forEach { (id, label) ->
+                            if (machine == id) {
+                                Button(onClick = {}, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF59E0B)),
+                                       modifier = Modifier.padding(end = 4.dp)) {
+                                    Text(label, color = Color(0xFF111111), fontWeight = FontWeight.SemiBold)
+                                }
+                            } else {
+                                OutlinedButton(onClick = { switchTo(id) }, modifier = Modifier.padding(end = 4.dp)) {
+                                    Text(label, color = Color(0xFFE2E8F0))
+                                }
+                            }
+                        }
+                    }
                     Button(onClick = { handBack() },
                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF16A34A))) {
                         Text(if (error != null) "Close" else "Hand back")

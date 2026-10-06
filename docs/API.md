@@ -312,8 +312,14 @@ owner is in control a running task waits; **Hand back** (`stop`) answers the req
 `__handed_back__`, and the task looks at the screen again. Control comes back by itself after 10 minutes with no
 picture asked for and no input.
 
+**Which computer:** the Mini by default, or the owner's laptop with `"machine": "laptop"` in a body (start,
+input, stop) or `?machine=laptop` (status, frame). The laptop runs its own Take over from its login (AgentComputerUse
+`takeover-serve`, Tailscale only) and the agent passes calls on to it; `503` when it isn't set up or isn't answering
+(asleep, off, Tailscale off). Requests and hand-backs are Mini-only.
+
 | Method & path | Body | Returns |
 |---|---|---|
+| `GET /api/computer/takeover/machines` | | `{"machines": [{"id": "mini", "name": "Mini"}, {"id": "laptop", "name": "Laptop"}]}` (the laptop once it's set up) |
 | `GET /api/computer/takeover` | | `{"active": bool, "since", "request_id"}` |
 | `POST /api/computer/takeover/start` | `{"request_id": "…"}` or `{}` | `{"active": true, "request_id", "screen": [width, height]}`. `409` if that request already closed; `503` without the tool |
 | `GET /api/computer/takeover/frame` | | JPEG of the screen (at most 1280 wide, the pointer ringed in yellow), header `X-Screen: 1920x1080`. `409` until started. Ask about every 0.6 s while the screen is shown |

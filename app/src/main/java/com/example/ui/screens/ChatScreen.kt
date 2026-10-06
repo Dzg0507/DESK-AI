@@ -639,7 +639,7 @@ fun ChatScreen(
             requestId = takeOverFor,
             onClose = { showTakeOver = false; takeOverFor = null },
             call = { action, body -> viewModel.takeover(action, body) },
-            fetchFrame = { viewModel.requestScreenshot("/api/computer/takeover/frame") }
+            fetchFrame = { machine -> viewModel.requestScreenshot("/api/computer/takeover/frame?machine=$machine") }
         )
     }
 

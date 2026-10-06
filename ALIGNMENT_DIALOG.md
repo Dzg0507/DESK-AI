@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-06 (DeskAI v2.6.0 / Build 43 shipped — Take over; update check fixed)
+**Last Updated:** 2026-10-06 (DeskAI v2.6.1 / Build 44 shipped — Take over the laptop)
 
 ---
 
@@ -14,6 +14,10 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-06: DeskAI v2.6.1 (build 44), Take over the laptop
+
+- `TakeOverScreen`: a Mini / Laptop switch in the top bar (not shown when opened from a Needs you request: those are the Mini's). Every call carries `machine` (docs/API.md "Take over" → "Which computer"); switching stops the old machine and starts the new one; the frame is `/api/computer/takeover/frame?machine=...`. The agent passes laptop calls to the laptop's own Take over (started at its login, Tailscale only); 503 when the laptop isn't answering.
 
 ## Shipped 2026-10-06: DeskAI v2.6.0 (build 43), Take over
 
