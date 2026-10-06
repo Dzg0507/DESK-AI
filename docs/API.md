@@ -44,6 +44,10 @@ DeskAI repo at `docs/API.md`, updated whenever this one changes.
     owner asked for in chat: `tiktok` ("Post vibe_check_….mp4 to TikTok") or `pins` ("Post 2 pins to Pinterest").
     The chat never posts; the owner's tap on Run does. Apps that don't know `tiktok`/`pins` show them as a task
     card, which works the same.
+  - `computer` ("Computer task: find the hours on the county website"): Run queues a task (engine `computer`) that
+    AgentComputerUse does on the Mini's screen with the real mouse and keyboard. Its steps arrive as the task's
+    progress (`message`: "Step 2: type - …"); the result is the answer with quotes from the page, or where it
+    stopped (it never submits, sends, pays or posts by itself). Shown as a task card by apps that don't know it.
   - **Run:** `POST /api/proposals/{id}/run` returns `{"status": "success", "task_id": "..."}`. For
     `add_project` it returns `{"status": "success", "project": "...", "message": "..."}` with no `task_id`,
     or 400 with the reason.
