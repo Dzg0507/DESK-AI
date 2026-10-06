@@ -125,29 +125,11 @@ fun ChatScreen(
                     .connectTimeout(5, java.util.concurrent.TimeUnit.SECONDS)
                     .readTimeout(5, java.util.concurrent.TimeUnit.SECONDS)
                     .build()
-                // Updates are published only on GitHub. (The agent's server doesn't host version.json, so asking
-                // it first just logged a rejected request on the Mini at every launch.)
-                val now = System.currentTimeMillis()
-                val checkUrls = mutableListOf<String>()
-                checkUrls.add("https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/web_dist/version.json?t=$now")
-                checkUrls.add("https://raw.githubusercontent.com/Dzg0507/Desk-ai/master/web_dist/version.json?t=$now")
-                for (u in checkUrls) {
-                    try {
-                        val req = okhttp3.Request.Builder().url(u).build()
-                        val resp = client.newCall(req).execute()
-                        if (resp.isSuccessful && resp.body != null) {
-                            val bodyStr = resp.body!!.string()
-                            val json = org.json.JSONObject(bodyStr)
-                            val vCode = json.optInt("versionCode", 1)
-                            if (vCode > com.example.BuildConfig.VERSION_CODE) {
-                                withContext(Dispatchers.Main) {
-                                    hasUpdateAvailable = true
-                                }
-                                break
-                            }
-                        }
-                        resp.close()
-                    } catch (_: Exception) {}
+                // Updates are published only on GitHub; the same check as the update screen (UpdateSource), so the
+                // badge and the screen can't disagree
+                val latest = com.example.data.remote.UpdateSource.fetch(client)
+                if (latest != null && latest.versionCode > com.example.BuildConfig.VERSION_CODE) {
+                    withContext(Dispatchers.Main) { hasUpdateAvailable = true }
                 }
             } catch (_: Exception) {}
         }
@@ -160,6 +142,8 @@ fun ChatScreen(
     var showSchedulesSheet by remember { mutableStateOf(false) }
     var showMaintenanceSheet by remember { mutableStateOf(false) }
     var showNeedsYou by remember { mutableStateOf(false) }
+    var showTakeOver by remember { mutableStateOf(false) }
+    var takeOverFor by remember { mutableStateOf<String?>(null) }
     val needsYou by viewModel.needsYou.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { viewModel.startNeedsYouPolling() }
     // A "Needs you" notification was tapped: the panel with the screenshot and the answer
@@ -511,6 +495,7 @@ fun ChatScreen(
             onOpenAgentWork = { showAgentWorkSheet = true },
             onOpenMaintenance = { showMaintenanceSheet = true },
             onOpenSchedules = { showSchedulesSheet = true },
+            onOpenTakeOver = { takeOverFor = null; showTakeOver = true },
             onSelectCommandTemplate = { template ->
                 viewModel.onInputTextChange(template)
             },
@@ -643,7 +628,18 @@ fun ChatScreen(
             onDismiss = { showNeedsYou = false },
             onRefresh = { viewModel.refreshNeedsYou() },
             onAnswer = { id, answer -> viewModel.answerComputerRequest(id, answer) },
-            onScreenshot = { path -> viewModel.requestScreenshot(path) }
+            onScreenshot = { path -> viewModel.requestScreenshot(path) },
+            onTakeOver = { id -> showNeedsYou = false; takeOverFor = id; showTakeOver = true }
+        )
+    }
+
+    // Take over: the Mini's screen on the phone, the owner's taps replayed there
+    if (showTakeOver) {
+        com.example.ui.dialogs.TakeOverScreen(
+            requestId = takeOverFor,
+            onClose = { showTakeOver = false; takeOverFor = null },
+            call = { action, body -> viewModel.takeover(action, body) },
+            fetchFrame = { viewModel.requestScreenshot("/api/computer/takeover/frame") }
         )
     }
 

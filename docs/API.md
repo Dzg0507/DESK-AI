@@ -304,6 +304,31 @@ card's progress says `Needs you: …` with the `request_id`.
   and the like). Picking `Type my password` brings a `secret` request for the password box.
 - Show the screenshot above the answer, and the page's address in words.
 
+### Take over
+
+The owner uses the Mini from the phone: a live picture of the screen, and their taps and typing replayed with
+the real mouse and keyboard. Offered on every request (a CAPTCHA, anything unusual) and on its own. While the
+owner is in control a running task waits; **Hand back** (`stop`) answers the request it was taken over for with
+`__handed_back__`, and the task looks at the screen again. Control comes back by itself after 10 minutes with no
+picture asked for and no input.
+
+| Method & path | Body | Returns |
+|---|---|---|
+| `GET /api/computer/takeover` | | `{"active": bool, "since", "request_id"}` |
+| `POST /api/computer/takeover/start` | `{"request_id": "…"}` or `{}` | `{"active": true, "request_id", "screen": [width, height]}`. `409` if that request already closed; `503` without the tool |
+| `GET /api/computer/takeover/frame` | | JPEG of the screen (at most 1280 wide, the pointer ringed in yellow), header `X-Screen: 1920x1080`. `409` until started. Ask about every 0.6 s while the screen is shown |
+| `POST /api/computer/takeover/input` | one input, below | `{"status": "ok", "done"}`. `409` until started, `400` for an input that doesn't fit |
+| `POST /api/computer/takeover/stop` | `{"request_id": "…"}` or `{}` | `{"status": "ok", "active": false, "handed_back_to": "…" or null}` |
+
+Inputs (`x`, `y`, `x2`, `y2` are 0 to 1 across and down the picture):
+- `{"type": "tap", "x", "y"}`, `double_tap`, `long_press` (a right-click)
+- `{"type": "drag", "x", "y", "x2", "y2"}`
+- `{"type": "scroll", "dy": 5}` (positive is up; at most 15), with `x`, `y` to scroll at that spot
+- `{"type": "text", "text": "…"}` (up to 500 characters)
+- `{"type": "key", "key": "enter"}`: `enter`, `backspace`, `tab`, `esc`, `delete`, `space`, the arrows `up` `down`
+  `left` `right`, `home`, `end`, `page_up`, `page_down`, and `ctrl+a/c/v/x/z/y/l/f/t/w/r`, `ctrl+shift+t`,
+  `alt+tab`, `alt+left`, `alt+right`, `shift+tab`
+
 ## Messages the agent starts (proactive)
 
 The agent reaches out by itself: a morning brief, notices, suggestions, and questions to get to know the owner

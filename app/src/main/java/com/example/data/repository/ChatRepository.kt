@@ -247,6 +247,9 @@ class ChatRepository(
 
     suspend fun fetchBytes(path: String): ByteArray? = agentClient.fetchBytes(getActiveConfig(), path)
 
+    suspend fun takeover(action: String, body: org.json.JSONObject? = null): Result<org.json.JSONObject> =
+        agentClient.takeoverCall(getActiveConfig(), action, body)
+
     suspend fun fetchSystemLogs(limit: Int = 100): List<SystemLogEntry> = withContext(Dispatchers.IO) {
         val config = getActiveConfig()
         agentClient.getSystemLogs(config, limit)

@@ -568,6 +568,19 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     suspend fun requestScreenshot(path: String): ByteArray? = repository.fetchBytes(path)
 
+    /** Take over: start, stop (hand back) or input (docs/API.md "Take over"). */
+    suspend fun takeover(action: String, body: org.json.JSONObject? = null): Result<org.json.JSONObject> {
+        val result = repository.takeover(action, body)
+        // Handing back answers the request it was taken over for: its alert goes, and the list refreshes
+        if (action == "stop" && result.isSuccess) {
+            result.getOrNull()?.optString("handed_back_to")?.takeIf { it.isNotBlank() && it != "null" }?.let {
+                com.example.service.NeedsYou.cancel(getApplication(), it)
+            }
+            refreshNeedsYou()
+        }
+        return result
+    }
+
     suspend fun fetchSystemLogs(limit: Int = 100): List<com.example.data.model.SystemLogEntry> {
         return repository.fetchSystemLogs(limit)
     }

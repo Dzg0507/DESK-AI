@@ -26,6 +26,7 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.Memory
@@ -91,6 +92,7 @@ fun CommandPaletteDialog(
     onOpenAgentWork: () -> Unit = {},
     onOpenMaintenance: () -> Unit = {},
     onOpenSchedules: () -> Unit = {},
+    onOpenTakeOver: () -> Unit = {},
     onSelectCommandTemplate: (String) -> Unit,
     onExecuteCommand: (String) -> Unit,
     onDismiss: () -> Unit
@@ -543,6 +545,19 @@ fun CommandPaletteDialog(
                                         onClick = {
                                             onDismiss()
                                             onOpenSchedules()
+                                        }
+                                    )
+
+                                    // 8. Take over: the Mini's screen on the phone, taps replayed there
+                                    WorkstationCard(
+                                        title = "Take over",
+                                        subtitle = "Use the Mini's screen from your phone",
+                                        icon = Icons.Default.TouchApp,
+                                        accentColor = Color(0xFFF59E0B),
+                                        modifier = Modifier.fillMaxWidth(),
+                                        onClick = {
+                                            onDismiss()
+                                            onOpenTakeOver()
                                         }
                                     )
                                 }

@@ -56,7 +56,8 @@ fun NeedsYouSheet(
     onDismiss: () -> Unit,
     onRefresh: () -> Unit,
     onAnswer: suspend (requestId: String, answer: String) -> Result<String>,
-    onScreenshot: suspend (path: String) -> ByteArray?
+    onScreenshot: suspend (path: String) -> ByteArray?,
+    onTakeOver: (requestId: String?) -> Unit = {}
 ) {
     LaunchedEffect(Unit) { onRefresh() }
     // A password or code on screen: no screenshots, screen recording or recent-apps preview of this sheet
@@ -69,13 +70,16 @@ fun NeedsYouSheet(
         Column(modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 24.dp)) {
             Text("⚠️ Needs you", color = Color(0xFFFCD34D), fontSize = 20.sp, fontWeight = FontWeight.Bold)
             Text("A computer task on the Mini is waiting for your answer.", color = Color(0xFF94A3B8), fontSize = 13.sp)
+            Spacer(Modifier.height(8.dp))
+            // Use the Mini yourself from here, any time (a running task waits until you hand back)
+            OutlinedButton(onClick = { onTakeOver(null) }) { Text("🖐 Take over the computer", color = Color(0xFFE2E8F0)) }
             Spacer(Modifier.height(12.dp))
             if (requests.isEmpty()) {
                 Text("Nothing is waiting right now.", color = Color(0xFFCBD5E1), fontSize = 14.sp,
                      modifier = Modifier.padding(vertical = 24.dp))
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    items(requests, key = { it.id }) { req -> RequestCard(req, onAnswer, onScreenshot) }
+                    items(requests, key = { it.id }) { req -> RequestCard(req, onAnswer, onScreenshot, onTakeOver) }
                 }
             }
         }
@@ -86,7 +90,8 @@ fun NeedsYouSheet(
 private fun RequestCard(
     req: ComputerRequest,
     onAnswer: suspend (String, String) -> Result<String>,
-    onScreenshot: suspend (String) -> ByteArray?
+    onScreenshot: suspend (String) -> ByteArray?,
+    onTakeOver: (String?) -> Unit
 ) {
     val scope = rememberCoroutineScope()
     var sending by remember { mutableStateOf(false) }
@@ -168,6 +173,10 @@ private fun RequestCard(
                 Button(onClick = { send(reply.trim()) }, enabled = !sending && reply.isNotBlank(),
                        modifier = Modifier.align(Alignment.End)) { Text("Send") }
             }
+        }
+        // Or do it yourself on the Mini's screen (a CAPTCHA, anything odd); the task looks again when you hand back
+        androidx.compose.material3.TextButton(onClick = { onTakeOver(req.id) }, enabled = !sending) {
+            Text("🖐 Take over and do it yourself", color = Color(0xFF7DD3FC))
         }
         if (sending) Text("Sending…", color = Color(0xFF94A3B8), fontSize = 12.sp)
         error?.let { Text("Couldn't send: $it", color = Color(0xFFFCA5A5), fontSize = 12.sp) }

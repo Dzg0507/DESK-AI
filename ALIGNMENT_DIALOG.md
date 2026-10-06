@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-06 (DeskAI v2.5.3 / Build 42 shipped — tappable links in chat)
+**Last Updated:** 2026-10-06 (DeskAI v2.6.0 / Build 43 shipped — Take over; update check fixed)
 
 ---
 
@@ -14,6 +14,11 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-06: DeskAI v2.6.0 (build 43), Take over
+
+- `ui/dialogs/TakeOverScreen.kt`: full-screen dialog. `POST /api/computer/takeover/start` (with the request id when opened from a Needs you request), then the frame (`GET .../frame`, JPEG) every 0.6 s; taps on the picture map to 0..1 coordinates in the picture's own space (the pointerInput sits after the zoom graphicsLayer, so pinch-zoom doesn't throw taps off); hold = right-click; Double / Drag one-shot modes; scroll, text and key buttons. Hand back or leaving the screen calls `stop` (the agent answers the request with `__handed_back__`, the task looks again). Entry points: the command palette card "Take over" and "Take over and do it yourself" on every Needs you card. The owner tested the same flow as a web page on the laptop first and found it fast.
+- `data/remote/UpdateSource.kt`: the badge (ChatScreen) and AppUpdaterDialog both read version.json, and download the APK, at the newest commit (GitHub API `commits/main`, Accept `application/vnd.github.sha`), because GitHub's raw cache served the previous version.json for minutes after a release (badge said update, screen said up to date). Falls back to the plain raw URL.
 
 ## Shipped 2026-10-06: DeskAI v2.5.3 (build 42), tappable links
 

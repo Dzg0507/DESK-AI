@@ -277,43 +277,10 @@ fun AppUpdaterDialog(
                         .readTimeout(8, TimeUnit.SECONDS)
                         .build()
 
-                    val now = System.currentTimeMillis()
-                    val versionUrls = mutableListOf(
-                        "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/web_dist/version.json?t=$now",
-                        "https://raw.githubusercontent.com/Dzg0507/Desk-ai/master/web_dist/version.json?t=$now"
-                    )
-
-                    var parsedJson: JSONObject? = null
-                    for (rawVUrl in versionUrls) {
-                        try {
-                            val isLocal = !rawVUrl.contains("github")
-                            val vUrl = if (authToken.isNotBlank() && isLocal && !rawVUrl.contains("token=")) {
-                                if (rawVUrl.contains("?")) "$rawVUrl&token=${authToken.trim()}" else "$rawVUrl?token=${authToken.trim()}"
-                            } else {
-                                rawVUrl
-                            }
-                            val reqBuilder = Request.Builder().url(vUrl)
-                            reqBuilder.header("User-Agent", "DeskAI-Android")
-                            if (authToken.isNotBlank() && isLocal) {
-                                reqBuilder.addHeader("X-HUD-Token", authToken.trim())
-                                reqBuilder.addHeader("Cookie", "hud_token=${authToken.trim()}")
-                                reqBuilder.addHeader("Authorization", "Bearer " + authToken.trim())
-                            }
-                            val req = reqBuilder.build()
-                            val resp = client.newCall(req).execute()
-                            if (resp.isSuccessful && resp.body != null) {
-                                val bodyStr = resp.body!!.string().trim()
-                                if (bodyStr.startsWith("{") && bodyStr.contains("versionCode")) {
-                                    parsedJson = JSONObject(bodyStr)
-                                    resp.close()
-                                    break
-                                }
-                            }
-                            resp.close()
-                        } catch (_: Exception) {
-                            // Try next candidate
-                        }
-                    }
+                    // The same check as the badge (UpdateSource): version.json and the APK read at the newest commit,
+                    // which no cache can serve an old copy of
+                    val latest = com.example.data.remote.UpdateSource.fetch(client)
+                    val parsedJson: JSONObject? = latest?.json
 
                     if (parsedJson != null) {
                         val vCode = parsedJson.optInt("versionCode", 1)
@@ -328,7 +295,10 @@ fun AppUpdaterDialog(
                             remoteChangelog = changelog.ifBlank { null }
                             remoteFileSize = fSize
 
-                            if (dlUrl.isNotBlank()) {
+                            val pinnedApk = latest?.apkUrl
+                            if (pinnedApk != null) {
+                                downloadUrl = pinnedApk                 // exactly this version's APK
+                            } else if (dlUrl.isNotBlank()) {
                                 if (dlUrl.startsWith("http")) {
                                     downloadUrl = dlUrl
                                 } else {

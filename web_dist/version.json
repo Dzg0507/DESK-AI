@@ -1,7 +1,7 @@
 {
-  "versionCode": 42,
-  "versionName": "2.5.3",
-  "changelog": "DeskAI v2.5.3 (Build 42): links in chat messages are tappable (web addresses and [label](address) links open in your browser).",
+  "versionCode": 43,
+  "versionName": "2.6.0",
+  "changelog": "DeskAI v2.6.0 (Build 43): Take over. Use the Mini's screen from your phone: tap to click, hold to right-click, pinch to zoom, type and press keys; a running computer task waits until you tap Hand back, then looks again. Open it from the menu (Take over), or from any Needs you request (Take over and do it yourself), e.g. for a CAPTCHA. Also: the update check reads the newest release directly, so the badge and the update screen always agree.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24181495
+  "fileSizeBytes": 24214266
 }

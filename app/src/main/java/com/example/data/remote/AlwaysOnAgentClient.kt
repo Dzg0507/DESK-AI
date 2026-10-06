@@ -1040,6 +1040,10 @@ class AlwaysOnAgentClient {
             }
         }
 
+    /** Take over (docs/API.md "Take over"): action is start, stop (hand back) or input. */
+    suspend fun takeoverCall(config: BridgeConfig, action: String, body: JSONObject? = null): Result<JSONObject> =
+        scheduleCall(config, "POST", "/api/computer/takeover/$action", body)
+
     /** Bytes of a file on the agent's API (e.g. a request's screenshot), with the app's token. */
     suspend fun fetchBytes(config: BridgeConfig, path: String): ByteArray? = withContext(Dispatchers.IO) {
         try {
