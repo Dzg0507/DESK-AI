@@ -157,7 +157,8 @@ data class VideoItem(
     val filename: String,
     val sizeMb: Double,
     val createdAt: String,
-    val url: String
+    val url: String,
+    val thumbnailUrl: String = ""
 )
 
 data class ImageItem(

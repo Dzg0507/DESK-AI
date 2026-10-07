@@ -1,7 +1,7 @@
 {
-  "versionCode": 50,
-  "versionName": "2.6.7",
-  "changelog": "DeskAI v2.6.7 (Build 50): Take over has a slim icon bar. The keyboard stays away until you tap the keyboard button; the text bar then sits right on top of it.",
+  "versionCode": 51,
+  "versionName": "2.6.8",
+  "changelog": "DeskAI v2.6.8 (Build 51): Video Hub thumbnails: preview images extracted directly from rendered videos with frosted play overlay and quick Watch/Post actions.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24264298
+  "fileSizeBytes": 24263416
 }

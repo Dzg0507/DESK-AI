@@ -1208,13 +1208,27 @@ class AlwaysOnAgentClient {
                                 } else {
                                     fullUrl
                                 }
+                                val rawThumb = obj.optString("thumbnail_url", obj.optString("thumbnail", "")).trim()
+                                val fullThumb = when {
+                                    rawThumb.startsWith("http://") || rawThumb.startsWith("https://") -> rawThumb
+                                    rawThumb.startsWith("/") -> "$cleanBase$rawThumb"
+                                    rawThumb.isNotBlank() -> "$cleanBase/$rawThumb"
+                                    fname.isNotBlank() -> "$cleanBase/api/videos/$fname/thumbnail"
+                                    else -> ""
+                                }
+                                val authedThumb = if (config.apiKey.isNotBlank() && fullThumb.isNotBlank() && !fullThumb.contains("token=")) {
+                                    "$fullThumb${if (fullThumb.contains("?")) "&" else "?"}token=${config.apiKey.trim()}"
+                                } else {
+                                    fullThumb
+                                }
                                 if (fname.isNotBlank()) {
                                     list.add(
                                         VideoItem(
                                             filename = fname,
                                             sizeMb = obj.optDouble("size_mb", obj.optDouble("size", 0.0)),
                                             createdAt = obj.optString("created_at", obj.optString("date", "")),
-                                            url = authedUrl
+                                            url = authedUrl,
+                                            thumbnailUrl = authedThumb
                                         )
                                     )
                                 }

@@ -26,7 +26,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Close
@@ -531,100 +533,12 @@ fun MediaGallerySheet(
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             items(videos) { video ->
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(Color(0xFF1E293B))
-                                        .border(1.dp, Color(0xFF334155), RoundedCornerShape(10.dp))
-                                        .clickable { selectedVideoForPlayback = video }
-                                        .padding(10.dp)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            modifier = Modifier.weight(1f)
-                                        ) {
-                                            // Play thumbnail action
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(38.dp)
-                                                    .clip(RoundedCornerShape(8.dp))
-                                                    .background(ElectricCyan.copy(alpha = 0.18f))
-                                                    .clickable { selectedVideoForPlayback = video },
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Icon(
-                                                    imageVector = Icons.Default.PlayArrow,
-                                                    contentDescription = "Play Video",
-                                                    tint = ElectricCyan,
-                                                    modifier = Modifier.size(22.dp)
-                                                )
-                                            }
-                                            Spacer(modifier = Modifier.width(10.dp))
-                                            Column {
-                                                Text(
-                                                    text = video.filename,
-                                                    fontSize = 12.sp,
-                                                    fontWeight = FontWeight.Medium,
-                                                    color = Color(0xFFF1F5F9),
-                                                    maxLines = 1
-                                                )
-                                                Text(
-                                                    text = "${video.sizeMb} MB • ${video.createdAt}",
-                                                    fontSize = 10.sp,
-                                                    color = Color(0xFF64748B),
-                                                    fontFamily = FontFamily.Monospace
-                                                )
-                                            }
-                                        }
-
-                                        Row(
-                                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            // Watch button
-                                            Box(
-                                                modifier = Modifier
-                                                    .clip(RoundedCornerShape(6.dp))
-                                                    .background(Color(0xFF0F172A))
-                                                    .border(1.dp, Color(0xFF334155), RoundedCornerShape(6.dp))
-                                                    .clickable { selectedVideoForPlayback = video }
-                                                    .padding(horizontal = 8.dp, vertical = 6.dp)
-                                            ) {
-                                                Text(
-                                                    text = "▶ Watch",
-                                                    fontSize = 11.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = ElectricCyan
-                                                )
-                                            }
-
-                                            // 🚀 Direct TikTok Publish Button (Section 7.4)
-                                            Box(
-                                                modifier = Modifier
-                                                    .clip(RoundedCornerShape(6.dp))
-                                                    .background(Color(0xFF0284C7).copy(alpha = 0.25f))
-                                                    .border(1.dp, Color(0xFF0284C7).copy(alpha = 0.5f), RoundedCornerShape(6.dp))
-                                                    .clickable {
-                                                        scope.launch { publishExisting(video.filename) }
-                                                    }
-                                                    .padding(horizontal = 8.dp, vertical = 6.dp)
-                                            ) {
-                                                Text(
-                                                    text = "🚀 Post TikTok",
-                                                    fontSize = 11.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = Color(0xFF38BDF8)
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
+                                VideoGalleryCard(
+                                    video = video,
+                                    authToken = authToken,
+                                    onPlay = { selectedVideoForPlayback = video },
+                                    onPostTikTok = { scope.launch { publishExisting(video.filename) } }
+                                )
                             }
                         }
                     }
@@ -654,6 +568,169 @@ fun MediaGallerySheet(
                 if (filename != null) scope.launch { publishExisting(filename) }
             }
         )
+    }
+}
+
+@Composable
+fun VideoGalleryCard(
+    video: VideoItem,
+    authToken: String,
+    onPlay: () -> Unit,
+    onPostTikTok: () -> Unit
+) {
+    val context = LocalContext.current
+    val thumbRequest = remember(video.thumbnailUrl, authToken) {
+        if (video.thumbnailUrl.isNotBlank()) {
+            ImageRequest.Builder(context)
+                .data(video.thumbnailUrl)
+                .crossfade(true)
+                .apply {
+                    if (authToken.isNotBlank()) {
+                        addHeader("X-HUD-Token", authToken.trim())
+                        addHeader("Authorization", "Bearer ${authToken.trim()}")
+                    }
+                }
+                .build()
+        } else null
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFF1E293B))
+            .border(1.dp, Color(0xFF334155), RoundedCornerShape(12.dp))
+            .clickable { onPlay() }
+            .padding(10.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Video Thumbnail preview box (60.dp x 86.dp, ~9:16 vertical video ratio)
+            Box(
+                modifier = Modifier
+                    .width(60.dp)
+                    .height(86.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color(0xFF0F172A))
+                    .border(1.dp, Color(0xFF334155), RoundedCornerShape(8.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                if (thumbRequest != null) {
+                    SubcomposeAsyncImage(
+                        model = thumbRequest,
+                        contentDescription = video.filename,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
+                        loading = {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    color = ElectricCyan,
+                                    strokeWidth = 2.dp
+                                )
+                            }
+                        },
+                        error = {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.Videocam,
+                                    contentDescription = null,
+                                    tint = Color(0xFF64748B),
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Videocam,
+                        contentDescription = null,
+                        tint = Color(0xFF64748B),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                // Frosted glass play icon badge overlay in center
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clip(CircleShape)
+                        .background(Color.Black.copy(alpha = 0.55f))
+                        .border(1.dp, Color.White.copy(alpha = 0.3f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = "Play Video",
+                        tint = ElectricCyan,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // Metadata & action buttons
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Text(
+                    text = video.filename,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFFF1F5F9),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = "${video.sizeMb} MB • ${video.createdAt}",
+                    fontSize = 10.sp,
+                    color = Color(0xFF64748B),
+                    fontFamily = FontFamily.Monospace
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Watch button
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(Color(0xFF0F172A))
+                            .border(1.dp, Color(0xFF334155), RoundedCornerShape(6.dp))
+                            .clickable { onPlay() }
+                            .padding(horizontal = 9.dp, vertical = 5.dp)
+                    ) {
+                        Text(
+                            text = "▶ Watch",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = ElectricCyan
+                        )
+                    }
+
+                    // 🚀 Direct TikTok Publish Button
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(Color(0xFF0284C7).copy(alpha = 0.25f))
+                            .border(1.dp, Color(0xFF0284C7).copy(alpha = 0.5f), RoundedCornerShape(6.dp))
+                            .clickable { onPostTikTok() }
+                            .padding(horizontal = 9.dp, vertical = 5.dp)
+                    ) {
+                        Text(
+                            text = "🚀 Post TikTok",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF38BDF8)
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 

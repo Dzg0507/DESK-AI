@@ -171,7 +171,8 @@ Each task object includes a dynamic `actions` array of contextual 1-tap buttons:
 |---|---|---|
 | `POST /api/trigger_media` | `{"action": "video" or "tiktok", "quote": null}` | `{"status", "task_id", "woke_daemon", "message"}`. With no quote, a fresh one is written. `tiktok` renders then posts. |
 | `POST /api/videos/{filename}/publish` | | `{"status": "success", "task_id": "..."}`: posts an existing video to TikTok (about a minute). The task's result says whether it worked. |
-| `GET /api/videos` | | `{"videos": [{"filename", "size_mb", "created_at", "url"}]}`, newest first |
+| `GET /api/videos` | | `{"videos": [{"filename", "size_mb", "created_at", "url", "thumbnail_url"}]}`, newest first |
+| `GET /api/videos/{filename}/thumbnail` | | JPEG thumbnail (360px wide, cached). Generated on-demand via FFmpeg if missing. |
 | `GET /videos/{filename}` | | the MP4, with byte-range support. `/videos/{name}.jpg` is its cover. |
 | `GET /images/{filename}` | | images made by `/image` |
 

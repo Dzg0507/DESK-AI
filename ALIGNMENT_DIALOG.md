@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-06 (DeskAI v2.6.7 / Build 50 shipped — Take over icon bar, keyboard on demand)
+**Last Updated:** 2026-10-06 (DeskAI v2.6.8 / Build 51 shipped — Video Hub thumbnails)
 
 ---
 
@@ -14,6 +14,13 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-06: DeskAI v2.6.8 (build 51), Video Hub thumbnails (by Antigravity session, at owner's request)
+
+- `MediaGallerySheet.kt`: Added `VideoGalleryCard` featuring extracted video thumbnails (60dp x 86dp, 9:16 ratio) loaded via Coil `SubcomposeAsyncImage` with token auth headers, dark rounded border, and frosted glass play circle badge overlay. Polished title with 2-line ellipsis and metadata row with monospace size and date. Added quick "▶ Watch" and "🚀 Post TikTok" action chips.
+- `AlwaysOnModels.kt`: `VideoItem` has `thumbnailUrl: String = ""`.
+- `AlwaysOnAgentClient.kt`: `getVideos()` extracts `thumbnail_url` from backend (falling back to `/api/videos/$fname/thumbnail`) and attaches auth token.
+- `AlwaysOnAgent` backend (`interfaces/hud/media.py`): Added `thumbnail_url` to `GET /api/videos` and added `GET /api/videos/{filename}/thumbnail` endpoint generating 360px JPEG thumbnails on-demand via FFmpeg and caching in `.thumbnails/`.
 
 ## Shipped 2026-10-06: DeskAI v2.6.7 (build 50), Take over redesign (by the laptop Claude session, at the owner's request)
 
