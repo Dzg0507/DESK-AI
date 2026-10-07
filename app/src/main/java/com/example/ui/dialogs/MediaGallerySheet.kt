@@ -653,21 +653,7 @@ fun VideoGalleryCard(
                 }
 
                 // Frosted glass play icon badge overlay in center
-                Box(
-                    modifier = Modifier
-                        .size(28.dp)
-                        .clip(CircleShape)
-                        .background(Color.Black.copy(alpha = 0.55f))
-                        .border(1.dp, Color.White.copy(alpha = 0.3f), CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.PlayArrow,
-                        contentDescription = "Play Video",
-                        tint = ElectricCyan,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
+                FrostedPlayBadge()
             }
 
             Spacer(modifier = Modifier.width(12.dp))
@@ -731,6 +717,26 @@ fun VideoGalleryCard(
                 }
             }
         }
+    }
+}
+
+/** The Video Hub's frosted play badge, shared with a mission's details (TaskDetailsSheet). */
+@Composable
+fun FrostedPlayBadge(size: androidx.compose.ui.unit.Dp = 28.dp) {
+    Box(
+        modifier = Modifier
+            .size(size)
+            .clip(CircleShape)
+            .background(Color.Black.copy(alpha = 0.55f))
+            .border(1.dp, Color.White.copy(alpha = 0.3f), CircleShape),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = Icons.Default.PlayArrow,
+            contentDescription = "Play Video",
+            tint = ElectricCyan,
+            modifier = Modifier.size(size * 0.64f)
+        )
     }
 }
 
