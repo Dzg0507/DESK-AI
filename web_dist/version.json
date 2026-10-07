@@ -1,7 +1,7 @@
 {
-  "versionCode": 49,
-  "versionName": "2.6.6",
-  "changelog": "DeskAI v2.6.6 (Build 49): videos taller than the player (like screen recordings) are centred instead of pushed to the left. TikTok videos look the same as before.",
+  "versionCode": 50,
+  "versionName": "2.6.7",
+  "changelog": "DeskAI v2.6.7 (Build 50): Take over has a slim icon bar. The keyboard stays away until you tap the keyboard button; the text bar then sits right on top of it.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24247017
+  "fileSizeBytes": 24264298
 }

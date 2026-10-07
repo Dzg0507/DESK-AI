@@ -3,6 +3,26 @@ package com.example.ui.dialogs
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.isImeVisible
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Keyboard
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.OpenWith
+import androidx.compose.material.icons.filled.StopCircle
+import androidx.compose.material.icons.filled.TouchApp
+import androidx.compose.material.icons.filled.ZoomOutMap
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.horizontalScroll
@@ -62,6 +82,7 @@ import org.json.JSONObject
  * Tap = click, hold = right-click, pinch to zoom and drag to move around when zoomed; Double and Drag are one-shot
  * modes. The picture refreshes about every 0.6 s.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TakeOverScreen(
     requestId: String?,
@@ -83,6 +104,20 @@ fun TakeOverScreen(
     var closing by remember { mutableStateOf(false) }
     // Which computer: the Mini, or the owner's laptop (a request is always the Mini's)
     var machine by remember { mutableStateOf("mini") }
+    // Typing: the text bar shows only after ⌨, gets the focus (so the keyboard opens with it), and goes away when
+    // the keyboard is closed
+    var typing by remember { mutableStateOf(false) }
+    val focus = remember { FocusRequester() }
+    val keyboard = LocalSoftwareKeyboardController.current
+    val imeOpen = WindowInsets.isImeVisible
+    var imeWasOpen by remember { mutableStateOf(false) }
+    LaunchedEffect(typing) {
+        if (typing) { delay(80); focus.requestFocus(); keyboard?.show() }
+    }
+    LaunchedEffect(imeOpen) {
+        if (imeOpen) imeWasOpen = true
+        else if (imeWasOpen && typing) { typing = false; imeWasOpen = false }
+    }
 
     fun body(m: String = machine): JSONObject = JSONObject().apply {
         put("machine", m)
@@ -138,43 +173,46 @@ fun TakeOverScreen(
     run {
         Surface(modifier = Modifier.fillMaxSize(), color = Color(0xFF0B1120)) {
             Column(modifier = Modifier.fillMaxSize().systemBarsPadding().imePadding()) {
-                // Who's in control, and Hand back
+                // Top: which computer, who's in control (and the last action), and ✓ to hand back
                 Row(
-                    modifier = Modifier.fillMaxWidth().background(Color(0xFF111A2E)).padding(horizontal = 12.dp, vertical = 8.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = when {
-                            error != null -> "Couldn't take over: $error"
-                            active -> "🖐 You're in control"
-                            else -> "Connecting…"
-                        },
-                        color = if (error != null) Color(0xFFFCA5A5) else Color(0xFFF1F5F9),
-                        fontWeight = FontWeight.SemiBold, fontSize = 15.sp, modifier = Modifier.weight(1f)
-                    )
                     if (requestId == null) {
-                        listOf("mini" to "Mini", "laptop" to "Laptop").forEach { (id, label) ->
-                            if (machine == id) {
-                                Button(onClick = {}, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF59E0B)),
-                                       modifier = Modifier.padding(end = 4.dp)) {
-                                    Text(label, color = Color(0xFF111111), fontWeight = FontWeight.SemiBold)
-                                }
-                            } else {
-                                OutlinedButton(onClick = { switchTo(id) }, modifier = Modifier.padding(end = 4.dp)) {
-                                    Text(label, color = Color(0xFFE2E8F0))
-                                }
+                        Row(Modifier.width(96.dp)) {
+                            listOf("mini" to "Mini", "laptop" to "Laptop").forEach { (id, label) ->
+                                Text(label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
+                                     color = if (machine == id) Color(0xFF111111) else Color(0xFFCBD5E1),
+                                     modifier = Modifier.padding(end = 4.dp).clip(RoundedCornerShape(8.dp))
+                                         .background(if (machine == id) Color(0xFFF59E0B) else Color(0xFF1E293B))
+                                         .clickable { switchTo(id) }.padding(horizontal = 7.dp, vertical = 4.dp))
                             }
                         }
+                    } else {
+                        Spacer(Modifier.width(96.dp))
                     }
-                    Button(onClick = { handBack() },
-                           colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF16A34A))) {
-                        Text(if (error != null) "Close" else "Hand back")
+                    Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = when {
+                                error != null -> "Couldn't take over"
+                                active -> "You're in control"
+                                else -> "Connecting…"
+                            },
+                            color = if (error != null) Color(0xFFFCA5A5) else Color(0xFFF1F5F9),
+                            fontWeight = FontWeight.SemiBold, fontSize = 15.sp
+                        )
+                        Text(
+                            text = error ?: note.ifBlank { "Tap to click · hold to right-click · pinch to zoom" },
+                            color = Color(0xFF94A3B8), fontSize = 11.sp, maxLines = 1
+                        )
+                    }
+                    Box(Modifier.width(96.dp), contentAlignment = Alignment.CenterEnd) {
+                        IconButton(onClick = { handBack() },
+                                   modifier = Modifier.size(42.dp).clip(CircleShape).background(Color(0xFF334155))) {
+                            Icon(Icons.Default.Check, contentDescription = "Hand back", tint = Color.White)
+                        }
                     }
                 }
-                Text(
-                    text = if (note.isNotBlank()) note else "Tap to click · hold to right-click · pinch to zoom",
-                    color = Color(0xFF94A3B8), fontSize = 12.sp, modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
-                )
 
                 // The screen. Pinch and pan on the frame; taps on the picture land where tapped (the picture's
                 // own coordinates, so zooming doesn't throw them off).
@@ -233,54 +271,63 @@ fun TakeOverScreen(
                     }
                 }
 
-                // Container 2: the controls, one panel at the bottom: right above the keyboard when it's open
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(top = 6.dp)
-                        .clip(RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp)).background(Color(0xFF111A2E))
-                        .padding(vertical = 4.dp)
-                ) {
-                // Modes and scrolling
-                Row(
-                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp, vertical = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    ModeButton("Double", mode == "double") { mode = if (mode == "double") "tap" else "double"; dragStart = null }
-                    ModeButton("Drag", mode == "drag") { mode = if (mode == "drag") "tap" else "drag"; dragStart = null }
-                    KeyButton("Scroll ▲") {
-                        val ev = JSONObject().put("type", "scroll").put("dy", 5)
-                        lastSpot?.let { ev.put("x", it.x.toDouble()).put("y", it.y.toDouble()) }
-                        send(ev, "Scrolled up")
-                    }
-                    KeyButton("Scroll ▼") {
-                        val ev = JSONObject().put("type", "scroll").put("dy", -5)
-                        lastSpot?.let { ev.put("x", it.x.toDouble()).put("y", it.y.toDouble()) }
-                        send(ev, "Scrolled down")
-                    }
-                    KeyButton("Zoom 1×") { scale = 1f; pan = Offset.Zero }
-                }
-                // Typing
-                Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    OutlinedTextField(
-                        value = text, onValueChange = { text = it.take(500) }, singleLine = true,
-                        placeholder = { Text("Type here, then Send") }, modifier = Modifier.weight(1f)
-                    )
-                    Spacer(Modifier.width(6.dp))
-                    Button(onClick = {
-                        val t = text
-                        if (t.isNotEmpty()) { send(JSONObject().put("type", "text").put("text", t), "Typed ${t.length} characters"); text = "" }
-                    }, enabled = active && text.isNotEmpty()) { Text("Send") }
-                }
-                // Keys
-                Row(
-                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    listOf("Enter" to "enter", "⌫" to "backspace", "Tab" to "tab", "Esc" to "esc", "↑" to "up", "↓" to "down",
-                           "←" to "left", "→" to "right", "Ctrl+A" to "ctrl+a", "Ctrl+C" to "ctrl+c", "Ctrl+V" to "ctrl+v")
-                        .forEach { (label, key) ->
-                            KeyButton(label) { send(JSONObject().put("type", "key").put("key", key), "Pressed $label") }
+                // Container 2: a slim icon bar (like a remote-desktop app). Typing is hidden until ⌨ is tapped: then
+                // the special keys and the text bar appear right on top of the phone's keyboard, and closing the
+                // keyboard hides them again (2026-10-06, the owner: the keyboard "pops up and is all in the way").
+                Column(modifier = Modifier.fillMaxWidth().padding(top = 6.dp).background(Color(0xFF0F172A))) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        BarIcon(Icons.Default.StopCircle, "Hand back", tint = Color(0xFFF87171)) { handBack() }
+                        BarIcon(Icons.Default.Keyboard, "Keyboard", on = typing) {
+                            if (typing) { typing = false; keyboard?.hide() } else typing = true
                         }
-                }
+                        BarIcon(Icons.Default.TouchApp, "Tap", on = mode == "tap") { mode = "tap"; dragStart = null }
+                        BarText("2×", "Double-click", on = mode == "double") {
+                            mode = if (mode == "double") "tap" else "double"; dragStart = null
+                        }
+                        BarIcon(Icons.Default.OpenWith, "Drag", on = mode == "drag") {
+                            mode = if (mode == "drag") "tap" else "drag"; dragStart = null
+                        }
+                        BarIcon(Icons.Default.KeyboardArrowUp, "Scroll up") {
+                            val ev = JSONObject().put("type", "scroll").put("dy", 5)
+                            lastSpot?.let { ev.put("x", it.x.toDouble()).put("y", it.y.toDouble()) }
+                            send(ev, "Scrolled up")
+                        }
+                        BarIcon(Icons.Default.KeyboardArrowDown, "Scroll down") {
+                            val ev = JSONObject().put("type", "scroll").put("dy", -5)
+                            lastSpot?.let { ev.put("x", it.x.toDouble()).put("y", it.y.toDouble()) }
+                            send(ev, "Scrolled down")
+                        }
+                        if (scale > 1.01f) BarIcon(Icons.Default.ZoomOutMap, "Zoom out") { scale = 1f; pan = Offset.Zero }
+                    }
+                    if (typing) {
+                        // Special keys, then the text bar: the last thing above the keyboard
+                        Row(
+                            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            listOf("Enter" to "enter", "⌫" to "backspace", "Tab" to "tab", "Esc" to "esc", "↑" to "up",
+                                   "↓" to "down", "←" to "left", "→" to "right", "Ctrl+A" to "ctrl+a", "Ctrl+C" to "ctrl+c",
+                                   "Ctrl+V" to "ctrl+v")
+                                .forEach { (label, key) ->
+                                    KeyButton(label) { send(JSONObject().put("type", "key").put("key", key), "Pressed $label") }
+                                }
+                        }
+                        Row(modifier = Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                            OutlinedTextField(
+                                value = text, onValueChange = { text = it.take(500) }, singleLine = true,
+                                placeholder = { Text("Type, then Send") },
+                                modifier = Modifier.weight(1f).focusRequester(focus)
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Button(onClick = {
+                                val t = text
+                                if (t.isNotEmpty()) { send(JSONObject().put("type", "text").put("text", t), "Typed ${t.length} characters"); text = "" }
+                            }, enabled = active && text.isNotEmpty()) { Text("Send") }
+                        }
+                    }
                 }
             }
         }
@@ -288,13 +335,20 @@ fun TakeOverScreen(
 }
 
 @Composable
-private fun ModeButton(label: String, on: Boolean, onClick: () -> Unit) {
-    if (on) {
-        Button(onClick = onClick, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF59E0B))) {
-            Text(label, color = Color(0xFF111111), fontWeight = FontWeight.SemiBold)
-        }
-    } else {
-        KeyButton(label, onClick)
+private fun BarIcon(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, on: Boolean = false,
+                    tint: Color = Color(0xFFE2E8F0), onClick: () -> Unit) {
+    IconButton(onClick = onClick,
+               modifier = Modifier.size(44.dp).clip(CircleShape).background(if (on) Color(0xFFF1F5F9) else Color.Transparent)) {
+        Icon(icon, contentDescription = label, tint = if (on) Color(0xFF0F172A) else tint)
+    }
+}
+
+@Composable
+private fun BarText(text: String, label: String, on: Boolean = false, onClick: () -> Unit) {
+    Box(modifier = Modifier.size(44.dp).clip(CircleShape).background(if (on) Color(0xFFF1F5F9) else Color.Transparent)
+            .clickable(onClickLabel = label, onClick = onClick),
+        contentAlignment = Alignment.Center) {
+        Text(text, color = if (on) Color(0xFF0F172A) else Color(0xFFE2E8F0), fontWeight = FontWeight.Bold, fontSize = 15.sp)
     }
 }
 

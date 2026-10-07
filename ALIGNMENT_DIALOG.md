@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-06 (DeskAI v2.6.6 / Build 49 shipped — videos centred in the player)
+**Last Updated:** 2026-10-06 (DeskAI v2.6.7 / Build 50 shipped — Take over icon bar, keyboard on demand)
 
 ---
 
@@ -14,6 +14,10 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-06: DeskAI v2.6.7 (build 50), Take over redesign (by the laptop Claude session, at the owner's request)
+
+- `TakeOverScreen.kt`: top = Mini/Laptop chips, "You're in control" with the last action, a round check button (hand back). Bottom = one icon bar: stop (hand back), keyboard, tap, 2x (double), drag, scroll up/down, zoom out (only when zoomed). Typing is hidden until the keyboard button: then the special keys and the text bar show right above the phone's keyboard (focused, so it opens), and closing the keyboard hides them. Modelled on a remote-desktop screenshot the owner sent. Not tried on the phone before shipping (unplugged).
 
 ## Shipped 2026-10-06: DeskAI v2.6.6 (build 49), videos centred in the player (by the laptop Claude session)
 
