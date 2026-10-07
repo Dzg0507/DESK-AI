@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import com.example.data.local.AppDatabase
 import com.example.data.remote.AlwaysOnAgentClient
+import com.example.data.remote.TaskEvents
 import com.example.ui.screens.ChatScreen
 import com.example.ui.theme.MyApplicationTheme
 import com.google.firebase.messaging.FirebaseMessaging
@@ -88,6 +89,17 @@ class MainActivity : ComponentActivity() {
         )
       }
     }
+  }
+
+  // Live task events only while the app is on screen; push notifications cover it when it's closed
+  override fun onStart() {
+    super.onStart()
+    TaskEvents.start(applicationContext)
+  }
+
+  override fun onStop() {
+    TaskEvents.stop()
+    super.onStop()
   }
 
   override fun onNewIntent(intent: Intent) {

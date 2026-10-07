@@ -158,12 +158,42 @@ Each task object includes a dynamic `actions` array of contextual 1-tap buttons:
 | Method & path | Body | Returns |
 |---|---|---|
 | `GET /api/tasks?limit=50&phase=in_progress` | | array, newest first |
-| `GET /api/tasks/{id}` | | one task, or 404. Cheap: polling every 2 s is fine. |
+| `GET /api/tasks/{id}` | | one task, or 404. Cheap: polling every 2 s is fine (the fallback when `/api/events` is down). |
+| `GET /api/events` | | **Live task events** (Server-Sent Events; see below). |
 | `POST /api/tasks` | `{"title", "prompt", "priority": "medium", "engine": "auto", "mode": "accept-edits", "timeout_seconds": 300}` | `{"status", "task_id", "woke_daemon", "message"}` |
 | `POST /api/tasks/run` | `{"command": "..."}` (new) or `{"task_id": "..."}` (re-run a failed one) | `{"status", "task_id", "message"}` |
 | `POST /api/cancel/{id}` | | 200; 404 if unknown; **409** if it already finished |
 | `POST /api/tasks/cancel` | `{}` (the running task) or `{"task_id": "..."}` | as above; `{"status": "idle"}` if nothing is running |
 | `POST /api/retry/{id}` | | back to `backlog`; **409** while it's still running |
+
+### Live task events (`GET /api/events`)
+
+A Server-Sent Events stream (`text/event-stream`) that says the moment a task's status changes, so the app
+doesn't have to poll. Same auth as everything else (`X-HUD-Token` or `Authorization: Bearer`). Each change is:
+
+```
+event: task
+data: {"type":"started","task_id":"task-052","status":"started","phase":"in_progress","ts":1791432000.1}
+```
+
+| `type` / `status` | When | Extra fields |
+|---|---|---|
+| `created` (`status` is `queued`) | a task was added | `phase` |
+| `queued` | a task went back to the queue (retry, restart recovery) | `phase` |
+| `started` | the daemon picked it up | `phase` |
+| `progress` | a running task reported progress | `percent`, `label`, `eta_seconds` (when known) |
+| `done` | finished (`phase` `completed`; `exit_code` 4 = needs your input) | `phase`, `exit_code` |
+| `failed` | failed or cancelled | `phase`, `exit_code`, `cancelled: true` when cancelled |
+
+- The event is a nudge, not the whole task: fetch `GET /api/tasks/{id}` for the full task object.
+- `: ping` comment lines come every 15 s so phones and routers keep a quiet connection open. The stream starts
+  with `retry: 5000` and `: connected`.
+- At most 20 streams at once (`503` beyond that). A client that stops reading (its 100-event backlog fills) is
+  dropped and its stream ends: reconnect, then refresh what's on screen over plain HTTP.
+- Only changes made inside the agent's own process are sent (everything the API and the daemon do). Missed
+  events (while disconnected) are not replayed: after a reconnect, refresh the tasks on screen once.
+- When the stream fails, fall back to polling `GET /api/tasks/{id}` and retry the stream with backoff. Push
+  notifications (FCM) still cover the app being closed.
 
 ## Videos (TiktokVideos)
 

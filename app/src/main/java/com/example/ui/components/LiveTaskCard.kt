@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.AgentTaskItem
 import com.example.data.model.TaskAction
+import com.example.data.remote.TaskEvents
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldConnected
 import com.example.ui.theme.RoseError
@@ -79,11 +80,14 @@ fun LiveTaskCard(
     var isCancelling by remember { mutableStateOf(false) }
     var cancelFeedback by remember { mutableStateOf<String?>(null) }
 
-    // Live refresh loop: Poll every 2 seconds while active, stop on 404, backoff on errors
+    // Live refresh loop: refresh when the agent says this task changed (/api/events), or every 2 seconds while
+    // the events stream is down; stop on 404, backoff on errors
     LaunchedEffect(taskId, isPolling) {
         if (!isPolling) return@LaunchedEffect
         var consecutiveErrors = 0
         while (isActive && isPolling) {
+            val stamp = TaskEvents.stamp(taskId)          // before fetching, so a change during the fetch counts
+            val fetchedAt = System.currentTimeMillis()
             val res = onGetTask(taskId)
             if (res.isSuccess) {
                 consecutiveErrors = 0
@@ -99,7 +103,7 @@ fun LiveTaskCard(
                         break
                     }
                 }
-                delay(2000)
+                TaskEvents.awaitChange(taskId, stamp, pollMs = 2000, lastFetchAt = fetchedAt)
             } else {
                 val err = res.exceptionOrNull()?.message ?: ""
                 if (err.contains("404")) {

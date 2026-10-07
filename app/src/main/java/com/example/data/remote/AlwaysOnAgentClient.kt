@@ -24,6 +24,8 @@ import com.example.data.model.VideoItem
 import com.example.data.model.ImageItem
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.Call
 import okhttp3.Callback
@@ -440,6 +442,63 @@ class AlwaysOnAgentClient {
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    /**
+     * Live task events (GET /api/events, Server-Sent Events; docs/API.md "Live task events"). Blocks while the
+     * stream is open: [onOpen] once connected, then [onEvent] with (task id, status) for every `event: task`.
+     * Returns when the server ends the stream; throws when it can't connect or the line goes quiet for 45 s
+     * (the server sends a `: ping` every 15 s). [onCall] hands out the OkHttp call so the caller can cancel it
+     * the moment the app goes to the background.
+     */
+    suspend fun streamTaskEvents(
+        config: BridgeConfig,
+        onCall: (Call) -> Unit,
+        onOpen: () -> Unit,
+        onEvent: (taskId: String, status: String) -> Unit
+    ) = withContext(Dispatchers.IO) {
+        executeWithFailover(config) { baseUrl ->
+            // Stopped (app went to the background) while on the first address: don't open the next one
+            currentCoroutineContext().ensureActive()
+            val req = addAuth(
+                Request.Builder().url("$baseUrl/api/events").header("Accept", "text/event-stream"),
+                config
+            ).build()
+            val call = eventsHttpClient.newCall(req)
+            onCall(call)
+            call.execute().use { resp ->
+                if (!resp.isSuccessful) throw IOException("HTTP ${resp.code} from /api/events")
+                val body = resp.body ?: throw IOException("Empty /api/events response")
+                onOpen()
+                val reader = BufferedReader(InputStreamReader(body.byteStream()))
+                var eventName = ""
+                while (true) {
+                    val line = reader.readLine() ?: break
+                    when {
+                        line.startsWith("event:") -> eventName = line.removePrefix("event:").trim()
+                        line.startsWith("data:") && eventName == "task" -> {
+                            try {
+                                val json = JSONObject(line.removePrefix("data:").trim())
+                                val id = json.optString("task_id", "")
+                                if (id.isNotBlank()) onEvent(id, json.optString("status", ""))
+                            } catch (_: Exception) {
+                                // One bad line doesn't end the stream
+                            }
+                        }
+                        line.isEmpty() -> eventName = ""
+                    }
+                }
+            }
+        }
+    }
+
+    // The events stream stays open for minutes: no overall timeout, and 45 s of silence (three missed pings) means
+    // the line is dead. Shares the main client's connection pool and threads.
+    private val eventsHttpClient: OkHttpClient by lazy {
+        httpClient.newBuilder()
+            .readTimeout(45, TimeUnit.SECONDS)
+            .callTimeout(0, TimeUnit.SECONDS)
+            .build()
     }
 
     private fun parseTaskJson(item: JSONObject, baseUrl: String? = null): AgentTaskItem {
