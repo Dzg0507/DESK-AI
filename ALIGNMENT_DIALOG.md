@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-06 (DeskAI v2.6.8 / Build 51 shipped — Video Hub thumbnails)
+**Last Updated:** 2026-10-07 (DeskAI v2.6.9 / Build 52 shipped — Live task events)
 
 ---
 
@@ -14,6 +14,16 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-07: DeskAI v2.6.9 (build 52), Live task events from /api/events SSE stream (by Antigravity session, at owner's request)
+
+- Applied `scripts/deskai_patches/live-events.patch` (AlwaysOnAgent PR #4 companion).
+- `MainActivity.kt`: Lifecycle hooks `onStart()` / `onStop()` manage `TaskEvents` connection so SSE stream only consumes network/battery while app is foregrounded.
+- `AlwaysOnAgentClient.kt`: Added `streamTaskEvents()` listening to `GET /api/events` (`text/event-stream`) with dedicated 45s silence timeout and ping tracking.
+- `TaskEvents.kt`: Foreground SSE manager with exponential backoff retry (2s–60s) and coroutine change counters (`awaitChange`, `awaitAnyChange`).
+- `LiveTaskCard.kt`: Task cards update immediately when a server task event arrives (`TaskEvents.awaitChange`), falling back cleanly to 2s polling if stream is offline.
+- `ChatViewModel.kt`: Status bar and daemon stats refresh immediately on task updates; inbox sync decoupled to 60s wall-clock interval.
+- FCM push messaging remains untouched for background alerts. Tested and verified on physical device via ADB.
 
 ## Shipped 2026-10-06: DeskAI v2.6.8 (build 51), Video Hub thumbnails (by Antigravity session, at owner's request)
 

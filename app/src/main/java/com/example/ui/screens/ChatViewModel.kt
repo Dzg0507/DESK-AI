@@ -26,6 +26,7 @@ import com.example.data.model.DaemonStats
 import com.example.data.model.TaskProposal
 import com.example.data.model.VideoItem
 import com.example.data.model.ImageItem
+import com.example.data.remote.TaskEvents
 import com.example.data.repository.ChatRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -130,8 +131,10 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun pollStatsPeriodically() {
         viewModelScope.launch {
-            var tick = 0
+            var lastInboxSync = 0L
             while (true) {
+                val stamp = TaskEvents.stampAny()         // before fetching, so a change during the fetch counts
+                val fetchedAt = System.currentTimeMillis()
                 try {
                     val stats = repository.fetchDaemonStats()
                     if (stats != null) {
@@ -142,15 +145,16 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     // Ignore transient errors
                 }
                 // The agent's own messages (brief, questions…): on opening, then once a minute, so a missed push
-                // loses nothing (a push also syncs right away)
-                if (tick % 10 == 0) {
+                // loses nothing (a push also syncs right away). By the clock: task events make this loop run more often
+                if (fetchedAt - lastInboxSync >= 60_000L) {
+                    lastInboxSync = fetchedAt
                     try {
                         repository.syncInbox(_currentSession.value?.id)
                     } catch (_: Exception) {
                     }
                 }
-                tick++
-                delay(6000)
+                // Every 6 s as before, or as soon as a task changes while the live events stream is up
+                TaskEvents.awaitAnyChange(stamp, pollMs = 6000, lastFetchAt = fetchedAt)
             }
         }
     }

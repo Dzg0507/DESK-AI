@@ -1,7 +1,7 @@
 {
-  "versionCode": 51,
-  "versionName": "2.6.8",
-  "changelog": "DeskAI v2.6.8 (Build 51): Video Hub thumbnails: preview images extracted directly from rendered videos with frosted play overlay and quick Watch/Post actions.",
+  "versionCode": 52,
+  "versionName": "2.6.9",
+  "changelog": "DeskAI v2.6.9 (Build 52): Live task events over /api/events SSE stream while in foreground with automatic fallback to polling.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24263416
+  "fileSizeBytes": 24279789
 }
