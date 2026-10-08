@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-08 (DeskAI v2.8.2 / Build 57 shipped — View only mode in Take over)
+**Last Updated:** 2026-10-08 (DeskAI v2.8.3 / Build 58 shipped — Take over shows the running task and what it's doing)
 
 ---
 
@@ -14,6 +14,13 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-08: DeskAI v2.8.3 (build 58), Take over shows running task & status (by Antigravity session, at owner's request)
+
+- Set `versionCode = 58` and `versionName = "2.8.3"` in `app/build.gradle.kts`.
+- Take over shows the running task and what it's doing.
+- Rebuilt debug APK signed with debug keystore and synced to `DeskAI.apk`, `DeskAI-update.apk`, and `web_dist/DeskAI.apk`.
+- Updated OTA update manifest `web_dist/version.json`.
 
 ## Shipped 2026-10-08: DeskAI v2.8.2 (build 57), View only mode in Take over (by Antigravity session, at owner's request)
 
