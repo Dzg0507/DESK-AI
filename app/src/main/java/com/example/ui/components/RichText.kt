@@ -282,19 +282,20 @@ fun parseLogLine(timestamp: String, level: String, message: String): ParsedLogLi
 // Colors (match ui/theme/Color.kt)
 // ---------------------------------------------------------------------------------------------------------------
 
-private val Cyan = Color(0xFF38BDF8)          // ElectricCyan
-private val Emerald = Color(0xFF10B981)       // EmeraldConnected
-private val Rose = Color(0xFFF43F5E)          // RoseError
-private val Amber = Color(0xFFF59E0B)         // AmberPending
-private val Slate200 = Color(0xFFE2E8F0)
-private val Slate300 = Color(0xFFCBD5E1)
-private val Slate400 = Color(0xFF94A3B8)
-private val Slate500 = Color(0xFF64748B)
-private val Slate700 = Color(0xFF334155)
+private val Cyan = com.example.ui.theme.ElectricCyan
+private val Emerald = com.example.ui.theme.EmeraldConnected
+private val Rose = com.example.ui.theme.RoseError
+private val Amber = com.example.ui.theme.AmberPending
+private val Slate200 = com.example.ui.theme.Slate200
+private val Slate300 = com.example.ui.theme.Slate300
+private val Slate400 = com.example.ui.theme.Slate400
+private val Slate500 = com.example.ui.theme.Slate500
+private val Slate700 = com.example.ui.theme.Slate700
 
 private val TagPalette = listOf(
-    Color(0xFF38BDF8), Color(0xFFA855F7), Color(0xFF10B981), Color(0xFFF59E0B),
-    Color(0xFF6366F1), Color(0xFFEC4899), Color(0xFF14B8A6), Color(0xFFF97316)
+    com.example.ui.theme.ElectricCyan, com.example.ui.theme.NeonPurple, com.example.ui.theme.EmeraldConnected,
+    com.example.ui.theme.AmberPending, com.example.ui.theme.NeonIndigo, com.example.ui.theme.Pink500,
+    com.example.ui.theme.Teal500, com.example.ui.theme.Orange500
 )
 
 /** A stable color per tag name, so [Push] is always the same color. */
@@ -321,8 +322,8 @@ private fun AnnotatedString.Builder.appendInlines(items: List<RichInline>, base:
         is RichInline.FileRef -> withStyle(
             SpanStyle(
                 fontFamily = FontFamily.Monospace,
-                color = Color(0xFFC4B5FD),
-                background = Color(0xFFA855F7).copy(alpha = 0.16f)
+                color = com.example.ui.theme.Violet300,
+                background = com.example.ui.theme.NeonPurple.copy(alpha = 0.16f)
             )
         ) {
             append("\u2009\uD83D\uDCC4 ${item.name}")
@@ -354,8 +355,8 @@ fun logLineString(line: ParsedLogLine): AnnotatedString = buildAnnotatedString {
         append(" ")
     }
     val msgColor = when (line.level) {
-        LogLevel.ERROR -> Color(0xFFFDA4AF)
-        LogLevel.WARNING -> Color(0xFFFDE68A)
+        LogLevel.ERROR -> com.example.ui.theme.Rose300
+        LogLevel.WARNING -> com.example.ui.theme.Amber200
         LogLevel.INFO -> Slate300
         LogLevel.DEBUG -> Slate500
     }
@@ -407,7 +408,7 @@ private fun RichBlockView(block: RichBlock, base: Color, first: Boolean) {
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(8.dp))
-                .background(Color(0xFF090D16))
+                .background(com.example.ui.theme.CodeBlockBackground)
                 .border(1.dp, Slate700, RoundedCornerShape(8.dp))
                 .padding(8.dp)
         ) {
@@ -489,7 +490,7 @@ fun Pill(text: String, color: Color, fontSize: Int = 10, modifier: Modifier = Mo
         modifier = modifier
             .clip(RoundedCornerShape(6.dp))
             .background(color.copy(alpha = 0.15f))
-            .border(1.dp, color.copy(alpha = 0.45f), RoundedCornerShape(6.dp))
+            .border(1.dp, color.copy(alpha = 0.40f), RoundedCornerShape(6.dp))
             .padding(horizontal = 6.dp, vertical = 1.dp)
     ) {
         Text(

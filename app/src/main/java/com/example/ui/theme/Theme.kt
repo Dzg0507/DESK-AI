@@ -15,11 +15,11 @@ private val DarkColorScheme = darkColorScheme(
     primary = ElectricCyan,
     onPrimary = Color(0xFF032640),
     primaryContainer = Color(0xFF0C4A6E),
-    onPrimaryContainer = Color(0xFFE0F2FE),
+    onPrimaryContainer = Sky100,
     secondary = NeonIndigo,
     onSecondary = Color.White,
-    secondaryContainer = Color(0xFF312E81),
-    onSecondaryContainer = Color(0xFFE0E7FF),
+    secondaryContainer = Indigo900,
+    onSecondaryContainer = Indigo100,
     tertiary = NeonPurple,
     onTertiary = Color.White,
     background = SlateDarkBackground,
@@ -29,20 +29,28 @@ private val DarkColorScheme = darkColorScheme(
     surfaceVariant = SlateDarkSurfaceVariant,
     onSurfaceVariant = TextSecondary,
     outline = SlateDarkBorder,
+    outlineVariant = Slate800,
+    surfaceContainerLowest = DeepNavy,
+    surfaceContainerLow = SlateDarkSurface,
+    surfaceContainer = SlateDarkSurface,
+    surfaceContainerHigh = Slate800,
+    surfaceContainerHighest = Slate700,
+    inverseSurface = Slate100,
+    inverseOnSurface = Slate900,
     error = RoseError,
     onError = Color.White
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Color(0xFF0284C7),
+    primary = ElectricCyanGlow,
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFE0F2FE),
-    onPrimaryContainer = Color(0xFF0369A1),
-    secondary = Color(0xFF4F46E5),
+    primaryContainer = Sky100,
+    onPrimaryContainer = Sky700,
+    secondary = Indigo600,
     onSecondary = Color.White,
-    secondaryContainer = Color(0xFFEEF2FF),
-    onSecondaryContainer = Color(0xFF3730A3),
-    tertiary = Color(0xFF9333EA),
+    secondaryContainer = Indigo50,
+    onSecondaryContainer = Indigo700,
+    tertiary = Purple600,
     background = SlateLightBackground,
     onBackground = TextPrimaryLight,
     surface = SlateLightSurface,
@@ -72,6 +80,7 @@ fun MyApplicationTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
+        shapes = DeskMaterialShapes,
         content = content
     )
 }
