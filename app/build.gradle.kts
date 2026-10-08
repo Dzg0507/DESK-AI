@@ -1,4 +1,5 @@
 import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
+import java.util.Properties
 
 plugins {
   alias(libs.plugins.android.application)
@@ -10,7 +11,7 @@ plugins {
 
 // Signing settings come from local.properties (gitignored) or the environment, never from git (2026-10-07: the
 // debug keystore had been committed inside DeskAI-source.zip). local.properties first, then the environment.
-val localProps = java.util.Properties().apply {
+val localProps = Properties().apply {
   val f = rootProject.file("local.properties")
   if (f.isFile) f.inputStream().use { load(it) }
 }
@@ -26,8 +27,8 @@ android {
     applicationId = "com.aistudio.deskai.kzpwqm"
     minSdk = 24
     targetSdk = 36
-    versionCode = 55
-    versionName = "2.8.0"
+    versionCode = 56
+    versionName = "2.8.1"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
