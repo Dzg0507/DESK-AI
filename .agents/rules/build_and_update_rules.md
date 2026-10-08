@@ -3,7 +3,7 @@
 ## 1. NEVER INSTALL OR DOWNLOAD GRADLE OR ANDROID SDK ON THIS MACHINE
 - This host machine (HP EliteDesk 800 G6 Mini, `devinmini`) is strictly the 24/7 AlwaysOnAgent desktop server daemon.
 - It does **NOT** compile, sign, or build Android APKs.
-- APK compilation and signing occur exclusively on the owner's primary development workstation, where the private `debug.keystore` and `google-services.json` reside.
+- APK compilation and signing occur exclusively on the owner's primary development workstation, where the private `debug.keystore` (outside the repo, path in `local.properties`) and `google-services.json` reside. Never commit a keystore, not even inside a zip.
 - **NEVER** run `scoop install gradle`, `choco install`, download Android SDK command-line tools, or execute Gradle builds on this mini PC.
 - AlwaysOnAgent changes to DeskAI are strictly code/model edits committed directly to git.
 

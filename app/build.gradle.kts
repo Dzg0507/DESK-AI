@@ -1,4 +1,5 @@
 import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
+import java.util.Properties
 
 plugins {
   alias(libs.plugins.android.application)
@@ -8,6 +9,16 @@ plugins {
   alias(libs.plugins.google.services)
 }
 
+// Signing settings come from local.properties (gitignored) or the environment, never from git (2026-10-07: the
+// debug keystore had been committed inside DeskAI-source.zip). local.properties first, then the environment.
+val localProps = Properties().apply {
+  val f = rootProject.file("local.properties")
+  if (f.isFile) f.inputStream().use { load(it) }
+}
+
+fun signingSetting(key: String, env: String): String? =
+  localProps.getProperty(key)?.trim()?.takeIf { it.isNotEmpty() } ?: System.getenv(env)?.trim()?.takeIf { it.isNotEmpty() }
+
 android {
   namespace = "com.example"
   compileSdk { version = release(36) { minorApiLevel = 1 } }
@@ -16,25 +27,28 @@ android {
     applicationId = "com.aistudio.deskai.kzpwqm"
     minSdk = 24
     targetSdk = 36
-    versionCode = 55
-    versionName = "2.8.0"
+    versionCode = 56
+    versionName = "2.8.1"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
   signingConfigs {
     create("release") {
-      val keystorePath = System.getenv("KEYSTORE_PATH") ?: "${rootDir}/my-upload-key.jks"
+      val keystorePath = signingSetting("deskai.release.keystore", "KEYSTORE_PATH") ?: "${rootDir}/my-upload-key.jks"
       storeFile = file(keystorePath)
-      storePassword = System.getenv("STORE_PASSWORD")
+      storePassword = signingSetting("deskai.release.storePassword", "STORE_PASSWORD")
       keyAlias = "upload"
-      keyPassword = System.getenv("KEY_PASSWORD")
+      keyPassword = signingSetting("deskai.release.keyPassword", "KEY_PASSWORD")
     }
     create("debugConfig") {
-      storeFile = file("${rootDir}/debug.keystore")
-      storePassword = "android"
-      keyAlias = "androiddebugkey"
-      keyPassword = "android"
+      // The one fixed debug key every release is signed with (SHA-256 3315b429…; BUILD.md). It lives OUTSIDE the
+      // repo; local.properties says where. Never rotate it: the phone would have to uninstall the app first.
+      storeFile = file(signingSetting("deskai.debug.keystore", "DESKAI_DEBUG_KEYSTORE") ?: "${rootDir}/debug.keystore")
+      // Fallbacks are the Android SDK's public default debug passwords, not secrets (the key file is the secret)
+      storePassword = signingSetting("deskai.debug.storePassword", "DESKAI_DEBUG_STORE_PASSWORD") ?: "android"
+      keyAlias = signingSetting("deskai.debug.keyAlias", "DESKAI_DEBUG_KEY_ALIAS") ?: "androiddebugkey"
+      keyPassword = signingSetting("deskai.debug.keyPassword", "DESKAI_DEBUG_KEY_PASSWORD") ?: "android"
       enableV1Signing = true
       enableV2Signing = true
     }

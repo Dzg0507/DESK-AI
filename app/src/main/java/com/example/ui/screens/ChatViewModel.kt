@@ -88,6 +88,9 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private var isTtsReady = false
 
     init {
+        // Links handed to other apps (external player, share) are signed by the agent, never carry the token
+        com.example.data.remote.MediaLinks.signer = { url -> repository.signMediaLink(url) }
+
         // Initialize Android Text To Speech
         tts = TextToSpeech(application) { status ->
             if (status == TextToSpeech.SUCCESS) {
@@ -675,6 +678,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     override fun onCleared() {
         super.onCleared()
+        com.example.data.remote.MediaLinks.signer = null
         tts?.stop()
         tts?.shutdown()
     }

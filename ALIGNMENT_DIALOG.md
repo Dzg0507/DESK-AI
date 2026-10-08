@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-07 (DeskAI v2.8.0 / Build 55 shipped — App-wide visual polish & design system)
+**Last Updated:** 2026-10-07 (DeskAI v2.8.1 / Build 56 shipped — Media URL security & signing isolation)
 
 ---
 
@@ -14,6 +14,12 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-07: DeskAI v2.8.1 (build 56), Media URL security & signing isolation (by Antigravity session, at owner's request)
+
+- Applied `scripts/deskai_patches/security.patch` (2 commits).
+- Security fix: Token removed from media URLs. In-app media (chat images, Media Hub photos/videos/thumbnails) loaded exclusively with Authorization header. External sharing, browser viewing, and external players obtain signed, time-limited expiring URLs via `POST /api/media/link`.
+- Keystore & signing isolation: Stopped tracking `DeskAI-source.zip` and `web_dist/DeskAI-source.zip` (removed from disk). `debug.keystore` moved to `~/.deskai/debug.keystore` outside repository tree. Signing settings sourced cleanly from `local.properties` / environment variables.
 
 ## Shipped 2026-10-07: DeskAI v2.8.0 (build 55), App-wide visual polish & design system (by Antigravity session, at owner's request)
 

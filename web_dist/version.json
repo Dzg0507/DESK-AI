@@ -1,7 +1,7 @@
 {
-  "versionCode": 55,
-  "versionName": "2.8.0",
-  "changelog": "A fresh coat of paint across the whole app: clearer cards, colored status pills, nicer empty states",
+  "versionCode": 56,
+  "versionName": "2.8.1",
+  "changelog": "Security: your server key no longer travels inside image and video links; shared video links now expire",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24345324
+  "fileSizeBytes": 24361720
 }

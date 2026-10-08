@@ -1,5 +1,6 @@
 package com.example.ui.dialogs
 
+import com.example.data.remote.MediaLinks
 import androidx.compose.ui.graphics.Brush
 import com.example.ui.theme.Gray900
 import com.example.ui.theme.DeskShapes
@@ -473,12 +474,13 @@ private suspend fun shareImage(
         }
     } catch (_: Exception) {}
 
-    // Fallback: share URL text
+    // Fallback: share a signed, expiring link (never the token, 2026-10-07)
+    val link = MediaLinks.shareable(imageUrl)
     withContext(Dispatchers.Main) {
         try {
             val shareIntent = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
-                putExtra(Intent.EXTRA_TEXT, imageUrl)
+                putExtra(Intent.EXTRA_TEXT, link)
             }
             context.startActivity(Intent.createChooser(shareIntent, "Share Image Link"))
         } catch (_: Exception) {}

@@ -16,3 +16,12 @@
 local.properties
 .env
 debug.keystore
+# Signing keys and anything that bundles them: never in git (2026-10-07: DeskAI-source.zip held debug.keystore)
+*.keystore
+*.keystore.base64
+*.jks
+*.p12
+*.pem
+DeskAI-source.zip
+web_dist/DeskAI-source.zip
+app/google-services.json
