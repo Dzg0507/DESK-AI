@@ -86,6 +86,16 @@ import com.example.ui.theme.Slate700
 import com.example.ui.theme.Slate800
 import com.example.ui.theme.Slate900
 import com.example.ui.components.deskSheet
+import androidx.compose.ui.graphics.Brush
+import com.example.ui.components.EmptyState
+import com.example.ui.components.LoadingState
+import com.example.ui.components.SheetHeader
+import com.example.ui.components.StatusNote
+import com.example.ui.components.StatusPill
+import com.example.ui.components.TagChip
+import com.example.ui.components.deskCard
+import com.example.ui.theme.Cyan400
+import com.example.ui.theme.DeskShapes
 
 private val Muted = Slate400
 private val Faint = Slate500
@@ -157,43 +167,22 @@ fun SchedulesSheet(
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
                 // Header
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                SheetHeader(
+                    title = if (showForm) "New schedule" else "Schedules",
+                    icon = Icons.Default.Schedule,
+                    subtitle = "Runs by itself" + if (timezone.isNotBlank()) " · times in $timezone" else "",
+                    onClose = onDismiss
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                        Box(
-                            modifier = Modifier.size(32.dp).clip(CircleShape).background(ElectricCyan.copy(alpha = 0.15f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(Icons.Default.Schedule, contentDescription = null, tint = ElectricCyan, modifier = Modifier.size(18.dp))
-                        }
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column {
-                            Text(if (showForm) "New schedule" else "Schedules", fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold, color = Color.White)
-                            Text(
-                                text = "Runs by itself" + if (timezone.isNotBlank()) " · times in $timezone" else "",
-                                fontSize = 11.sp, color = Muted, maxLines = 1
-                            )
-                        }
-                    }
-                    Row {
-                        if (!showForm) {
-                            IconButton(onClick = { refresh() }) {
-                                Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = ElectricCyan, modifier = Modifier.size(18.dp))
-                            }
-                        }
-                        IconButton(onClick = onDismiss) {
-                            Icon(Icons.Default.Close, contentDescription = "Close", tint = Muted, modifier = Modifier.size(20.dp))
+                    if (!showForm) {
+                        IconButton(onClick = { refresh() }, modifier = Modifier.size(32.dp)) {
+                            Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = ElectricCyan, modifier = Modifier.size(18.dp))
                         }
                     }
                 }
 
                 status?.let { (msg, ok) ->
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(msg, fontSize = 11.sp, color = if (ok) EmeraldConnected else RoseError, fontFamily = FontFamily.Monospace)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    StatusNote(msg, modifier = Modifier.fillMaxWidth(), color = if (ok) EmeraldConnected else RoseError)
                 }
                 Spacer(modifier = Modifier.height(10.dp))
 
@@ -215,20 +204,13 @@ fun SchedulesSheet(
                 } else {
                     Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                         when {
-                            isLoading && schedules.isEmpty() -> Row(
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                CircularProgressIndicator(modifier = Modifier.size(16.dp), color = ElectricCyan, strokeWidth = 2.dp)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Loading schedules...", fontSize = 11.sp, color = Muted)
-                            }
-                            schedules.isEmpty() -> Text(
-                                text = "Nothing scheduled yet.\n\nTap New schedule below, or just ask in chat, like " +
+                            isLoading && schedules.isEmpty() -> LoadingState("Loading schedules…")
+                            schedules.isEmpty() -> EmptyState(
+                                icon = Icons.Default.Schedule,
+                                title = "Nothing scheduled yet",
+                                message = "Tap New schedule below, or just ask in chat, like " +
                                         "\"post a TikTok every day at 6pm\" or \"remind me on weekdays at 8:30 to take my vitamins\".",
-                                fontSize = 12.sp, color = Muted, lineHeight = 18.sp,
-                                modifier = Modifier.clip(RoundedCornerShape(10.dp)).background(Card).padding(12.dp)
+                                accent = ElectricCyan
                             )
                             else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 items(schedules, key = { it.id }) { s ->
@@ -264,8 +246,8 @@ fun SchedulesSheet(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(ElectricCyan)
+                            .clip(DeskShapes.control)
+                            .background(Brush.horizontalGradient(listOf(ElectricCyan, Cyan400)))
                             .clickable { status = null; showForm = true }
                             .padding(vertical = 12.dp),
                         contentAlignment = Alignment.Center
@@ -289,10 +271,8 @@ private fun ScheduleCard(s: AgentSchedule, onToggle: (Boolean) -> Unit, onRunNow
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(Card)
-            .border(1.dp, if (s.enabled) accent.copy(alpha = 0.35f) else Slate700, RoundedCornerShape(10.dp))
-            .padding(10.dp)
+            .deskCard(borderColor = if (s.enabled) accent.copy(alpha = 0.35f) else Slate700)
+            .padding(12.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
@@ -303,7 +283,8 @@ private fun ScheduleCard(s: AgentSchedule, onToggle: (Boolean) -> Unit, onRunNow
             }
             Spacer(modifier = Modifier.width(10.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(s.name, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = if (s.enabled) Color.White else Muted, maxLines = 1)
+                Text(s.name, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = if (s.enabled) Color.White else Muted,
+                    maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                 Text(s.description.replaceFirstChar { it.uppercase() }, fontSize = 11.sp, color = if (s.enabled) accent else Faint)
             }
             Switch(
@@ -318,11 +299,7 @@ private fun ScheduleCard(s: AgentSchedule, onToggle: (Boolean) -> Unit, onRunNow
                 Text("🎬 A fresh affirmation video", fontSize = 11.sp, color = Slate300)
                 if (s.postToTiktok) {
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        "POSTS TO TIKTOK", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = TikTokPink,
-                        modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(TikTokPink.copy(alpha = 0.15f))
-                            .padding(horizontal = 5.dp, vertical = 2.dp)
-                    )
+                    StatusPill("Posts to TikTok", TikTokPink, showDot = false)
                 }
             }
             "reminder" -> Text("⏰ \"${s.text ?: s.name}\"", fontSize = 11.sp, color = Slate300)
@@ -330,10 +307,13 @@ private fun ScheduleCard(s: AgentSchedule, onToggle: (Boolean) -> Unit, onRunNow
                 color = Slate300, maxLines = 2)
         }
         Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = if (s.enabled) "Next: ${formatRun(s.nextRunAt)}" else "Paused",
-            fontSize = 10.sp, color = Muted, fontFamily = FontFamily.Monospace
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (s.enabled) {
+                TagChip(text = "Next · ${formatRun(s.nextRunAt)}", color = accent, icon = Icons.Default.Schedule)
+            } else {
+                StatusPill("Paused", Muted)
+            }
+        }
         if (s.lastRunAt != null) {
             Text("Last: ${formatRun(s.lastRunAt)} · ${s.lastResult ?: ""}", fontSize = 10.sp, color = Faint,
                 fontFamily = FontFamily.Monospace, maxLines = 2)
