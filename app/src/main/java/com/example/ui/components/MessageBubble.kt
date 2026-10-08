@@ -322,7 +322,7 @@ fun MessageBubble(
                     IconButton(
                         onClick = {
                             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                            clipboard.setPrimaryClip(ClipData.newPlainText("message", message.content))
+                            clipboard.setPrimaryClip(ClipData.newPlainText("message", com.example.data.remote.MediaAuth.stripTokensInText(message.content)))
                             Toast.makeText(context, "Copied", Toast.LENGTH_SHORT).show()
                             showActions = false
                         },

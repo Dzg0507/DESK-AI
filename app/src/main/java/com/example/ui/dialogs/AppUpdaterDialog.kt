@@ -154,8 +154,9 @@ fun AppUpdaterDialog(
                     for (rawUrl in candidateUrls) {
                         try {
                             val isLocal = !rawUrl.contains("github")
-                            val url = if (authToken.isNotBlank() && isLocal && !rawUrl.contains("token=")) {
-                                if (rawUrl.contains("?")) "$rawUrl&token=${authToken.trim()}" else "$rawUrl?token=${authToken.trim()}"
+                            // The agent gets the token in the headers below, never in the URL (2026-10-07)
+                            val url = if (isLocal) {
+                                com.example.data.remote.MediaAuth.stripToken(rawUrl)
                             } else if (rawUrl.contains("github") && !rawUrl.contains("t=")) {
                                 val sep = if (rawUrl.contains("?")) "&" else "?"
                                 "$rawUrl${sep}t=${System.currentTimeMillis()}"

@@ -293,6 +293,11 @@ class ChatRepository(
         agentClient.deleteImage(config, filename)
     }
 
+    /** A signed, expiring link to a media file for another app (no token in it); null if the agent can't make one. */
+    suspend fun signMediaLink(url: String): String? = withContext(Dispatchers.IO) {
+        agentClient.signMediaLink(getActiveConfig(), url)
+    }
+
     suspend fun downloadVideo(
         videoUrl: String,
         destinationFile: java.io.File,

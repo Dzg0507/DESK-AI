@@ -84,7 +84,8 @@ fun MarkdownContent(
     serverBaseUrl: String = "",
     authToken: String = ""
 ) {
-    val elements = remember(content) { parseMarkdown(content) }
+    // Messages saved before 2026-10-07 can hold image links with ?token=: never show it again
+    val elements = remember(content) { parseMarkdown(com.example.data.remote.MediaAuth.stripTokensInText(content)) }
 
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         elements.forEach { element ->
@@ -166,20 +167,22 @@ fun MarkdownImage(
             val path = if (cleanUrl.startsWith("/")) cleanUrl else "/$cleanUrl"
             if (cleanBase.isNotBlank()) "$cleanBase$path" else cleanUrl
         }
-        if (authToken.isNotBlank() && !fullUrl.contains("token=") && (fullUrl.startsWith("http://") || fullUrl.startsWith("https://"))) {
-            val sep = if (fullUrl.contains("?")) "&" else "?"
-            "$fullUrl${sep}token=${authToken.trim()}"
-        } else {
-            fullUrl
-        }
+        // The token goes in a header, never the URL (2026-10-07); older saved links lose theirs here
+        com.example.data.remote.MediaAuth.stripToken(fullUrl)
+    }
+    // Only our own agent gets the token: a picture from a public website in a reply must not receive it
+    val sendToken = remember(resolvedUrl, serverBaseUrl, authToken) {
+        authToken.isNotBlank() && com.example.data.remote.MediaAuth.isOwnServer(resolvedUrl, serverBaseUrl)
     }
 
-    val imageRequest = remember(resolvedUrl, authToken) {
+    val linkScope = androidx.compose.runtime.rememberCoroutineScope()
+
+    val imageRequest = remember(resolvedUrl, authToken, sendToken) {
         coil.request.ImageRequest.Builder(context)
             .data(resolvedUrl)
             .crossfade(true)
             .apply {
-                if (authToken.isNotBlank()) {
+                if (sendToken) {
                     addHeader("X-HUD-Token", authToken.trim())
                     addHeader("Authorization", "Bearer ${authToken.trim()}")
                 }
@@ -256,10 +259,14 @@ fun MarkdownImage(
                         color = Slate300,
                         modifier = Modifier
                             .clickable {
-                                try {
-                                    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(resolvedUrl))
-                                    context.startActivity(intent)
-                                } catch (_: Exception) {}
+                                // A browser can't send the token: our own images open through a signed link
+                                linkScope.launch {
+                                    val link = if (sendToken) com.example.data.remote.MediaLinks.shareable(resolvedUrl) else resolvedUrl
+                                    try {
+                                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(link))
+                                        context.startActivity(intent)
+                                    } catch (_: Exception) {}
+                                }
                             }
                             .padding(horizontal = 4.dp, vertical = 2.dp)
                     )
@@ -272,7 +279,7 @@ fun MarkdownImage(
         ImageViewerDialog(
             imageUrl = resolvedUrl,
             altText = alt,
-            authToken = authToken,
+            authToken = if (sendToken) authToken else "",
             onDismiss = { isExpanded = false }
         )
     }

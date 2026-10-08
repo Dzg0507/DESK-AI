@@ -10,7 +10,7 @@ DeskAI repo at `docs/API.md`, updated whenever this one changes.
 | Base URL | `http://192.168.12.151:8080` on the home Wi-Fi, `http://100.109.85.92:8080` over Tailscale (the mini PC `devinmini`) |
 | Auth | `X-HUD-Token: <HUD_AUTH_TOKEN>` on **every** request (`Authorization: Bearer <token>` also works). Send it only to this host. |
 | No auth | `GET /api/status`, `GET /api/health` |
-| Token in a URL | `?token=<token>` also works, for media links opened outside the app |
+| Token in a URL | **Deprecated** (2026-10-07). `?token=<token>` still works so older DeskAI builds keep loading media, but a token in a URL leaks into logs, chat history and shared links. Load media with the header (Coil/OkHttp headers). For a link that must leave the app (external player, share), ask for a signed link: `POST /api/media/link`. The server hides `token=`/`sig=` values in its logs. |
 | Errors | `401`: missing or wrong token. Otherwise `{"detail": "..."}` with a normal HTTP code. |
 | JSON | `snake_case`; timestamps are ISO 8601 in the server's local time |
 | CORS | none on purpose (it would let any website read the owner's memory). Native HTTP clients are unaffected. A request carrying a browser's `Origin` header needs the token even from the Mini itself, so a web page open in a browser there can't use the loopback trust (until 2026-10-04 chat, videos and images answered wildcard preflights). `tests/test_api_contract.py` checks that every route is in this file and every route here exists. |
@@ -210,6 +210,7 @@ data: {"type":"started","task_id":"task-052","status":"started","phase":"in_prog
 | `GET /api/videos/{filename}/thumbnail` | | JPEG thumbnail (360px wide, cached). Generated on-demand via FFmpeg if missing. |
 | `GET /videos/{filename}` | | the MP4, with byte-range support. `/videos/{name}.jpg` is its cover. |
 | `GET /images/{filename}` | | images made by `/image` |
+| `POST /api/media/link` | `{"url": "/videos/x.mp4", "ttl_seconds": 86400}` | `{"url": "/videos/x.mp4?exp=...&sig=...", "expires_at", "signed": true}`: a short-lived link (1 minute to 7 days, default 24 h) to one media file (`/videos/…`, `/images/…`, `/api/videos/{filename}/thumbnail`, `/api/tasks/{id}/thumb`) that works without the token, for an external player or a shared link. HMAC-SHA256 with a key derived from `HUD_AUTH_TOKEN` (nothing new to set; changing the token voids every link). `400` for any other path. Without `HUD_AUTH_TOKEN`: the plain path, `"signed": false`. |
 
 ## Memory
 
@@ -260,7 +261,7 @@ Generated images are stored outside the agent repository in the dedicated galler
 |---|---|---|
 | `GET /api/images` | | `{"images": [{"filename", "size_mb", "created_at", "mtime", "url"}]}`: lists all generated artwork |
 | `DELETE /api/images/{filename}` | | `{"status": "success", "message": "Deleted <filename>"}`: removes an image from disk |
-| `GET /images/{filename}` | | Static image file (supports token parameter or auth headers) |
+| `GET /images/{filename}` | | Static image file. Send the token in a header; `?token=` (deprecated) and a signed link (`POST /api/media/link`) also work |
 
 ## Agent controls and maintenance
 

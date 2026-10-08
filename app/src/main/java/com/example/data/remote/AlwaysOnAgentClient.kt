@@ -1287,11 +1287,8 @@ class AlwaysOnAgentClient {
                                     fname.isNotBlank() -> "$cleanBase/videos/$fname"
                                     else -> ""
                                 }
-                                val authedUrl = if (config.apiKey.isNotBlank() && !fullUrl.contains("token=")) {
-                                    "$fullUrl${if (fullUrl.contains("?")) "&" else "?"}token=${config.apiKey.trim()}"
-                                } else {
-                                    fullUrl
-                                }
+                                // No token in the URL (2026-10-07): playback/downloads send it in a header (addAuth)
+                                val authedUrl = MediaAuth.stripToken(fullUrl)
                                 val rawThumb = obj.optString("thumbnail_url", obj.optString("thumbnail", "")).trim()
                                 val fullThumb = when {
                                     rawThumb.startsWith("http://") || rawThumb.startsWith("https://") -> rawThumb
@@ -1300,11 +1297,7 @@ class AlwaysOnAgentClient {
                                     fname.isNotBlank() -> "$cleanBase/api/videos/$fname/thumbnail"
                                     else -> ""
                                 }
-                                val authedThumb = if (config.apiKey.isNotBlank() && fullThumb.isNotBlank() && !fullThumb.contains("token=")) {
-                                    "$fullThumb${if (fullThumb.contains("?")) "&" else "?"}token=${config.apiKey.trim()}"
-                                } else {
-                                    fullThumb
-                                }
+                                val authedThumb = MediaAuth.stripToken(fullThumb)     // Coil sends the token as a header
                                 if (fname.isNotBlank()) {
                                     list.add(
                                         VideoItem(
@@ -1352,11 +1345,7 @@ class AlwaysOnAgentClient {
                                 fname.isNotBlank() -> "$cleanBase/images/$fname"
                                 else -> ""
                             }
-                            val authedUrl = if (config.apiKey.isNotBlank() && !fullUrl.contains("token=")) {
-                                "$fullUrl${if (fullUrl.contains("?")) "&" else "?"}token=${config.apiKey.trim()}"
-                            } else {
-                                fullUrl
-                            }
+                            val authedUrl = MediaAuth.stripToken(fullUrl)     // Coil sends the token as a header
                             if (fname.isNotBlank()) {
                                 list.add(
                                     ImageItem(
@@ -1397,6 +1386,44 @@ class AlwaysOnAgentClient {
             Result.failure(e)
         }
     }
+
+    /**
+     * A short-lived signed link to one media file (POST /api/media/link), for handing a video or image to another
+     * app (external player, share) without the token. Null when the agent can't make one (an older agent).
+     */
+    suspend fun signMediaLink(config: BridgeConfig, url: String, ttlSeconds: Int = 24 * 3600): String? =
+        withContext(Dispatchers.IO) {
+            val clean = MediaAuth.stripToken(url)
+            val parsed = (try { android.net.Uri.parse(clean) } catch (_: Exception) { null }) ?: return@withContext null
+            val path = parsed.encodedPath ?: return@withContext null
+            try {
+                executeWithFailover(config) { baseUrl ->
+                    val payload = JSONObject().apply {
+                        put("url", path)
+                        put("ttl_seconds", ttlSeconds)
+                    }
+                    val req = addAuth(
+                        Request.Builder().url("$baseUrl/api/media/link")
+                            .post(payload.toString().toRequestBody(jsonMediaType)),
+                        config
+                    ).build()
+                    httpClient.newCall(req).execute().use { resp ->
+                        if (!resp.isSuccessful) return@use null
+                        val json = JSONObject(resp.body?.string() ?: "")
+                        if (!json.optBoolean("signed", false)) return@use null
+                        val rel = json.optString("url", "")
+                        if (rel.isBlank()) return@use null
+                        // Same server the original link pointed at, else the one that answered
+                        val origin = if (parsed.scheme != null && parsed.authority != null) {
+                            "${parsed.scheme}://${parsed.authority}"
+                        } else baseUrl.trimEnd('/')
+                        "$origin$rel"
+                    }
+                }
+            } catch (_: Exception) {
+                null
+            }
+        }
 
     suspend fun downloadVideo(
         config: BridgeConfig,
@@ -2069,15 +2096,10 @@ class AlwaysOnAgentClient {
                                             json.optString("text",
                                                 json.optString("result", body))))))
                             val cleanBase = baseUrl.trimEnd('/')
-                            val tokenQuery = if (config.apiKey.isNotBlank()) "?token=${config.apiKey.trim()}" else ""
+                            // The reply is saved in the chat history: no token in its image links (2026-10-07).
+                            // MarkdownImage loads them with the token in a header.
                             if (text.contains("](/images/")) {
                                 text = text.replace("](/images/", "]($cleanBase/images/")
-                                if (tokenQuery.isNotEmpty()) {
-                                    text = text.replace(Regex("""(\($cleanBase/images/[^\s)]+\.(?:jpe?g|png|webp))""")) {
-                                        val matched = it.value
-                                        if (!matched.contains("token=")) "$matched$tokenQuery" else matched
-                                    }
-                                }
                             }
 
                             // Structured proposals from agent Phase 2 (supports multiple suggestions)
@@ -2239,7 +2261,7 @@ class AlwaysOnAgentClient {
                 history.takeLast(10).forEach { msg ->
                     put(JSONObject().apply {
                         put("role", msg.role)
-                        put("content", msg.content)
+                        put("content", MediaAuth.stripTokensInText(msg.content))   // old messages held ?token= links
                     })
                 }
                 put(JSONObject().apply {
@@ -2308,7 +2330,7 @@ class AlwaysOnAgentClient {
                 history.takeLast(10).forEach { msg ->
                     put(JSONObject().apply {
                         put("role", msg.role)
-                        put("content", msg.content)
+                        put("content", MediaAuth.stripTokensInText(msg.content))   // old messages held ?token= links
                     })
                 }
                 put(JSONObject().apply {

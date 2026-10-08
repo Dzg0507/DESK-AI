@@ -1,5 +1,6 @@
 package com.example.ui.dialogs
 
+import com.example.data.remote.MediaLinks
 import com.example.ui.components.SheetHeader
 import com.example.ui.components.SectionLabel
 import com.example.ui.components.EmptyState
@@ -948,23 +949,27 @@ fun VideoPlayerDialog(
                         // Open in External App (VLC / MX Player / System Gallery)
                         IconButton(
                             onClick = {
-                                try {
-                                    val streamUri = if (targetFile.exists() && targetFile.length() > 0) {
-                                        Uri.fromFile(targetFile)
-                                    } else {
-                                        Uri.parse(video.url)
-                                    }
-                                    val intent = Intent(Intent.ACTION_VIEW).apply {
-                                        setDataAndType(streamUri, "video/*")
-                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                    }
-                                    context.startActivity(Intent.createChooser(intent, "Play with"))
-                                } catch (e: Exception) {
-                                    // Fallback to browser
+                                // Another app can't send our token: it gets a signed, expiring link (2026-10-07)
+                                scope.launch {
+                                    val link = MediaLinks.shareable(video.url)
                                     try {
-                                        val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(video.url))
-                                        context.startActivity(browserIntent)
-                                    } catch (_: Exception) {}
+                                        val streamUri = if (targetFile.exists() && targetFile.length() > 0) {
+                                            Uri.fromFile(targetFile)
+                                        } else {
+                                            Uri.parse(link)
+                                        }
+                                        val intent = Intent(Intent.ACTION_VIEW).apply {
+                                            setDataAndType(streamUri, "video/*")
+                                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        }
+                                        context.startActivity(Intent.createChooser(intent, "Play with"))
+                                    } catch (e: Exception) {
+                                        // Fallback to browser
+                                        try {
+                                            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(link))
+                                            context.startActivity(browserIntent)
+                                        } catch (_: Exception) {}
+                                    }
                                 }
                             },
                             modifier = Modifier.size(32.dp)
@@ -980,14 +985,18 @@ fun VideoPlayerDialog(
                         // Share Link
                         IconButton(
                             onClick = {
-                                try {
-                                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                        type = "text/plain"
-                                        putExtra(Intent.EXTRA_SUBJECT, "AlwaysOnAgent Video: ${video.filename}")
-                                        putExtra(Intent.EXTRA_TEXT, video.url)
-                                    }
-                                    context.startActivity(Intent.createChooser(shareIntent, "Share Video Stream"))
-                                } catch (_: Exception) {}
+                                // A signed link that expires, never the token itself (2026-10-07)
+                                scope.launch {
+                                    val link = MediaLinks.shareable(video.url)
+                                    try {
+                                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                            type = "text/plain"
+                                            putExtra(Intent.EXTRA_SUBJECT, "AlwaysOnAgent Video: ${video.filename}")
+                                            putExtra(Intent.EXTRA_TEXT, link)
+                                        }
+                                        context.startActivity(Intent.createChooser(shareIntent, "Share Video Stream"))
+                                    } catch (_: Exception) {}
+                                }
                             },
                             modifier = Modifier.size(32.dp)
                         ) {

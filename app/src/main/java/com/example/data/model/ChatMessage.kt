@@ -30,7 +30,8 @@ data class ChatMessage(
     fun getAttachments(): List<MessageAttachment> = MessageAttachment.fromJson(attachmentsJson)
 
     /** The text the agent gets for this message in the history (a file-only message has no typed text). */
-    fun historyText(): String = content.ifBlank {
+    // Old replies (before 2026-10-07) can hold image links with ?token=: never send that back to the agent
+    fun historyText(): String = com.example.data.remote.MediaAuth.stripTokensInText(content).ifBlank {
         getAttachments().joinToString("\n") { "[attached: ${it.name}]" }
     }
 
