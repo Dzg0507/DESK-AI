@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-07 (DeskAI v2.8.1 / Build 56 shipped — Media URL security & signing isolation)
+**Last Updated:** 2026-10-08 (DeskAI v2.8.2 / Build 57 shipped — View only mode in Take over)
 
 ---
 
@@ -14,6 +14,12 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-08: DeskAI v2.8.2 (build 57), View only mode in Take over (by Antigravity session, at owner's request)
+
+- Pulled `Dzg0507/DESK-AI` `main` (`fb7f056`).
+- `TakeOverScreen.kt`: Added a "View only" checkbox mode to Take over, allowing the owner to watch real-time computer use runs without sending input or interrupting the active task.
+- `CommandPaletteDialog.kt` & `ChatScreen.kt`: Cleaned up action handlers and dialog interactions.
 
 ## Shipped 2026-10-07: DeskAI v2.8.1 (build 56), Media URL security & signing isolation (by Antigravity session, at owner's request)
 

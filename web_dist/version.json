@@ -1,7 +1,7 @@
 {
-  "versionCode": 56,
-  "versionName": "2.8.1",
-  "changelog": "Security: your server key no longer travels inside image and video links; shared video links now expire",
+  "versionCode": 57,
+  "versionName": "2.8.2",
+  "changelog": "Take over now includes a View only mode so you can watch live runs without interrupting them",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24361720
+  "fileSizeBytes": 24361715
 }
