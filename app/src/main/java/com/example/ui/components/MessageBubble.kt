@@ -1,5 +1,10 @@
 package com.example.ui.components
 
+import androidx.compose.ui.graphics.Brush
+import com.example.ui.theme.CardGradient
+import com.example.ui.theme.DeepNavy
+import com.example.ui.theme.NeonIndigo
+import com.example.ui.theme.DeskShapes
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -97,6 +102,11 @@ import com.example.ui.theme.Slate700
 import com.example.ui.theme.Slate800
 import com.example.ui.theme.Slate900
 
+private val UserBubbleShape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 18.dp, bottomEnd = 6.dp)
+private val AssistantBubbleShape = RoundedCornerShape(topStart = 6.dp, topEnd = 18.dp, bottomStart = 18.dp, bottomEnd = 18.dp)
+private val UserBubbleBrush = Brush.linearGradient(listOf(UserBubbleBackground, ElectricCyanGlow))
+private val AssistantBubbleBrush = CardGradient
+
 @Composable
 fun MessageBubble(
     message: ChatMessage,
@@ -138,7 +148,7 @@ fun MessageBubble(
                 modifier = Modifier
                     .size(32.dp)
                     .clip(CircleShape)
-                    .background(Slate800)
+                    .background(Brush.radialGradient(listOf(ElectricCyan.copy(alpha = 0.28f), Slate800)))
                     .border(1.dp, ElectricCyan.copy(alpha = 0.5f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
@@ -163,47 +173,35 @@ fun MessageBubble(
                     modifier = Modifier.padding(start = 2.dp, bottom = 4.dp)
                 ) {
                     Text(
-                        text = "AlwaysOnAgent v2.1",
+                        text = "AlwaysOnAgent",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = ElectricCyan
+                        color = ElectricCyan,
+                        letterSpacing = 0.3.sp
                     )
                     if (message.latencyMs != null && message.latencyMs > 0) {
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = "⚡ ${message.latencyMs}ms",
-                            fontSize = 10.sp,
+                            fontSize = 9.sp,
                             fontFamily = FontFamily.Monospace,
-                            color = EmeraldConnected
+                            color = EmeraldConnected,
+                            modifier = Modifier
+                                .clip(DeskShapes.pill)
+                                .background(EmeraldConnected.copy(alpha = 0.12f))
+                                .padding(horizontal = 6.dp, vertical = 1.dp)
                         )
                     }
                 }
             }
 
-            // Message Bubble Box
+            // Message Bubble Box (user: blue→sky gradient; assistant: slate card gradient; a small "tail" corner)
+            val bubbleShape = if (isUser) UserBubbleShape else AssistantBubbleShape
             Box(
                 modifier = Modifier
-                    .clip(
-                        RoundedCornerShape(
-                            topStart = 16.dp,
-                            topEnd = 16.dp,
-                            bottomStart = if (isUser) 16.dp else 4.dp,
-                            bottomEnd = if (isUser) 4.dp else 16.dp
-                        )
-                    )
-                    .background(
-                        if (isUser) UserBubbleBackground else AssistantBubbleBackground
-                    )
-                    .border(
-                        1.dp,
-                        if (isUser) Blue500 else Slate700,
-                        RoundedCornerShape(
-                            topStart = 16.dp,
-                            topEnd = 16.dp,
-                            bottomStart = if (isUser) 16.dp else 4.dp,
-                            bottomEnd = if (isUser) 4.dp else 16.dp
-                        )
-                    )
+                    .clip(bubbleShape)
+                    .background(if (isUser) UserBubbleBrush else AssistantBubbleBrush)
+                    .border(1.dp, if (isUser) Blue500.copy(alpha = 0.7f) else Slate700, bubbleShape)
                     .clickable { showActions = !showActions }
                     .padding(horizontal = 14.dp, vertical = 10.dp)
             ) {
@@ -313,9 +311,10 @@ fun MessageBubble(
                 Row(
                     modifier = Modifier
                         .padding(top = 4.dp)
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(DeskShapes.pill)
                         .background(Slate800)
-                        .padding(horizontal = 4.dp, vertical = 2.dp),
+                        .border(1.dp, Slate700, DeskShapes.pill)
+                        .padding(horizontal = 6.dp, vertical = 2.dp),
                     horizontalArrangement = Arrangement.spacedBy(2.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -405,10 +404,10 @@ fun ProposalCard(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(Slate900)
-            .border(1.dp, if (isAddProject) ElectricCyan else ElectricCyan.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
-            .padding(10.dp)
+            .clip(DeskShapes.card)
+            .background(Brush.verticalGradient(listOf(Slate900, DeepNavy)))
+            .border(1.dp, if (isAddProject) ElectricCyan else ElectricCyan.copy(alpha = 0.4f), DeskShapes.card)
+            .padding(12.dp)
     ) {
         Column {
             Row(
@@ -507,10 +506,10 @@ fun ProposalCard(
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(if (isAddProject) ElectricCyanGlow else ElectricCyanGlow)
+                                .clip(DeskShapes.chip)
+                                .background(Brush.horizontalGradient(listOf(ElectricCyanGlow, NeonIndigo)))
                                 .clickable { onRun() }
-                                .padding(vertical = 6.dp),
+                                .padding(vertical = 8.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -572,10 +571,10 @@ fun QuestionChoicesCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(Slate900)
-            .border(1.dp, Slate700, RoundedCornerShape(10.dp))
-            .padding(10.dp),
+            .clip(DeskShapes.card)
+            .background(Brush.verticalGradient(listOf(Slate900, DeepNavy)))
+            .border(1.dp, if (isAnswered) EmeraldConnected.copy(alpha = 0.4f) else ElectricCyan.copy(alpha = 0.4f), DeskShapes.card)
+            .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         Row(
@@ -591,12 +590,7 @@ fun QuestionChoicesCard(
                 letterSpacing = 0.5.sp
             )
             if (isAnswered) {
-                Text(
-                    text = "Answered ✓",
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = EmeraldConnected
-                )
+                StatusPill(text = "Answered", color = EmeraldConnected)
             }
         }
 
@@ -616,7 +610,7 @@ fun QuestionChoicesCard(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(DeskShapes.control)
                         .background(
                             when {
                                 isSelected -> EmeraldConnected.copy(alpha = 0.25f)
@@ -631,7 +625,7 @@ fun QuestionChoicesCard(
                                 isAnswered -> Slate700
                                 else -> ElectricCyan.copy(alpha = 0.6f)
                             },
-                            RoundedCornerShape(8.dp)
+                            DeskShapes.control
                         )
                         .clickable(enabled = !isAnswered) {
                             onAnswer(option)
@@ -666,9 +660,9 @@ fun QuestionChoicesCard(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(DeskShapes.control)
                         .background(if (isOtherSelected) EmeraldConnected.copy(alpha = 0.25f) else Slate800)
-                        .border(1.dp, if (isOtherSelected) EmeraldConnected else Slate600, RoundedCornerShape(8.dp))
+                        .border(1.dp, if (isOtherSelected) EmeraldConnected else Slate600, DeskShapes.control)
                         .clickable(enabled = !isAnswered) {
                             onFocusOther()
                         }

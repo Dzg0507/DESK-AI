@@ -1,5 +1,10 @@
 package com.example.ui.components
 
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.border
+import androidx.compose.runtime.remember
+import com.example.ui.theme.DeepNavy
+import com.example.ui.theme.DeskShapes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -63,7 +68,7 @@ fun SessionDrawerContent(
         modifier = modifier
             .fillMaxHeight()
             .width(300.dp)
-            .background(Slate900)
+            .background(Brush.verticalGradient(listOf(Slate900, DeepNavy)))
             .padding(16.dp)
     ) {
         // App / Brand Header
@@ -74,8 +79,8 @@ fun SessionDrawerContent(
             Box(
                 modifier = Modifier
                     .size(36.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(ElectricCyanGlow),
+                    .clip(DeskShapes.control)
+                    .background(Brush.linearGradient(listOf(ElectricCyan, NeonIndigo))),
                 contentAlignment = Alignment.Center
             ) {
                 Text(text = "⚡", fontSize = 18.sp)
@@ -89,7 +94,7 @@ fun SessionDrawerContent(
                     color = Color.White
                 )
                 Text(
-                    text = "DESKTOP BRIDGE v2.1",
+                    text = "DESKTOP BRIDGE",
                     fontSize = 10.sp,
                     color = ElectricCyan,
                     fontFamily = FontFamily.Monospace,
@@ -102,8 +107,9 @@ fun SessionDrawerContent(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(10.dp))
-                .background(Slate800)
+                .clip(DeskShapes.control)
+                .background(Brush.horizontalGradient(listOf(ElectricCyan.copy(alpha = 0.18f), NeonIndigo.copy(alpha = 0.12f))))
+                .border(1.dp, ElectricCyan.copy(alpha = 0.35f), DeskShapes.control)
                 .clickable { onNewSession() }
                 .padding(vertical = 10.dp, horizontal = 12.dp)
         ) {
@@ -126,12 +132,10 @@ fun SessionDrawerContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(
-            text = "CONVERSATIONS",
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
+        SectionLabel(
+            text = "Conversations",
+            count = sessions.size,
             color = Slate500,
-            letterSpacing = 0.5.sp,
             modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
         )
 
@@ -142,13 +146,19 @@ fun SessionDrawerContent(
         ) {
             items(sessions) { session ->
                 val isActive = session.id == activeSessionId
-                val timeStr = SimpleDateFormat("MMM d", Locale.getDefault()).format(Date(session.updatedAt))
+                val timeStr = remember(session.updatedAt) {
+                    SimpleDateFormat("MMM d", Locale.getDefault()).format(Date(session.updatedAt))
+                }
 
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(if (isActive) Slate800 else Color.Transparent)
+                        .clip(DeskShapes.control)
+                        .background(
+                            if (isActive) Brush.horizontalGradient(listOf(ElectricCyan.copy(alpha = 0.14f), Slate800))
+                            else Brush.horizontalGradient(listOf(Color.Transparent, Color.Transparent))
+                        )
+                        .border(1.dp, if (isActive) ElectricCyan.copy(alpha = 0.30f) else Color.Transparent, DeskShapes.control)
                         .clickable { onSelectSession(session) }
                         .padding(horizontal = 10.dp, vertical = 8.dp)
                 ) {
@@ -174,7 +184,8 @@ fun SessionDrawerContent(
                                     fontSize = 13.sp,
                                     color = if (isActive) Color.White else Slate300,
                                     fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal,
-                                    maxLines = 1
+                                    maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                                 )
                                 Text(
                                     text = timeStr,
@@ -207,8 +218,9 @@ fun SessionDrawerContent(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(8.dp))
+                .clip(DeskShapes.control)
                 .background(SlateDarkSurface)
+                .border(1.dp, Slate800, DeskShapes.control)
                 .padding(10.dp)
         ) {
             Column {

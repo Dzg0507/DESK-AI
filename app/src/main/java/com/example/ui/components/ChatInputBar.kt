@@ -1,5 +1,8 @@
 package com.example.ui.components
 
+import androidx.compose.ui.graphics.Brush
+import com.example.ui.theme.DeepNavy
+import com.example.ui.theme.ElectricCyanGlow
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
@@ -122,7 +125,7 @@ fun ChatInputBar(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(Slate900)
+            .background(Brush.verticalGradient(listOf(Slate900, DeepNavy)))
             .border(1.dp, Slate800)
             // Above the keyboard when it's open, above the navigation bar when it isn't
             .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime))
@@ -286,7 +289,8 @@ fun ChatInputBar(
                         .size(40.dp)
                         .clip(CircleShape)
                         .background(
-                            if (canSend) UserBubbleBackground else Slate800
+                            if (canSend) Brush.linearGradient(listOf(UserBubbleBackground, ElectricCyanGlow))
+                            else Brush.linearGradient(listOf(Slate800, Slate800))
                         )
                 ) {
                     Icon(

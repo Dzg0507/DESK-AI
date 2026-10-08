@@ -1,5 +1,10 @@
 package com.example.ui.screens
 
+import androidx.compose.ui.graphics.Brush
+import com.example.ui.theme.ChatBackground
+import com.example.ui.theme.EmeraldConnected
+import com.example.ui.theme.AmberPending
+import com.example.ui.components.EmptyState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -229,12 +234,21 @@ fun ChatScreen(
                 TopAppBar(
                     title = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
+                            // Connection dot: emerald when the bridge is up, rose when it isn't
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(if (isConnected) EmeraldConnected else RoseError)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = currentSession?.title ?: "AlwaysOnAgent",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White,
-                                maxLines = 1
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                             )
                         }
                     },
@@ -313,20 +327,25 @@ fun ChatScreen(
                     .padding(innerPadding)
                     // The Scaffold already padded for the system bars; the input bar adds only the keyboard's extra height
                     .consumeWindowInsets(innerPadding)
-                    .background(Color(0xFF080B11))
+                    .background(Brush.verticalGradient(listOf(ChatBackground, SlateDarkBackground)))
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
                     // A computer task is waiting for the owner (also when the alert was missed)
                     if (needsYou.isNotEmpty()) {
                         androidx.compose.foundation.layout.Row(
                             modifier = Modifier.fillMaxWidth()
-                                .background(Amber900)
+                                .background(Brush.horizontalGradient(listOf(Amber900, Amber900.copy(alpha = 0.75f))))
                                 .clickable { showNeedsYou = true }
-                                .padding(horizontal = 14.dp, vertical = 10.dp)
+                                .padding(horizontal = 14.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text("⚠️ Needs you (${needsYou.size}): ${needsYou.first().question.take(70)}",
                                  color = Amber200, fontSize = 13.sp,
-                                 fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, maxLines = 1)
+                                 fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, maxLines = 1,
+                                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                 modifier = Modifier.weight(1f))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Open ›", color = AmberPending, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                     // AlwaysOnAgent Live Status & Pulse Bar
@@ -441,6 +460,17 @@ fun ChatScreen(
                                     authToken = config.apiKey
                                 )
                             }
+                        }
+
+                        // A brand-new conversation: a friendly prompt instead of a blank screen
+                        if (messages.isEmpty() && !hasEarlierMessages) {
+                            EmptyState(
+                                icon = Icons.Default.AddComment,
+                                title = "Ask AlwaysOnAgent anything",
+                                message = "Chat, dispatch a mission, or type / for commands.",
+                                accent = ElectricCyan,
+                                modifier = Modifier.align(Alignment.Center)
+                            )
                         }
 
                         // Scroll-to-bottom FAB

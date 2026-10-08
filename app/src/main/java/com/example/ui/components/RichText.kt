@@ -31,6 +31,11 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.theme.Slate200
+import com.example.ui.theme.Slate300
+import com.example.ui.theme.Slate400
+import com.example.ui.theme.Slate500
+import com.example.ui.theme.Slate700
 
 /*
  * Rich text for agent output and host logs: a tiny, dependency-free parser plus Compose renderers.
@@ -286,11 +291,6 @@ private val Cyan = com.example.ui.theme.ElectricCyan
 private val Emerald = com.example.ui.theme.EmeraldConnected
 private val Rose = com.example.ui.theme.RoseError
 private val Amber = com.example.ui.theme.AmberPending
-private val Slate200 = com.example.ui.theme.Slate200
-private val Slate300 = com.example.ui.theme.Slate300
-private val Slate400 = com.example.ui.theme.Slate400
-private val Slate500 = com.example.ui.theme.Slate500
-private val Slate700 = com.example.ui.theme.Slate700
 
 private val TagPalette = listOf(
     com.example.ui.theme.ElectricCyan, com.example.ui.theme.NeonPurple, com.example.ui.theme.EmeraldConnected,

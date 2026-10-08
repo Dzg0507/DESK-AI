@@ -1,5 +1,9 @@
 package com.example.ui.components
 
+import androidx.compose.ui.graphics.Brush
+import com.example.ui.theme.DeepNavy
+import com.example.ui.theme.SheetBorderGradient
+import com.example.ui.theme.DeskShapes
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -110,9 +114,9 @@ fun AgentStatusBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
-            .background(Slate900)
-            .border(1.dp, Slate800, RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
+            .clip(RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp))
+            .background(Brush.verticalGradient(listOf(DeepNavy, Slate900)))
+            .border(1.dp, SheetBorderGradient, RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp))
             .padding(horizontal = 14.dp, vertical = 10.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -171,9 +175,9 @@ fun AgentStatusBar(
                     // Daemon Wake / Standby Toggle Button
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(DeskShapes.control)
                             .background(if (isPaused) ElectricCyan.copy(alpha = 0.15f) else Slate800)
-                            .border(1.dp, if (isPaused) ElectricCyan else Slate700, RoundedCornerShape(8.dp))
+                            .border(1.dp, if (isPaused) ElectricCyan else Slate700, DeskShapes.control)
                             .clickable { onToggleDaemon() }
                             .padding(horizontal = 8.dp, vertical = 4.dp),
                         contentAlignment = Alignment.Center
@@ -317,9 +321,9 @@ fun AgentStatusBar(
 fun MetricChip(label: String, value: String, color: Color) {
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(6.dp))
+            .clip(DeskShapes.pill)
             .background(color.copy(alpha = 0.12f))
-            .border(0.8.dp, color.copy(alpha = 0.35f), RoundedCornerShape(6.dp))
+            .border(0.8.dp, color.copy(alpha = 0.35f), DeskShapes.pill)
             .padding(horizontal = 6.dp, vertical = 2.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {

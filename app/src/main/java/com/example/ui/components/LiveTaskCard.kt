@@ -1,5 +1,10 @@
 package com.example.ui.components
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.ui.graphics.Brush
+import com.example.ui.theme.DeskShapes
+import com.example.ui.theme.Slate300
+import com.example.ui.theme.NeonIndigo
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -154,9 +159,10 @@ fun LiveTaskCard(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(Slate900)
-            .border(1.dp, phaseColor.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+            .clip(DeskShapes.card)
+            .background(Brush.verticalGradient(listOf(phaseColor.copy(alpha = 0.07f), Slate900)))
+            .border(1.dp, phaseColor.copy(alpha = 0.5f), DeskShapes.card)
+            .animateContentSize()
             .padding(12.dp)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -190,35 +196,26 @@ fun LiveTaskCard(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "TASK #${taskId.take(12)}",
-                        fontSize = 12.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White,
+                        color = Slate300,
+                        letterSpacing = 0.5.sp,
                         fontFamily = FontFamily.Monospace
                     )
                 }
 
                 // Phase Badge
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(phaseColor.copy(alpha = 0.2f))
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        text = when {
-                            isNotFound -> "NOT FOUND (404)"
-                            isCancelled -> "CANCELLED"
-                            isCompleted -> "COMPLETED"
-                            isInProgress -> "RUNNING"
-                            isFailed -> "FAILED"
-                            else -> "WAITING"
-                        },
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = phaseColor,
-                        fontFamily = FontFamily.Monospace
-                    )
-                }
+                StatusPill(
+                    text = when {
+                        isNotFound -> "Not found (404)"
+                        isCancelled -> "Cancelled"
+                        isCompleted -> "Completed"
+                        isInProgress -> "Running"
+                        isFailed -> "Failed"
+                        else -> "Waiting"
+                    },
+                    color = phaseColor
+                )
             }
 
             // Title or Prompt
@@ -419,9 +416,9 @@ fun LiveTaskCard(
 
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(6.dp))
+                                .clip(DeskShapes.chip)
                                 .background(chipBg)
-                                .border(1.dp, chipBorder, RoundedCornerShape(6.dp))
+                                .border(1.dp, chipBorder, DeskShapes.chip)
                                 .clickable {
                                     if (act.action == "stream" && act.url != null && onPlayVideo != null) {
                                         onPlayVideo(act.url, taskResult?.filename?.ifBlank { "Stream" } ?: "Stream")
@@ -465,9 +462,9 @@ fun LiveTaskCard(
                     if ((isInProgress || isBacklog) && onCancelTask != null) {
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(Slate700)
-                                .border(1.dp, RoseError.copy(alpha = 0.6f), RoundedCornerShape(6.dp))
+                                .clip(DeskShapes.chip)
+                                .background(RoseError.copy(alpha = 0.12f))
+                                .border(1.dp, RoseError.copy(alpha = 0.6f), DeskShapes.chip)
                                 .clickable(enabled = !isCancelling) {
                                     scope.launch {
                                         isCancelling = true
@@ -506,8 +503,8 @@ fun LiveTaskCard(
                     if (isCompleted && result != null && result.url.isNotBlank() && onPlayVideo != null) {
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(ElectricCyanGlow)
+                                .clip(DeskShapes.chip)
+                                .background(Brush.horizontalGradient(listOf(ElectricCyanGlow, NeonIndigo)))
                                 .clickable {
                                     onPlayVideo(result.url, result.filename.ifBlank { "Rendered Video" })
                                 }
@@ -535,9 +532,9 @@ fun LiveTaskCard(
                     if (isFailed && onRetryTask != null) {
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(Slate800)
-                                .border(1.dp, ElectricCyan, RoundedCornerShape(6.dp))
+                                .clip(DeskShapes.chip)
+                                .background(ElectricCyan.copy(alpha = 0.10f))
+                                .border(1.dp, ElectricCyan, DeskShapes.chip)
                                 .clickable {
                                     scope.launch {
                                         val res = onRetryTask(taskId)

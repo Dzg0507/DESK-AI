@@ -77,6 +77,8 @@ val SlateDarkBackground = Color(0xFF0B0F19)
 val SlateDarkSurface = Color(0xFF131B2E)
 val SlateDarkSurfaceVariant = Slate800
 val SlateDarkBorder = Color(0xFF2E3A52)
+/** Behind the chat messages: a touch darker than the app background. */
+val ChatBackground = Color(0xFF080B11)
 
 /** Sheet / dialog body, cards inside it, and their outlines. */
 val SheetBackground = Slate900
