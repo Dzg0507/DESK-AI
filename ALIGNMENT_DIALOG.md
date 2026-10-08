@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-07 (DeskAI v2.7.1 / Build 54 shipped — Readable mission results & maintenance logs)
+**Last Updated:** 2026-10-07 (DeskAI v2.8.0 / Build 55 shipped — App-wide visual polish & design system)
 
 ---
 
@@ -14,6 +14,17 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-07: DeskAI v2.8.0 (build 55), App-wide visual polish & design system (by Antigravity session, at owner's request)
+
+- Applied `scripts/deskai_patches/beautify-all.patch` (7-commit series).
+- `ui/theme` & `ui/components/DeskUi.kt`: Added shared color palette tokens, typography scale, spacing and shape tokens, plus unified card/sheet surfaces (`deskSheet`, `deskCard`).
+- Visual styling overhaul across all screens:
+  - Chat: gradient message bubbles, live connection status indicator in top bar, refined empty chat state.
+  - Missions: status-colored left border accent, status pills, readable short results, timestamp and source chips.
+  - Task Details: clean structured layout with status headers and rich output.
+  - Maintenance: colored log levels, tag pills, interactive test push status with colored transition.
+  - Schedules, Memory, Media Hub tabs, Needs-you, AgentWork, Repos, Connection Hub, Updater, Command Deck, image viewer, and canvas all updated with consistent theme tokens and elevated surfaces.
 
 ## Shipped 2026-10-07: DeskAI v2.7.1 (build 54), Readable mission results & maintenance logs (by Antigravity session, at owner's request)
 

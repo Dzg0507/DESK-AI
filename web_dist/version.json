@@ -1,7 +1,7 @@
 {
-  "versionCode": 54,
-  "versionName": "2.7.1",
-  "changelog": "Mission results and maintenance logs are now readable and colorful",
+  "versionCode": 55,
+  "versionName": "2.8.0",
+  "changelog": "A fresh coat of paint across the whole app: clearer cards, colored status pills, nicer empty states",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
   "fileSizeBytes": 24345324
 }
