@@ -49,6 +49,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.data.model.SystemLogEntry
+import com.example.ui.components.LogLevel
+import com.example.ui.components.logLineString
+import com.example.ui.components.parseLogLine
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldConnected
 import com.example.ui.theme.RoseError
@@ -70,6 +73,12 @@ fun MaintenanceSheet(
     var actionStatus by remember { mutableStateOf<String?>(null) }
     var actionSuccess by remember { mutableStateOf(true) }
     var isOperating by remember { mutableStateOf(false) }
+    val styledLogs = remember(logs) {
+        logs.map { entry ->
+            val parsed = parseLogLine(entry.timestamp, entry.level, entry.message)
+            parsed.level to logLineString(parsed)
+        }
+    }
 
     fun refreshLogs() {
         scope.launch {
@@ -319,39 +328,28 @@ fun MaintenanceSheet(
                     } else {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                            verticalArrangement = Arrangement.spacedBy(2.dp)
                         ) {
-                            items(logs) { entry ->
-                                val levelColor = when (entry.level.uppercase()) {
-                                    "ERROR" -> RoseError
-                                    "WARN", "WARNING" -> Color(0xFFF59E0B)
-                                    else -> EmeraldConnected
+                            // Parsed and styled once per refresh (not per frame): time dimmed, level colored,
+                            // [Push]/[media] tags as colored pills, errors and warnings tinted (ui/components/RichText.kt)
+                            items(styledLogs) { (level, line) ->
+                                val rowTint = when (level) {
+                                    LogLevel.ERROR -> RoseError.copy(alpha = 0.08f)
+                                    LogLevel.WARNING -> Color(0xFFF59E0B).copy(alpha = 0.06f)
+                                    else -> Color.Transparent
                                 }
-                                Row(modifier = Modifier.fillMaxWidth()) {
-                                    if (entry.timestamp.isNotBlank()) {
-                                        Text(
-                                            text = entry.timestamp.takeLast(12),
-                                            fontSize = 9.sp,
-                                            fontFamily = FontFamily.Monospace,
-                                            color = Color(0xFF64748B)
-                                        )
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                    }
-                                    Text(
-                                        text = "[${entry.level.uppercase()}]",
-                                        fontSize = 9.sp,
-                                        fontFamily = FontFamily.Monospace,
-                                        fontWeight = FontWeight.Bold,
-                                        color = levelColor
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = entry.message,
-                                        fontSize = 10.sp,
-                                        fontFamily = FontFamily.Monospace,
-                                        color = Color(0xFFCBD5E1)
-                                    )
-                                }
+                                Text(
+                                    text = line,
+                                    fontSize = 10.sp,
+                                    lineHeight = 14.sp,
+                                    fontFamily = FontFamily.Monospace,
+                                    color = Color(0xFFCBD5E1),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .background(rowTint)
+                                        .padding(horizontal = 4.dp, vertical = 1.dp)
+                                )
                             }
                         }
                     }
