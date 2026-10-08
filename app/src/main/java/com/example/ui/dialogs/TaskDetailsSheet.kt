@@ -38,7 +38,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -48,6 +50,8 @@ import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.example.data.model.AgentTaskItem
 import com.example.data.model.VideoItem
+import com.example.ui.components.RichText
+import com.example.ui.theme.AmberPending
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldConnected
 import com.example.ui.theme.RoseError
@@ -76,6 +80,8 @@ fun TaskDetailsSheet(
     var current by remember(task.id) { mutableStateOf(task) }
     var playing by remember { mutableStateOf<VideoItem?>(null) }
     var note by remember { mutableStateOf<String?>(null) }
+    var showRaw by remember { mutableStateOf(false) }
+    val clipboard = LocalClipboardManager.current
 
     // The list may hold a slimmer copy (the live stream's); fetch the full task once
     LaunchedEffect(task.id) {
@@ -188,14 +194,57 @@ fun TaskDetailsSheet(
                     }
                     val summary = t.outputSummary?.trim()
                     if (!summary.isNullOrBlank()) {
-                        DetailSection(if (t.needsInput) "NEEDS YOUR INPUT" else "RESULT") {
-                            SelectionContainer { DetailText(summary) }
+                        DetailSection(
+                            if (t.needsInput) "NEEDS YOUR INPUT" else "RESULT",
+                            accent = if (t.needsInput) AmberPending else Color(0xFF94A3B8),
+                            trailing = {
+                                SmallChip("Copy") {
+                                    clipboard.setText(AnnotatedString(summary))
+                                    note = "📋 Result copied"
+                                }
+                                Spacer(modifier = Modifier.width(6.dp))
+                                SmallChip(if (showRaw) "Pretty" else "Raw", active = showRaw) { showRaw = !showRaw }
+                            }
+                        ) {
+                            // Raw: exactly what the server sent, selectable. Pretty: headings, bullets, file chips,
+                            // diffstat colors and branch badges (ui/components/RichText.kt). Both allow long-press copy.
+                            SelectionContainer {
+                                if (showRaw) {
+                                    Text(summary, fontSize = 11.sp, color = Color(0xFFCBD5E1), lineHeight = 16.sp,
+                                        fontFamily = FontFamily.Monospace)
+                                } else {
+                                    RichText(summary)
+                                }
+                            }
                         }
                     }
                     val error = t.lastError?.trim()
                     if (!error.isNullOrBlank() && error != summary) {
-                        DetailSection("ERROR", accent = RoseError) {
-                            SelectionContainer { DetailText(error, color = Color(0xFFFCA5A5)) }
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(RoseError.copy(alpha = 0.08f))
+                                .border(1.dp, RoseError.copy(alpha = 0.45f), RoundedCornerShape(10.dp))
+                                .padding(10.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                Text("⚠ ERROR", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = RoseError,
+                                    letterSpacing = 0.5.sp, modifier = Modifier.weight(1f))
+                                SmallChip("Copy", color = RoseError) {
+                                    clipboard.setText(AnnotatedString(error))
+                                    note = "📋 Error copied"
+                                }
+                            }
+                            SelectionContainer {
+                                if (showRaw) {
+                                    Text(error, fontSize = 11.sp, color = Color(0xFFFCA5A5), lineHeight = 16.sp,
+                                        fontFamily = FontFamily.Monospace)
+                                } else {
+                                    RichText(error, baseColor = Color(0xFFFCA5A5))
+                                }
+                            }
                         }
                     }
                     note?.let { Text(it, fontSize = 11.sp, color = Color(0xFF7DD3FC)) }
@@ -283,7 +332,12 @@ private fun TaskVideoPreview(thumbUrl: String?, authToken: String, playable: Boo
 }
 
 @Composable
-private fun DetailSection(label: String, accent: Color = Color(0xFF94A3B8), content: @Composable () -> Unit) {
+private fun DetailSection(
+    label: String,
+    accent: Color = Color(0xFF94A3B8),
+    trailing: (@Composable () -> Unit)? = null,
+    content: @Composable () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -293,8 +347,30 @@ private fun DetailSection(label: String, accent: Color = Color(0xFF94A3B8), cont
             .padding(10.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        Text(label, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = accent, letterSpacing = 0.5.sp)
+        if (trailing == null) {
+            Text(label, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = accent, letterSpacing = 0.5.sp)
+        } else {
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(label, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = accent, letterSpacing = 0.5.sp,
+                    modifier = Modifier.weight(1f))
+                trailing()
+            }
+        }
         content()
+    }
+}
+
+@Composable
+private fun SmallChip(label: String, color: Color = ElectricCyan, active: Boolean = false, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(color.copy(alpha = if (active) 0.25f else 0.10f))
+            .border(1.dp, color.copy(alpha = 0.4f), RoundedCornerShape(6.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 8.dp, vertical = 2.dp)
+    ) {
+        Text(label, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, color = color)
     }
 }
 
