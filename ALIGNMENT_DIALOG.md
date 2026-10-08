@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-07 (DeskAI v2.7.0 / Build 53 shipped — Mission details & video playback)
+**Last Updated:** 2026-10-07 (DeskAI v2.7.1 / Build 54 shipped — Readable mission results & maintenance logs)
 
 ---
 
@@ -14,6 +14,14 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-07: DeskAI v2.7.1 (build 54), Readable mission results & maintenance logs (by Antigravity session, at owner's request)
+
+- Applied `scripts/deskai_patches/beautify.patch`.
+- `RichText.kt`: Lightweight dependency-free parser and Compose renderer for agent output (headings, bullets, bold, code pills, clickable web links, file path chips, tag pills, diffstat green/red, git unpushed/pushed status badges).
+- `TaskDetailsSheet.kt`: Mission results displayed with RichText formatting along with Copy and Raw/Pretty view toggle chips; error output highlighted in rose-tinted container with dedicated Copy chip.
+- `MaintenanceSheet.kt`: Server logs parsed and styled per refresh (dimmed timestamps, colored log levels ERR/WARN/INFO/DBG, tag pills, tinted rows for errors/warnings).
+- Added `RichTextParserTest` JVM unit tests.
 
 ## Shipped 2026-10-07: DeskAI v2.7.0 (build 53), Mission details & video thumbnail playback (by Antigravity session, at owner's request)
 
