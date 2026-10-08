@@ -105,11 +105,14 @@ fun TakeOverScreen(
     viewOnly: Boolean = false,
     onClose: () -> Unit,
     call: suspend (action: String, body: JSONObject?) -> Result<JSONObject>,
-    fetchFrame: suspend (machine: String) -> ByteArray?
+    fetchFrame: suspend (machine: String) -> ByteArray?,
+    fetchActivity: suspend (machine: String) -> JSONObject? = { null }
 ) {
     val scope = rememberCoroutineScope()
     var active by remember { mutableStateOf(false) }             // in control (never in view only)
     var watching by remember { mutableStateOf(false) }           // view only: showing the picture
+    // What a computer-use run is doing (the banner): goal, step, plain words; read-only, every 1.5 s
+    var activity by remember { mutableStateOf<JSONObject?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
     var note by remember { mutableStateOf("") }
     var frame by remember { mutableStateOf<ImageBitmap?>(null) }
@@ -122,6 +125,13 @@ fun TakeOverScreen(
     var closing by remember { mutableStateOf(false) }
     // Which computer: the Mini, or the owner's laptop (a request is always the Mini's)
     var machine by remember { mutableStateOf("mini") }
+    LaunchedEffect(machine) {
+        activity = null
+        while (true) {
+            activity = fetchActivity(machine)
+            delay(1500)
+        }
+    }
     // Typing: the text bar shows only after ⌨, gets the focus (so the keyboard opens with it), and goes away when
     // the keyboard is closed
     var typing by remember { mutableStateOf(false) }
@@ -236,6 +246,33 @@ fun TakeOverScreen(
                                    modifier = Modifier.size(42.dp).clip(CircleShape).background(Slate700)) {
                             Icon(Icons.Default.Check, contentDescription = if (viewOnly) "Close" else "Hand back",
                                  tint = Color.White)
+                        }
+                    }
+                }
+
+                // The task banner: what the computer-use run is doing right now (2026-10-08, the owner's ask)
+                activity?.let { a ->
+                    val goal = a.optString("goal").takeIf { it.isNotBlank() && it != "null" }
+                    val doing = a.optString("doing").takeIf { it.isNotBlank() && it != "null" }
+                    val step = a.opt("step")?.toString()?.takeIf { it.isNotBlank() && it != "null" }
+                    val running = a.optBoolean("running", false)
+                    if (goal != null || running) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 4.dp)
+                                .clip(RoundedCornerShape(10.dp)).background(Slate800)
+                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = (if (running) "🤖 " else "✓ ") + (goal ?: "A task"),
+                                color = if (running) AmberPending else Slate100,
+                                fontWeight = FontWeight.SemiBold, fontSize = 13.sp, maxLines = 2
+                            )
+                            if (doing != null) {
+                                Text(
+                                    text = (if (running && step != null) "Step $step · " else "") + doing,
+                                    color = Slate300, fontSize = 12.sp, maxLines = 2
+                                )
+                            }
                         }
                     }
                 }

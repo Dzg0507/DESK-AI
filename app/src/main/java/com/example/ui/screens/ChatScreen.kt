@@ -706,7 +706,8 @@ fun ChatScreen(
             fetchFrame = { machine ->
                 val view = if (takeOverWatching) "&view=1" else ""
                 viewModel.requestScreenshot("/api/computer/takeover/frame?machine=$machine$view")
-            }
+            },
+            fetchActivity = { machine -> viewModel.takeoverActivity(machine) }
         )
     }
 
