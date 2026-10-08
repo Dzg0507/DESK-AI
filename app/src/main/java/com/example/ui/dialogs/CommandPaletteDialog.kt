@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.TouchApp
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CleaningServices
@@ -110,6 +111,8 @@ fun CommandPaletteDialog(
     onOpenMaintenance: () -> Unit = {},
     onOpenSchedules: () -> Unit = {},
     onOpenTakeOver: () -> Unit = {},
+    takeOverViewOnly: Boolean = false,
+    onTakeOverViewOnlyChange: (Boolean) -> Unit = {},
     onOpenRepos: () -> Unit = {},
     onSelectCommandTemplate: (String) -> Unit,
     onExecuteCommand: (String) -> Unit,
@@ -569,8 +572,9 @@ fun CommandPaletteDialog(
                                     // 8. Take over: the Mini's screen on the phone, taps replayed there
                                     WorkstationCard(
                                         title = "Take over",
-                                        subtitle = "Use the Mini's screen from your phone",
-                                        icon = Icons.Default.TouchApp,
+                                        subtitle = if (takeOverViewOnly) "Watch the Mini's screen (view only)"
+                                                   else "Use the Mini's screen from your phone",
+                                        icon = if (takeOverViewOnly) Icons.Default.Visibility else Icons.Default.TouchApp,
                                         accentColor = AmberPending,
                                         modifier = Modifier.fillMaxWidth(),
                                         onClick = {
@@ -578,6 +582,19 @@ fun CommandPaletteDialog(
                                             onOpenTakeOver()
                                         }
                                     )
+                                    // View only: the picture without taking control, so a running task keeps going
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth()
+                                            .clickable { onTakeOverViewOnlyChange(!takeOverViewOnly) }
+                                            .padding(start = 4.dp, end = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        androidx.compose.material3.Checkbox(
+                                            checked = takeOverViewOnly,
+                                            onCheckedChange = { onTakeOverViewOnlyChange(it) }
+                                        )
+                                        Text("View only (watch without taking control)", color = Slate300, fontSize = 13.sp)
+                                    }
 
                                     // 9. Repos: GitHub repos like a file explorer; "Work on this" starts a job
                                     WorkstationCard(
