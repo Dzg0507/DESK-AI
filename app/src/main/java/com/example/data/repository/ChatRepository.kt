@@ -250,6 +250,9 @@ class ChatRepository(
     suspend fun takeover(action: String, body: org.json.JSONObject? = null): Result<org.json.JSONObject> =
         agentClient.takeoverCall(getActiveConfig(), action, body)
 
+    suspend fun takeoverActivity(machine: String): Result<org.json.JSONObject> =
+        agentClient.takeoverActivity(getActiveConfig(), machine)
+
     suspend fun github(method: String, path: String, body: org.json.JSONObject? = null,
                        idempotencyKey: String? = null): Result<org.json.JSONObject> =
         agentClient.githubCall(getActiveConfig(), method, path, body, idempotencyKey)

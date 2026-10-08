@@ -575,6 +575,9 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     suspend fun requestScreenshot(path: String): ByteArray? = repository.fetchBytes(path)
 
+    /** What a computer-use run is doing, for Take over's banner; null when it can't be read. */
+    suspend fun takeoverActivity(machine: String): org.json.JSONObject? = repository.takeoverActivity(machine).getOrNull()
+
     /** Take over: start, stop (hand back) or input (docs/API.md "Take over"). */
     suspend fun takeover(action: String, body: org.json.JSONObject? = null): Result<org.json.JSONObject> {
         val result = repository.takeover(action, body)

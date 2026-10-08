@@ -1128,6 +1128,10 @@ class AlwaysOnAgentClient {
     suspend fun takeoverCall(config: BridgeConfig, action: String, body: JSONObject? = null): Result<JSONObject> =
         scheduleCall(config, "POST", "/api/computer/takeover/$action", body)
 
+    /** What a computer-use run is doing, for the banner on Take over's screen (docs/API.md "Take over"). */
+    suspend fun takeoverActivity(config: BridgeConfig, machine: String): Result<JSONObject> =
+        scheduleCall(config, "GET", "/api/computer/takeover/activity?machine=$machine")
+
     /** The repo browser's calls (docs/API.md "Repos"): GET /api/github/... and POST /api/github/work. */
     suspend fun githubCall(config: BridgeConfig, method: String, path: String, body: JSONObject? = null,
                            idempotencyKey: String? = null): Result<JSONObject> =

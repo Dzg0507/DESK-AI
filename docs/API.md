@@ -382,6 +382,7 @@ input, stop) or `?machine=laptop` (status, frame). The laptop runs its own Take 
 | `GET /api/computer/takeover` | | `{"active": bool, "since", "request_id"}` |
 | `POST /api/computer/takeover/start` | `{"request_id": "…"}` or `{}` | `{"active": true, "request_id", "screen": [width, height]}`. `409` if that request already closed; `503` without the tool |
 | `GET /api/computer/takeover/frame` | | JPEG of the screen (at most 1280 wide, the pointer ringed in yellow), header `X-Screen: 1920x1080`. `409` until started. Ask about every 0.6 s while the screen is shown. `?view=1` (DeskAI's "View only" box): the picture without starting, so nobody takes control and a running task carries on; don't call `start`, `input` or `stop` then |
+| `GET /api/computer/takeover/activity` | `?machine=mini\|laptop` | What a computer-use run is doing, for the banner on Take over's screen (read-only, no control needed): `{"running": true, "goal", "step", "doing", "status"}`, or `{"running": false}` when nothing runs. A finished run shows for 2 minutes (`"running": false` with `status` and `doing`, e.g. "done: …"). Ask about every 1.5 s while the screen is shown |
 | `POST /api/computer/takeover/input` | one input, below | `{"status": "ok", "done"}`. `409` until started, `400` for an input that doesn't fit |
 | `POST /api/computer/takeover/stop` | `{"request_id": "…"}` or `{}` | `{"status": "ok", "active": false, "handed_back_to": "…" or null}` |
 
