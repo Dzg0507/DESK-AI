@@ -14,6 +14,7 @@ DeskAI repo at `docs/API.md`, updated whenever this one changes.
 | Errors | `401`: missing or wrong token. Otherwise `{"detail": "..."}` with a normal HTTP code. |
 | JSON | `snake_case`; timestamps are ISO 8601 in the server's local time |
 | CORS | none on purpose (it would let any website read the owner's memory). Native HTTP clients are unaffected. A request carrying a browser's `Origin` header needs the token even from the Mini itself, so a web page open in a browser there can't use the loopback trust (until 2026-10-04 chat, videos and images answered wildcard preflights). `tests/test_api_contract.py` checks that every route is in this file and every route here exists. |
+| Who started a task | optional `X-Task-Source: <name>` (up to 80 characters) on task-creating requests (`POST /api/tasks`, `/api/tasks/run`, `/api/trigger_media`, `/api/videos/{name}/publish`, `/api/agentwork/jobs`, `/api/github/work`) becomes the task's `source`. Hark sends `Hark` (through `scripts/mini_mcp.py`); without it each route names its DeskAI screen. |
 | Retries | send `Idempotency-Key: <uuid>` on task-creating requests: one UUID per user action, reused on every retry or failover. A repeat within 24 h returns the first `task_id` plus `"duplicate": true`. Accepted by `POST /api/tasks`, `/api/tasks/run`, `/api/trigger_media`, `/api/agentwork/jobs` and `/api/github/work`. |
 
 ## Chat
@@ -117,7 +118,10 @@ A **task object** (from `GET /api/tasks`, `GET /api/tasks/{id}`, and the stream'
 | `engine` | `auto`, `antigravity`, `cloud`, `ollama`, `media_pipeline` (TiktokVideos), `agentwork` |
 | `priority` | `low`, `medium`, `high`, `urgent` |
 | `actions` | contextual 1-tap action chips: `[{"label", "action": "stream"|"post"|"chat"|"none", "url"|"command", "variant": "primary"|"secondary"|"danger"}]`. e.g. "Preview diff", "🚀 Push live", "⚡ Apply update", "Discuss Blockers", "Post to TikTok" |
-| `created_at`, `started_at`, `completed_at`, `output_summary`, `last_error`, `exit_code`, `engine_used`, `retry_count`, `worker_pid`, `metadata` | as named; ignore any others |
+| `source` | who or what started it, in words: `DeskAI quick dispatch`, `DeskAI chat`, `DeskAI chat (/task)`, `DeskAI suggestion`, `DeskAI Video Hub`, `DeskAI AgentWork`, `DeskAI Repos`, `DeskAI`, `Hark`, `schedule #1 'Twice Daily'` (or `… (run now)`), or `unknown` for tasks older than 2026-10-07 that didn't record one |
+| `thumb_url` | `/api/tasks/{id}/thumb` for a task that made a video (a small JPEG, kept after the video is pruned), else `null` |
+| `video_filename`, `video_url`, `video_kept` | a video task's file, its stream (`/videos/{name}`, the same one the Video Hub plays; `null` once pruned) and whether it's still kept (`null` for tasks without a video). When `video_kept` is false, show the thumbnail with "video no longer kept" and no play button |
+| `created_at`, `started_at`, `completed_at`, `output_summary`, `last_error`, `exit_code`, `engine_used`, `retry_count`, `max_retries`, `worker_pid`, `metadata` | as named; ignore any others |
 
 `progress`:
 
@@ -159,8 +163,9 @@ Each task object includes a dynamic `actions` array of contextual 1-tap buttons:
 |---|---|---|
 | `GET /api/tasks?limit=50&phase=in_progress` | | array, newest first |
 | `GET /api/tasks/{id}` | | one task, or 404. Cheap: polling every 2 s is fine (the fallback when `/api/events` is down). |
+| `GET /api/tasks/{id}/thumb` | | the task's video thumbnail (JPEG, ~240 px wide, under 50 KB), made on the first ask while the video is still kept; **404** when the task has none. Load it with the token in a header. |
 | `GET /api/events` | | **Live task events** (Server-Sent Events; see below). |
-| `POST /api/tasks` | `{"title", "prompt", "priority": "medium", "engine": "auto", "mode": "accept-edits", "timeout_seconds": 300}` | `{"status", "task_id", "woke_daemon", "message"}` |
+| `POST /api/tasks` | `{"title", "prompt", "priority": "medium", "engine": "auto", "mode": "accept-edits", "timeout_seconds": 300, "source"?: "Hark"}` | `{"status", "task_id", "woke_daemon", "message"}`. Without `source` (or `X-Task-Source`) the task's source is `DeskAI quick dispatch` |
 | `POST /api/tasks/run` | `{"command": "..."}` (new) or `{"task_id": "..."}` (re-run a failed one) | `{"status", "task_id", "message"}` |
 | `POST /api/cancel/{id}` | | 200; 404 if unknown; **409** if it already finished |
 | `POST /api/tasks/cancel` | `{}` (the running task) or `{"task_id": "..."}` | as above; `{"status": "idle"}` if nothing is running |
@@ -266,7 +271,7 @@ Generated images are stored outside the agent repository in the dedicated galler
 | `POST /api/daemon/state` | `{"status": "wake"}` or `{"status": "standby"}` | `{"status", "daemon_status", "message"}` |
 | `POST /api/engine` | `{"engine": "auto"}` (auto, antigravity, cloud, ollama) | `{"status", "default_engine"}` |
 | `POST /api/backup` | | `{"ok", "message"}`: a memory backup now (a few seconds) |
-| `POST /api/cleanup` | | `{"message"}`: TiktokVideos' temp files and old videos, stale logs (> 30 days, preserving `affirmations.log`), and abandoned task workspaces (> 7 days, via AgentWork worktree discard) |
+| `POST /api/cleanup` | | `{"message"}`: TiktokVideos' temp files and old videos (beyond the newest `VIDEO_KEEP_COUNT`, default 50; task thumbnails are kept), stale logs (> 30 days, preserving `affirmations.log`), and abandoned task workspaces (> 7 days, via AgentWork worktree discard) |
 | `POST /api/restart` | `?now=true` (optional) | `202 {"status": "restarting", "message"}`: back in about 3 s. Poll `/api/status`. While a task runs: `202 {"status": "draining", "waiting_for": [titles], "message"}`, and the agent restarts when the task finishes (at most 30 min), starting nothing new meanwhile. `now=true` restarts at once. |
 | `GET /api/logs?limit=100` | | `[{"id", "timestamp", "level", "message"}]`, newest last |
 | `GET /api/stream` | | Server-Sent Events, one `data: {json}` per second: `timestamp`, `stats`, `active_task`, `tasks` (30 newest), `blockers`, `new_logs`, `daemon_status`, `overall_phase`, `last_heartbeat`, `default_engine` |

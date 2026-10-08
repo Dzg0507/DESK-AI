@@ -565,6 +565,20 @@ class AlwaysOnAgentClient {
 
         val isCancelled = item.optBoolean("cancelled", false) || optNullableString("phase") == "cancelled"
 
+        // Details links stay token-free: the details sheet loads them with the token in a header
+        fun resolveLink(raw: String?): String? {
+            val path = raw?.trim().orEmpty()
+            if (path.isEmpty()) return null
+            val cleanBase = baseUrl?.trimEnd('/') ?: ""
+            return when {
+                path.startsWith("http://") || path.startsWith("https://") -> path
+                cleanBase.isNotEmpty() -> "$cleanBase/${path.trimStart('/')}"
+                else -> path                                   // resolved against the server by the sheet
+            }
+        }
+        fun optNullableInt(key: String): Int? =
+            if (item.has(key) && !item.isNull(key)) item.optInt(key) else null
+
         return AgentTaskItem(
             id = optNullableString("id") ?: optNullableString("task_id") ?: "",
             title = optNullableString("title") ?: optNullableString("prompt") ?: "Task",
@@ -581,7 +595,18 @@ class AlwaysOnAgentClient {
             progress = parsedProgress,
             cancelled = isCancelled,
             result = parsedResult,
-            actions = actionsList
+            actions = actionsList,
+            createdAt = optNullableString("created_at"),
+            source = optNullableString("source"),
+            engineUsed = optNullableString("engine_used"),
+            retryCount = item.optInt("retry_count", 0),
+            maxRetries = optNullableInt("max_retries"),
+            exitCode = optNullableInt("exit_code"),
+            needsInput = item.optBoolean("needs_input", false),
+            thumbUrl = resolveLink(optNullableString("thumb_url")),
+            videoUrl = resolveLink(optNullableString("video_url")),
+            videoFilename = optNullableString("video_filename"),
+            videoKept = if (item.has("video_kept") && !item.isNull("video_kept")) item.optBoolean("video_kept") else null
         )
     }
 

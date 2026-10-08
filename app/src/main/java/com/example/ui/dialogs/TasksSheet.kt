@@ -61,9 +61,16 @@ fun TasksSheet(
     onDispatchTask: suspend (title: String, prompt: String, engine: String) -> Result<String>,
     onCancelTask: suspend (taskId: String) -> Result<String>,
     onAbortRunningTask: suspend () -> Result<String>,
-    onRetryTask: suspend (taskId: String) -> Result<String>
+    onRetryTask: suspend (taskId: String) -> Result<String>,
+    // Tapping a mission opens its details (TaskDetailsSheet)
+    serverBaseUrl: String = "",
+    authToken: String = "",
+    onGetTask: (suspend (String) -> Result<AgentTaskItem>)? = null,
+    onDownloadVideo: (suspend (url: String, destinationFile: java.io.File, onProgress: (Long, Long) -> Unit) -> Result<java.io.File>)? = null,
+    onPublishVideo: (suspend (filename: String) -> Result<String>)? = null
 ) {
     val scope = rememberCoroutineScope()
+    var detailsTask by remember { mutableStateOf<AgentTaskItem?>(null) }
     var isCreating by remember { mutableStateOf(false) }
     var taskTitle by remember { mutableStateOf("") }
     var taskPrompt by remember { mutableStateOf("") }
@@ -347,6 +354,7 @@ fun TasksSheet(
                     items(tasks) { task ->
                         TaskRowCard(
                             task = task,
+                            onOpen = { detailsTask = task },
                             onCancel = {
                                 scope.launch {
                                     onCancelTask(task.id)
@@ -365,11 +373,25 @@ fun TasksSheet(
             }
         }
     }
+
+    val openTask = detailsTask
+    if (openTask != null) {
+        TaskDetailsSheet(
+            task = openTask,
+            serverBaseUrl = serverBaseUrl,
+            authToken = authToken,
+            onDismiss = { detailsTask = null },
+            onRefreshTask = onGetTask,
+            onDownloadVideo = onDownloadVideo,
+            onPublishVideo = onPublishVideo
+        )
+    }
 }
 
 @Composable
 fun TaskRowCard(
     task: AgentTaskItem,
+    onOpen: () -> Unit = {},
     onCancel: () -> Unit,
     onRetry: () -> Unit
 ) {
@@ -388,6 +410,7 @@ fun TaskRowCard(
             .clip(RoundedCornerShape(10.dp))
             .background(Color(0xFF1E293B))
             .border(1.dp, Color(0xFF334155), RoundedCornerShape(10.dp))
+            .clickable { onOpen() }
             .padding(10.dp)
     ) {
         Column {

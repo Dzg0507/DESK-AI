@@ -73,7 +73,19 @@ data class AgentTaskItem(
     val progress: TaskProgress? = null,
     val cancelled: Boolean = false,
     val result: TaskResult? = null,
-    val actions: List<TaskAction> = emptyList()
+    val actions: List<TaskAction> = emptyList(),
+    // Task details (API.md, 2026-10-07): who started it and the rest of the record, shown when a mission is tapped
+    val createdAt: String? = null,
+    val source: String? = null,           // "DeskAI quick dispatch", "Hark", "schedule #1 '…'", "unknown"
+    val engineUsed: String? = null,
+    val retryCount: Int = 0,
+    val maxRetries: Int? = null,
+    val exitCode: Int? = null,
+    val needsInput: Boolean = false,
+    val thumbUrl: String? = null,         // the task's video thumbnail; kept after the video is pruned
+    val videoUrl: String? = null,         // the Video Hub's stream (/videos/…), null once the video is pruned
+    val videoFilename: String? = null,
+    val videoKept: Boolean? = null        // null: the task has no video
 )
 
 data class MemoryFactItem(

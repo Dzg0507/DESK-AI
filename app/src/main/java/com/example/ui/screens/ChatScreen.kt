@@ -541,7 +541,12 @@ fun ChatScreen(
             onDispatchTask = { title, prompt, eng -> viewModel.dispatchTask(title, prompt, eng) },
             onCancelTask = { taskId -> viewModel.cancelTask(taskId) },
             onAbortRunningTask = { viewModel.abortRunningTask() },
-            onRetryTask = { taskId -> viewModel.retryTask(taskId) }
+            onRetryTask = { taskId -> viewModel.retryTask(taskId) },
+            serverBaseUrl = config.getResolvedUrl(),
+            authToken = config.apiKey,
+            onGetTask = { tid -> viewModel.getTask(tid) },
+            onDownloadVideo = { url, file, onProg -> viewModel.downloadVideo(url, file, onProg) },
+            onPublishVideo = { filename -> viewModel.publishVideoToTikTok(filename) }
         )
     }
 

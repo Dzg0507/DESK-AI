@@ -1,7 +1,7 @@
 {
-  "versionCode": 52,
-  "versionName": "2.6.9",
-  "changelog": "DeskAI v2.6.9 (Build 52): Live task events over /api/events SSE stream while in foreground with automatic fallback to polling.",
+  "versionCode": 53,
+  "versionName": "2.7.0",
+  "changelog": "DeskAI v2.7.0 (Build 53): Mission details: tap any task to see full prompt, engine, execution times, result/error, and video thumbnail playback with pruning status.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24279789
+  "fileSizeBytes": 24312553
 }
