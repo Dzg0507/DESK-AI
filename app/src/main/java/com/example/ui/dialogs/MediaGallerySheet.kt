@@ -91,6 +91,8 @@ import com.example.ui.theme.Slate500
 import com.example.ui.theme.Slate700
 import com.example.ui.theme.Slate800
 import com.example.ui.theme.Slate900
+import com.example.ui.components.deskSheet
+import com.example.ui.components.deskCard
 
 @Composable
 fun MediaGallerySheet(
@@ -169,9 +171,7 @@ fun MediaGallerySheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight(0.90f)
-                .clip(RoundedCornerShape(16.dp))
-                .background(Slate900)
-                .border(1.dp, Slate800, RoundedCornerShape(16.dp))
+                .deskSheet()
                 .padding(16.dp)
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -609,9 +609,7 @@ fun VideoGalleryCard(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(Slate800)
-            .border(1.dp, Slate700, RoundedCornerShape(12.dp))
+            .deskCard()
             .clickable { onPlay() }
             .padding(10.dp)
     ) {
@@ -777,9 +775,7 @@ fun ImageGalleryCard(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(Slate800)
-            .border(1.dp, Slate700, RoundedCornerShape(12.dp))
+            .deskCard()
     ) {
         Column {
             Box(

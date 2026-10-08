@@ -68,6 +68,8 @@ import com.example.ui.theme.Slate500
 import com.example.ui.theme.Slate700
 import com.example.ui.theme.Slate800
 import com.example.ui.theme.Slate900
+import com.example.ui.components.deskSheet
+import com.example.ui.components.deskCard
 
 /**
  * A mission's details, opened by tapping its card in the Missions list: what was asked, who or what started it,
@@ -120,9 +122,7 @@ fun TaskDetailsSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight(0.85f)
-                .clip(RoundedCornerShape(16.dp))
-                .background(Slate900)
-                .border(1.dp, Slate800, RoundedCornerShape(16.dp))
+                .deskSheet()
                 .padding(16.dp)
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
@@ -303,9 +303,7 @@ private fun TaskVideoPreview(thumbUrl: String?, authToken: String, playable: Boo
             modifier = Modifier
                 .width(150.dp)
                 .height(266.dp)                     // 9:16, the videos' shape
-                .clip(RoundedCornerShape(12.dp))
-                .background(Slate800)
-                .border(1.dp, Slate700, RoundedCornerShape(12.dp))
+                .deskCard()
                 .then(if (playable) Modifier.clickable { onPlay() } else Modifier),
             contentAlignment = Alignment.Center
         ) {
@@ -350,9 +348,7 @@ private fun DetailSection(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(Slate800)
-            .border(1.dp, Slate700, RoundedCornerShape(10.dp))
+            .deskCard()
             .padding(10.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {

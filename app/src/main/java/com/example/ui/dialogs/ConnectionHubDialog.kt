@@ -66,6 +66,8 @@ import com.example.ui.theme.Slate700
 import com.example.ui.theme.Slate800
 import com.example.ui.theme.Slate900
 import com.example.ui.theme.SlateDarkSurface
+import com.example.ui.components.deskSheet
+import com.example.ui.components.deskCard
 
 @Composable
 fun ConnectionHubDialog(
@@ -111,9 +113,7 @@ fun ConnectionHubDialog(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(Slate900)
-                .border(1.dp, Slate800, RoundedCornerShape(16.dp))
+                .deskSheet()
                 .padding(20.dp)
         ) {
             Column(
@@ -409,9 +409,7 @@ fun ConnectionHubDialog(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Slate800)
-                        .border(1.dp, Slate700, RoundedCornerShape(10.dp))
+                        .deskCard()
                         .clickable(enabled = !isPinging) {
                             scope.launch {
                                 isPinging = true

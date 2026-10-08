@@ -81,6 +81,7 @@ import com.example.ui.theme.Slate400
 import com.example.ui.theme.Slate700
 import com.example.ui.theme.Slate800
 import com.example.ui.theme.Slate900
+import com.example.ui.components.deskSheet
 
 enum class UpdateState {
     CHECKING,
@@ -346,9 +347,7 @@ fun AppUpdaterDialog(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(Slate900)
-                .border(1.dp, Slate800, RoundedCornerShape(16.dp))
+                .deskSheet()
                 .padding(20.dp)
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
