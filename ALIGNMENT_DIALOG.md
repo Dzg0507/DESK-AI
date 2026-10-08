@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-07 (DeskAI v2.6.9 / Build 52 shipped — Live task events)
+**Last Updated:** 2026-10-07 (DeskAI v2.7.0 / Build 53 shipped — Mission details & video playback)
 
 ---
 
@@ -14,6 +14,15 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-07: DeskAI v2.7.0 (build 53), Mission details & video thumbnail playback (by Antigravity session, at owner's request)
+
+- Applied `scripts/deskai_patches/task-details.patch` (AlwaysOnAgent PR #5 companion).
+- `TasksSheet.kt`: Cards in Missions list are now tappable to open detailed inspection.
+- `TaskDetailsSheet.kt`: Shows task source, full prompt, created/started/completed timestamps, elapsed duration, engine/engine used, retries, exit code, and complete output or error.
+- Video tasks display server-kept thumbnails (`thumb_url`) with `FrostedPlayBadge`. Tapping plays via `VideoPlayerDialog`; pruned videos display "Video no longer kept".
+- `MediaGallerySheet.kt`: Extracted `FrostedPlayBadge` into a reusable composable.
+- Updated `docs/API.md` mirrored from AlwaysOnAgent.
 
 ## Shipped 2026-10-07: DeskAI v2.6.9 (build 52), Live task events from /api/events SSE stream (by Antigravity session, at owner's request)
 
