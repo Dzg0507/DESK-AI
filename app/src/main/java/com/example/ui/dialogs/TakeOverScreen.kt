@@ -94,17 +94,22 @@ import com.example.ui.theme.Slate950
  *
  * Tap = click, hold = right-click, pinch to zoom and drag to move around when zoomed; Double and Drag are one-shot
  * modes. The picture refreshes about every 0.6 s.
+ *
+ * [viewOnly] (the "View only" box on the hub card): the picture only. Control is never taken, nothing is sent, and a
+ * running task carries on while the owner watches (2026-10-08: watching through Take over stopped a task).
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TakeOverScreen(
     requestId: String?,
+    viewOnly: Boolean = false,
     onClose: () -> Unit,
     call: suspend (action: String, body: JSONObject?) -> Result<JSONObject>,
     fetchFrame: suspend (machine: String) -> ByteArray?
 ) {
     val scope = rememberCoroutineScope()
-    var active by remember { mutableStateOf(false) }
+    var active by remember { mutableStateOf(false) }             // in control (never in view only)
+    var watching by remember { mutableStateOf(false) }           // view only: showing the picture
     var error by remember { mutableStateOf<String?>(null) }
     var note by remember { mutableStateOf("") }
     var frame by remember { mutableStateOf<ImageBitmap?>(null) }
@@ -148,8 +153,9 @@ fun TakeOverScreen(
         if (closing) return
         closing = true
         active = false
+        watching = false
         scope.launch {
-            call("stop", body())
+            if (!viewOnly) call("stop", body())               // view only never took control
             onClose()
         }
     }
@@ -162,17 +168,21 @@ fun TakeOverScreen(
         frame = null
         scale = 1f
         pan = Offset.Zero
+        if (viewOnly) {
+            watching = true                                 // the picture only: no "start", nothing taken over
+            return@LaunchedEffect
+        }
         val r = call("start", body())
         if (r.isSuccess) active = true else error = r.exceptionOrNull()?.message ?: "Couldn't take over"
     }
     fun switchTo(m: String) {
         if (m == machine || closing) return
         val old = machine
-        scope.launch { call("stop", body(old)) }       // hand the one we're leaving back
+        if (!viewOnly) scope.launch { call("stop", body(old)) }   // hand the one we're leaving back
         machine = m
     }
-    LaunchedEffect(active, machine) {
-        while (active) {
+    LaunchedEffect(active, watching, machine) {
+        while (active || watching) {
             fetchFrame(machine)?.let { bytes ->
                 BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.let { frame = it.asImageBitmap() }
             }
@@ -208,6 +218,7 @@ fun TakeOverScreen(
                         Text(
                             text = when {
                                 error != null -> "Couldn't take over"
+                                viewOnly -> "Watching (view only)"
                                 active -> "You're in control"
                                 else -> "Connecting…"
                             },
@@ -215,14 +226,16 @@ fun TakeOverScreen(
                             fontWeight = FontWeight.SemiBold, fontSize = 15.sp
                         )
                         Text(
-                            text = error ?: note.ifBlank { "Tap to click · hold to right-click · pinch to zoom" },
+                            text = error ?: if (viewOnly) "Taps aren't sent · tasks keep running · pinch to zoom"
+                                            else note.ifBlank { "Tap to click · hold to right-click · pinch to zoom" },
                             color = Slate400, fontSize = 11.sp, maxLines = 1
                         )
                     }
                     Box(Modifier.width(96.dp), contentAlignment = Alignment.CenterEnd) {
                         IconButton(onClick = { handBack() },
                                    modifier = Modifier.size(42.dp).clip(CircleShape).background(Slate700)) {
-                            Icon(Icons.Default.Check, contentDescription = "Hand back", tint = Color.White)
+                            Icon(Icons.Default.Check, contentDescription = if (viewOnly) "Close" else "Hand back",
+                                 tint = Color.White)
                         }
                     }
                 }
@@ -287,7 +300,16 @@ fun TakeOverScreen(
                 // Container 2: a slim icon bar (like a remote-desktop app). Typing is hidden until ⌨ is tapped: then
                 // the special keys and the text bar appear right on top of the phone's keyboard, and closing the
                 // keyboard hides them again (2026-10-06, the owner: the keyboard "pops up and is all in the way").
-                Column(modifier = Modifier.fillMaxWidth().padding(top = 6.dp).background(Slate900)) {
+                // View only: no controls to send anything, just close (and zoom out)
+                if (viewOnly) Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 6.dp).background(Slate900)
+                        .padding(horizontal = 6.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically
+                ) {
+                    BarIcon(Icons.Default.StopCircle, "Close", tint = Red400) { handBack() }
+                    if (scale > 1.01f) BarIcon(Icons.Default.ZoomOutMap, "Zoom out") { scale = 1f; pan = Offset.Zero }
+                }
+                if (!viewOnly) Column(modifier = Modifier.fillMaxWidth().padding(top = 6.dp).background(Slate900)) {
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 6.dp),
                         horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically

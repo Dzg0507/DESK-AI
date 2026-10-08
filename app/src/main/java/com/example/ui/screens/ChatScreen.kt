@@ -156,6 +156,12 @@ fun ChatScreen(
     var showTakeOver by remember { mutableStateOf(false) }
     var showRepos by remember { mutableStateOf(false) }
     var takeOverFor by remember { mutableStateOf<String?>(null) }
+    // Take over's "View only" box on its hub card, remembered on the phone. View only shows the screen without taking
+    // control, so a running task carries on while the owner watches (2026-10-08: opening Take over to watch a task
+    // took control and stopped it).
+    val uiPrefs = remember { context.getSharedPreferences("deskai_ui", android.content.Context.MODE_PRIVATE) }
+    var takeOverViewOnly by remember { mutableStateOf(uiPrefs.getBoolean("takeover_view_only", false)) }
+    var takeOverWatching by remember { mutableStateOf(false) }      // the open Take over screen is view only
     val needsYou by viewModel.needsYou.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { viewModel.startNeedsYouPolling() }
     // A "Needs you" notification was tapped: the panel with the screenshot and the answer
@@ -532,7 +538,12 @@ fun ChatScreen(
             onOpenAgentWork = { showAgentWorkSheet = true },
             onOpenMaintenance = { showMaintenanceSheet = true },
             onOpenSchedules = { showSchedulesSheet = true },
-            onOpenTakeOver = { takeOverFor = null; showTakeOver = true },
+            onOpenTakeOver = { takeOverFor = null; takeOverWatching = takeOverViewOnly; showTakeOver = true },
+            takeOverViewOnly = takeOverViewOnly,
+            onTakeOverViewOnlyChange = { on ->
+                takeOverViewOnly = on
+                uiPrefs.edit().putBoolean("takeover_view_only", on).apply()
+            },
             onOpenRepos = { showRepos = true },
             onSelectCommandTemplate = { template ->
                 viewModel.onInputTextChange(template)
@@ -672,7 +683,8 @@ fun ChatScreen(
             onRefresh = { viewModel.refreshNeedsYou() },
             onAnswer = { id, answer -> viewModel.answerComputerRequest(id, answer) },
             onScreenshot = { path -> viewModel.requestScreenshot(path) },
-            onTakeOver = { id -> showNeedsYou = false; takeOverFor = id; showTakeOver = true }
+            // A request is answered by doing it yourself: always real control
+            onTakeOver = { id -> showNeedsYou = false; takeOverFor = id; takeOverWatching = false; showTakeOver = true }
         )
     }
 
@@ -688,9 +700,13 @@ fun ChatScreen(
     if (showTakeOver) {
         com.example.ui.dialogs.TakeOverScreen(
             requestId = takeOverFor,
+            viewOnly = takeOverWatching,
             onClose = { showTakeOver = false; takeOverFor = null },
             call = { action, body -> viewModel.takeover(action, body) },
-            fetchFrame = { machine -> viewModel.requestScreenshot("/api/computer/takeover/frame?machine=$machine") }
+            fetchFrame = { machine ->
+                val view = if (takeOverWatching) "&view=1" else ""
+                viewModel.requestScreenshot("/api/computer/takeover/frame?machine=$machine$view")
+            }
         )
     }
 
