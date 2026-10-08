@@ -1,5 +1,10 @@
 package com.example.ui.dialogs
 
+import com.example.ui.components.SheetHeader
+import com.example.ui.components.SectionLabel
+import com.example.ui.components.EmptyState
+import com.example.ui.theme.DeskShapes
+import com.example.ui.theme.NeonPurple
 import android.content.Intent
 import android.net.Uri
 import android.view.ViewGroup
@@ -176,44 +181,26 @@ fun MediaGallerySheet(
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 // Header
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                SheetHeader(
+                    title = "Agent Media Hub",
+                    icon = if (selectedTab == 0) Icons.Default.Image else Icons.Default.Videocam,
+                    accent = if (selectedTab == 0) NeonPurple else ElectricCyan,
+                    subtitle = "${images.size} images · ${videos.size} videos",
+                    onClose = onDismiss
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(
+                        onClick = {
+                            refreshVideos()
+                            refreshImages()
+                        },
+                        modifier = Modifier.size(32.dp)
+                    ) {
                         Icon(
-                            imageVector = if (selectedTab == 0) Icons.Default.Image else Icons.Default.Videocam,
-                            contentDescription = "Media Hub",
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Refresh Media",
                             tint = ElectricCyan,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(18.dp)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Agent Media Hub",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(
-                            onClick = {
-                                refreshVideos()
-                                refreshImages()
-                            },
-                            modifier = Modifier.size(28.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Refresh,
-                                contentDescription = "Refresh Media",
-                                tint = Slate400
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(4.dp))
-                        IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
-                            Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = Slate400)
-                        }
                     }
                 }
 
@@ -223,8 +210,9 @@ fun MediaGallerySheet(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(DeskShapes.control)
                         .background(Slate800)
+                        .border(1.dp, Slate700, DeskShapes.control)
                         .padding(4.dp),
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
@@ -232,12 +220,12 @@ fun MediaGallerySheet(
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(if (selectedTab == 0) ElectricCyan.copy(alpha = 0.22f) else Color.Transparent)
+                            .clip(DeskShapes.chip)
+                            .background(if (selectedTab == 0) NeonPurple.copy(alpha = 0.22f) else Color.Transparent)
                             .border(
                                 width = 1.dp,
-                                color = if (selectedTab == 0) ElectricCyan else Color.Transparent,
-                                shape = RoundedCornerShape(8.dp)
+                                color = if (selectedTab == 0) NeonPurple else Color.Transparent,
+                                shape = DeskShapes.chip
                             )
                             .clickable { selectedTab = 0 }
                             .padding(vertical = 8.dp),
@@ -247,7 +235,7 @@ fun MediaGallerySheet(
                             Icon(
                                 imageVector = Icons.Default.Image,
                                 contentDescription = null,
-                                tint = if (selectedTab == 0) ElectricCyan else Slate400,
+                                tint = if (selectedTab == 0) NeonPurple else Slate400,
                                 modifier = Modifier.size(15.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
@@ -264,12 +252,12 @@ fun MediaGallerySheet(
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(DeskShapes.chip)
                             .background(if (selectedTab == 1) ElectricCyan.copy(alpha = 0.22f) else Color.Transparent)
                             .border(
                                 width = 1.dp,
                                 color = if (selectedTab == 1) ElectricCyan else Color.Transparent,
-                                shape = RoundedCornerShape(8.dp)
+                                shape = DeskShapes.chip
                             )
                             .clickable { selectedTab = 1 }
                             .padding(vertical = 8.dp),
@@ -303,13 +291,7 @@ fun MediaGallerySheet(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "AGENT CREATIONS (${images.size})",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Slate400,
-                            letterSpacing = 0.5.sp
-                        )
+                        SectionLabel("Agent creations", count = images.size)
                         if (isImagesLoading) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(14.dp),
@@ -327,22 +309,12 @@ fun MediaGallerySheet(
                                 .weight(1f),
                             contentAlignment = Alignment.Center
                         ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(text = "🎨", fontSize = 32.sp)
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = "No images created yet",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = Slate400
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "Run /image <prompt> in chat to generate visuals!",
-                                    fontSize = 11.sp,
-                                    color = Slate500
-                                )
-                            }
+                            EmptyState(
+                                icon = Icons.Default.Image,
+                                title = "No images created yet",
+                                message = "Run /image <prompt> in chat to generate visuals!",
+                                accent = NeonPurple
+                            )
                         }
                     } else {
                         LazyVerticalGrid(
@@ -498,13 +470,7 @@ fun MediaGallerySheet(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "RENDERED VIDEOS (${videos.size})",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Slate400,
-                            letterSpacing = 0.5.sp
-                        )
+                        SectionLabel("Rendered videos", count = videos.size)
                         if (isLoading) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(14.dp),
@@ -522,22 +488,12 @@ fun MediaGallerySheet(
                                 .weight(1f),
                             contentAlignment = Alignment.Center
                         ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(text = "🎥", fontSize = 32.sp)
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = "No videos rendered yet",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = Slate400
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "Tap 'Render 3D Video' above to generate your first clip!",
-                                    fontSize = 11.sp,
-                                    color = Slate500
-                                )
-                            }
+                            EmptyState(
+                                icon = Icons.Default.Videocam,
+                                title = "No videos rendered yet",
+                                message = "Tap 'Render 3D Video' above to generate your first clip!",
+                                accent = ElectricCyan
+                            )
                         }
                     } else {
                         LazyColumn(

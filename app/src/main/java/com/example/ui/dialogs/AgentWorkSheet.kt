@@ -1,5 +1,9 @@
 package com.example.ui.dialogs
 
+import com.example.ui.components.SheetHeader
+import com.example.ui.components.EmptyState
+import com.example.ui.components.LoadingState
+import com.example.ui.theme.DeskShapes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -121,59 +125,19 @@ fun AgentWorkSheet(
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
                 // Header
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                SheetHeader(
+                    title = "AgentWork Project Hub",
+                    icon = Icons.Default.Build,
+                    subtitle = "Autonomous code workflows on host repositories",
+                    onClose = onDismiss
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .background(ElectricCyan.copy(alpha = 0.15f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Build,
-                                contentDescription = null,
-                                tint = ElectricCyan,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column {
-                            Text(
-                                text = "AgentWork Project Hub",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
-                            Text(
-                                text = "Autonomous code workflows on host repositories",
-                                fontSize = 11.sp,
-                                color = Slate400
-                            )
-                        }
-                    }
-
-                    Row {
-                        IconButton(onClick = { refreshProjects() }) {
-                            Icon(
-                                imageVector = Icons.Default.Refresh,
-                                contentDescription = "Refresh",
-                                tint = ElectricCyan,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        IconButton(onClick = onDismiss) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Close",
-                                tint = Slate400,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
+                    IconButton(onClick = { refreshProjects() }, modifier = Modifier.size(32.dp)) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Refresh",
+                            tint = ElectricCyan,
+                            modifier = Modifier.size(18.dp)
+                        )
                     }
                 }
 
@@ -211,9 +175,9 @@ fun AgentWorkSheet(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
+                            .clip(DeskShapes.control)
                             .background(Slate800)
-                            .border(1.dp, ElectricCyan.copy(alpha = 0.5f), RoundedCornerShape(10.dp))
+                            .border(1.dp, ElectricCyan.copy(alpha = 0.5f), DeskShapes.control)
                             .padding(10.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
@@ -257,7 +221,7 @@ fun AgentWorkSheet(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(6.dp))
+                                .clip(DeskShapes.chip)
                                 .background(if (isAddingProj) Slate600 else ElectricCyan)
                                 .clickable(enabled = !isAddingProj && newProjName.isNotBlank() && newProjRepo.isNotBlank()) {
                                     scope.launch {
@@ -300,36 +264,20 @@ fun AgentWorkSheet(
                 }
 
                 if (isLoading) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        CircularProgressIndicator(modifier = Modifier.size(16.dp), color = ElectricCyan, strokeWidth = 2.dp)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Scanning host repositories...", fontSize = 11.sp, color = Slate400)
-                    }
+                    LoadingState("Scanning host repositories…")
                 } else if (projects.isEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Slate800)
-                            .padding(12.dp)
-                    ) {
-                        Text(
-                            text = "No AgentWork projects configured on PC yet.\nAdd project folders in supervisor settings.",
-                            fontSize = 11.sp,
-                            color = Slate400,
-                            lineHeight = 16.sp
-                        )
-                    }
+                    EmptyState(
+                        icon = Icons.Default.Build,
+                        title = "No AgentWork projects yet",
+                        message = "Add project folders in supervisor settings on the PC.",
+                        accent = ElectricCyan
+                    )
                 } else {
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(110.dp)
-                            .clip(RoundedCornerShape(10.dp))
+                            .clip(DeskShapes.control)
                             .background(DeepCard)
                             .padding(6.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -339,12 +287,12 @@ fun AgentWorkSheet(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(6.dp))
+                                    .clip(DeskShapes.chip)
                                     .background(if (isSel) ElectricCyan.copy(alpha = 0.2f) else Color.Transparent)
                                     .border(
                                         1.dp,
                                         if (isSel) ElectricCyan else Color.Transparent,
-                                        RoundedCornerShape(6.dp)
+                                        DeskShapes.chip
                                     )
                                     .clickable { selectedProject = proj }
                                     .padding(horizontal = 8.dp, vertical = 6.dp),
@@ -411,7 +359,7 @@ fun AgentWorkSheet(
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Slate200
                     ),
-                    shape = RoundedCornerShape(10.dp)
+                    shape = DeskShapes.control
                 )
 
                 if (statusMessage != null) {
@@ -433,7 +381,7 @@ fun AgentWorkSheet(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(DeskShapes.control)
                         .background(if (canSubmit) ElectricCyan else Slate700)
                         .clickable(enabled = canSubmit) {
                             val projName = selectedProject?.name ?: projects.firstOrNull()?.name ?: return@clickable

@@ -1,5 +1,16 @@
 package com.example.ui.dialogs
 
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.border
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.foundation.layout.height
+import com.example.ui.components.EmptyState
+import com.example.ui.components.StatusNote
+import com.example.ui.components.TagChip
+import com.example.ui.components.deskCard
+import com.example.ui.theme.DeskShapes
+import com.example.ui.theme.Slate800
+import com.example.ui.theme.Slate900
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -162,6 +173,7 @@ fun ReposScreen(
 
     androidx.activity.compose.BackHandler { back() }
     Surface(modifier = Modifier.fillMaxSize(), color = DeepNavy) {
+      Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Slate900, DeepNavy)))) {
         Column(modifier = Modifier.fillMaxSize().systemBarsPadding().imePadding()) {
             // Header: back, where we are, close
             Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 4.dp),
@@ -169,6 +181,19 @@ fun ReposScreen(
                 IconButton(onClick = { back() }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
                 }
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(androidx.compose.foundation.shape.CircleShape)
+                        .background(Brush.radialGradient(listOf(Cyan400.copy(alpha = 0.30f), Cyan400.copy(alpha = 0.08f)))),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        if (file != null) Icons.Default.Description else Icons.Default.Folder,
+                        contentDescription = null, tint = Cyan400, modifier = Modifier.size(17.dp)
+                    )
+                }
+                Spacer(Modifier.width(10.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(repo?.optString("repo")?.substringAfter("/") ?: "Repos", color = Color.White,
                         fontWeight = FontWeight.Bold, fontSize = 17.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -184,15 +209,17 @@ fun ReposScreen(
                 }
             }
             if (loading) {
-                Box(Modifier.fillMaxWidth().padding(8.dp), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(modifier = Modifier.size(22.dp), color = Cyan400, strokeWidth = 2.dp)
-                }
+                LinearProgressIndicator(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(2.dp).clip(DeskShapes.pill),
+                    color = Cyan400,
+                    trackColor = Slate800
+                )
             }
             error?.let {
-                Text(it, color = Red400, fontSize = 13.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+                StatusNote(it, color = Red400, modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp))
             }
             sent?.let {
-                Text(it, color = Green400, fontSize = 13.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+                StatusNote(it, color = Green400, modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp))
             }
 
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
@@ -218,8 +245,10 @@ fun ReposScreen(
                         items(entries) { e ->
                             val isDir = e.optString("type") == "dir"
                             Row(modifier = Modifier.fillMaxWidth()
+                                .padding(horizontal = 8.dp, vertical = 1.dp)
+                                .clip(DeskShapes.control)
                                 .clickable { if (isDir) path = e.optString("path") else openFile(e.optString("path")) }
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                                .padding(horizontal = 8.dp, vertical = 11.dp),
                                 verticalAlignment = Alignment.CenterVertically) {
                                 Icon(if (isDir) Icons.Default.Folder else Icons.Default.Description, contentDescription = null,
                                     tint = if (isDir) AmberPending else Slate400, modifier = Modifier.size(20.dp))
@@ -239,11 +268,24 @@ fun ReposScreen(
                             filter.isBlank() || it.optString("repo").contains(filter.trim(), ignoreCase = true) ||
                                 it.optString("description").contains(filter.trim(), ignoreCase = true)
                         }
-                        LazyColumn(Modifier.fillMaxSize()) {
+                        if (shown.isEmpty() && !loading) {
+                            EmptyState(
+                                icon = Icons.Default.Folder,
+                                title = if (filter.isBlank()) "No repos to show" else "No repos match \"${filter.trim()}\"",
+                                message = if (filter.isBlank()) "Tap Refresh below to load your GitHub repos." else null,
+                                accent = Cyan400
+                            )
+                        }
+                        LazyColumn(
+                            Modifier.fillMaxSize(),
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
                             items(shown) { r ->
                                 Column(modifier = Modifier.fillMaxWidth()
+                                    .deskCard()
                                     .clickable { repo = r; path = ""; file = null; sent = null }
-                                    .padding(horizontal = 16.dp, vertical = 10.dp)) {
+                                    .padding(horizontal = 14.dp, vertical = 11.dp)) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Text(r.optString("repo").substringAfter("/"), color = Color.White,
                                             fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
@@ -254,9 +296,7 @@ fun ReposScreen(
                                         }
                                         Spacer(Modifier.weight(1f))
                                         if (!r.isNull("project")) {
-                                            Text("project", color = Cyan400, fontSize = 11.sp,
-                                                modifier = Modifier.clip(RoundedCornerShape(6.dp))
-                                                    .background(DeepTeal).padding(horizontal = 6.dp, vertical = 2.dp))
+                                            TagChip(text = "project", color = Cyan400)
                                         }
                                     }
                                     val desc = r.optString("description")
@@ -270,7 +310,12 @@ fun ReposScreen(
             }
 
             // Bottom: "Work on this" for the open repo, or refresh for the list
-            Column(Modifier.fillMaxWidth().background(Gray900).padding(12.dp)) {
+            Column(
+                Modifier.fillMaxWidth()
+                    .background(Brush.verticalGradient(listOf(Gray900, DeepNavy)))
+                    .border(1.dp, Slate800, RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                    .padding(12.dp)
+            ) {
                 if (repo == null) {
                     OutlinedButton(onClick = { refresh++ }, modifier = Modifier.fillMaxWidth()) { Text("Refresh") }
                 } else if (!working) {
@@ -296,6 +341,7 @@ fun ReposScreen(
                 }
             }
         }
+      }
     }
 }
 

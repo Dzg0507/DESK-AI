@@ -1,5 +1,16 @@
 package com.example.ui.dialogs
 
+import com.example.ui.components.SectionLabel
+import com.example.ui.components.EmptyState
+import com.example.ui.components.LoadingState
+import com.example.ui.components.TagChip
+import com.example.ui.components.deskTinted
+import com.example.ui.components.tagColor
+import com.example.ui.theme.NeonPurple
+import com.example.ui.theme.AmberPending
+import com.example.ui.components.SheetHeader
+import com.example.ui.theme.DeskShapes
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -103,30 +114,12 @@ fun MemorySheet(
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 // Header
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Memory,
-                            contentDescription = "Memory",
-                            tint = ElectricCyan,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "AlwaysOnAgent Memory",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
-                    IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
-                        Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = Slate400)
-                    }
-                }
+                SheetHeader(
+                    title = "AlwaysOnAgent Memory",
+                    icon = Icons.Default.Memory,
+                    subtitle = "What the agent remembers about you",
+                    onClose = onDismiss
+                )
 
                 Spacer(modifier = Modifier.height(10.dp))
 
@@ -152,9 +145,9 @@ fun MemorySheet(
                     Spacer(modifier = Modifier.width(8.dp))
                     Box(
                         modifier = Modifier
-                            .size(44.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(ElectricCyanGlow)
+                            .size(48.dp)
+                            .clip(DeskShapes.control)
+                            .background(Brush.linearGradient(listOf(ElectricCyan, ElectricCyanGlow)))
                             .clickable {
                                 if (newFactText.isNotBlank()) {
                                     scope.launch {
@@ -186,8 +179,8 @@ fun MemorySheet(
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .deskCard()
-                                    .padding(12.dp)
+                                    .deskTinted(ElectricCyan, fillAlpha = 0.06f)
+                                    .padding(14.dp)
                             ) {
                                 Text(
                                     text = "🧠 PROFILE",
@@ -210,12 +203,10 @@ fun MemorySheet(
                     // from and its track record. Pin keeps one in use for good; retired ones kept failing.
                     if (recipes.isNotEmpty()) {
                         item {
-                            Text(
-                                text = "📘 RECIPES (${recipes.count { !it.retired }})",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Slate400,
-                                letterSpacing = 0.5.sp,
+                            SectionLabel(
+                                text = "📘 Recipes",
+                                count = recipes.count { !it.retired },
+                                color = NeonPurple,
                                 modifier = Modifier.padding(top = 6.dp)
                             )
                         }
@@ -253,12 +244,27 @@ fun MemorySheet(
                                 loadFailed -> "COULDN'T REACH THE AGENT — SHOWING WHAT WAS LOADED (${facts.size})"
                                 else -> "STORED FACTS (${facts.size})"
                             },
-                            fontSize = 11.sp,
+                            fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Slate400,
-                            letterSpacing = 0.5.sp,
+                            color = if (loadFailed) AmberPending else Slate400,
+                            letterSpacing = 1.sp,
                             modifier = Modifier.padding(top = 6.dp)
                         )
+                    }
+                    if (facts.isEmpty() && profile.isBlank() && recipes.isEmpty()) {
+                        item {
+                            if (loading) {
+                                LoadingState("Loading memories…")
+                            } else {
+                                EmptyState(
+                                    icon = Icons.Default.Memory,
+                                    title = if (loadFailed) "Couldn't reach the agent" else "Nothing remembered yet",
+                                    message = if (loadFailed) "Check the connection and open this again."
+                                    else "Add a fact above, or tell the agent in chat to remember something.",
+                                    accent = if (loadFailed) AmberPending else ElectricCyan
+                                )
+                            }
+                        }
                     }
                     items(facts) { fact ->
                         Box(
@@ -271,16 +277,23 @@ fun MemorySheet(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    text = if (fact.pinned) "📌" else "•",
-                                    fontSize = 12.sp,
-                                    modifier = Modifier.padding(end = 6.dp)
-                                )
+                                if (fact.pinned) {
+                                    Text(text = "📌", fontSize = 12.sp, modifier = Modifier.padding(end = 6.dp))
+                                } else {
+                                    Box(
+                                        modifier = Modifier
+                                            .padding(start = 2.dp, end = 10.dp)
+                                            .size(6.dp)
+                                            .clip(androidx.compose.foundation.shape.CircleShape)
+                                            .background(tagColor(fact.category))
+                                    )
+                                }
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = fact.content,
-                                        fontSize = 12.sp,
-                                        color = Slate100
+                                        fontSize = 13.sp,
+                                        color = Slate100,
+                                        lineHeight = 18.sp
                                     )
                                     fact.origin()?.let { origin ->
                                         Text(
@@ -292,12 +305,21 @@ fun MemorySheet(
                                             modifier = Modifier.padding(top = 2.dp)
                                         )
                                     }
-                                    Text(
-                                        text = "#${fact.id} • category: ${fact.category}",
-                                        fontSize = 10.sp,
-                                        color = Slate500,
-                                        fontFamily = FontFamily.Monospace
-                                    )
+                                    Row(
+                                        modifier = Modifier.padding(top = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        if (fact.category.isNotBlank()) {
+                                            TagChip(text = fact.category, color = tagColor(fact.category))
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                        }
+                                        Text(
+                                            text = "#${fact.id}",
+                                            fontSize = 10.sp,
+                                            color = Slate500,
+                                            fontFamily = FontFamily.Monospace
+                                        )
+                                    }
                                 }
                                 IconButton(
                                     onClick = {
@@ -332,10 +354,8 @@ private fun RecipeCard(recipe: RecipeItem, onTogglePin: () -> Unit, onRestore: (
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(Slate800)
-            .border(1.dp, if (recipe.pinned) ElectricCyan.copy(alpha = 0.5f) else Slate700, RoundedCornerShape(10.dp))
-            .padding(10.dp)
+            .deskCard(borderColor = if (recipe.pinned) ElectricCyan.copy(alpha = 0.5f) else Slate700)
+            .padding(12.dp)
     ) {
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
