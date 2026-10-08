@@ -1,5 +1,8 @@
 package com.example.ui.dialogs
 
+import com.example.ui.theme.DeskShapes
+import com.example.ui.components.SheetHeader
+import com.example.ui.components.deskCard
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -73,6 +76,15 @@ import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 import java.util.concurrent.TimeUnit
+import com.example.ui.theme.Gray800
+import com.example.ui.theme.Gray900
+import com.example.ui.theme.Slate200
+import com.example.ui.theme.Slate300
+import com.example.ui.theme.Slate400
+import com.example.ui.theme.Slate700
+import com.example.ui.theme.Slate800
+import com.example.ui.theme.Slate900
+import com.example.ui.components.deskSheet
 
 enum class UpdateState {
     CHECKING,
@@ -338,41 +350,17 @@ fun AppUpdaterDialog(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFF0F172A))
-                .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(16.dp))
+                .deskSheet()
                 .padding(20.dp)
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 // Header
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.SystemUpdate,
-                            contentDescription = "App Updates",
-                            tint = ElectricCyan,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "In-App Updater",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
-                    IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Close",
-                            tint = Color(0xFF94A3B8)
-                        )
-                    }
-                }
+                SheetHeader(
+                    title = "In-App Updater",
+                    icon = Icons.Default.SystemUpdate,
+                    subtitle = "New builds straight from your host",
+                    onClose = onDismiss
+                )
 
                 Spacer(modifier = Modifier.height(14.dp))
 
@@ -380,9 +368,8 @@ fun AppUpdaterDialog(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0xFF1E293B))
-                        .padding(12.dp)
+                        .deskCard()
+                        .padding(14.dp)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -393,7 +380,7 @@ fun AppUpdaterDialog(
                             Text(
                                 text = "Installed Version",
                                 fontSize = 11.sp,
-                                color = Color(0xFF94A3B8)
+                                color = Slate400
                             )
                             Text(
                                 text = "DeskAI v" + BuildConfig.VERSION_NAME + " (Build " + BuildConfig.VERSION_CODE + ")",
@@ -405,12 +392,12 @@ fun AppUpdaterDialog(
                         }
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(6.dp))
+                                .clip(DeskShapes.chip)
                                 .background(
                                     when (updateState) {
                                         UpdateState.UP_TO_DATE -> EmeraldConnected.copy(alpha = 0.2f)
                                         UpdateState.UPDATE_AVAILABLE -> ElectricCyan.copy(alpha = 0.2f)
-                                        else -> Color(0xFF334155)
+                                        else -> Slate700
                                     }
                                 )
                                 .padding(horizontal = 8.dp, vertical = 4.dp)
@@ -443,9 +430,9 @@ fun AppUpdaterDialog(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
+                            .clip(DeskShapes.control)
                             .background(ElectricCyan.copy(alpha = 0.12f))
-                            .border(1.dp, ElectricCyan.copy(alpha = 0.45f), RoundedCornerShape(10.dp))
+                            .border(1.dp, ElectricCyan.copy(alpha = 0.45f), DeskShapes.control)
                             .padding(12.dp)
                     ) {
                         Column {
@@ -468,7 +455,7 @@ fun AppUpdaterDialog(
                                 Spacer(modifier = Modifier.height(6.dp))
                                 Text(
                                     text = log,
-                                    color = Color(0xFFE2E8F0),
+                                    color = Slate200,
                                     fontSize = 11.sp,
                                     lineHeight = 16.sp
                                 )
@@ -478,7 +465,7 @@ fun AppUpdaterDialog(
                                 val mb = (remoteFileSize / (1024 * 1024)).toString()
                                 Text(
                                     text = "Package size: ~$mb MB",
-                                    color = Color(0xFF94A3B8),
+                                    color = Slate400,
                                     fontSize = 10.sp,
                                     fontFamily = FontFamily.Monospace
                                 )
@@ -490,9 +477,9 @@ fun AppUpdaterDialog(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
+                            .clip(DeskShapes.control)
                             .background(EmeraldConnected.copy(alpha = 0.12f))
-                            .border(1.dp, EmeraldConnected.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
+                            .border(1.dp, EmeraldConnected.copy(alpha = 0.4f), DeskShapes.control)
                             .padding(12.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -512,7 +499,7 @@ fun AppUpdaterDialog(
                                 )
                                 Text(
                                     text = "You are running the newest version (v" + BuildConfig.VERSION_NAME + "). No update is needed.",
-                                    color = Color(0xFFCBD5E1),
+                                    color = Slate300,
                                     fontSize = 11.sp
                                 )
                             }
@@ -525,12 +512,12 @@ fun AppUpdaterDialog(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(DeskShapes.control)
                         .background(
                             when (updateState) {
                                 UpdateState.READY_TO_INSTALL -> EmeraldConnected.copy(alpha = 0.12f)
                                 UpdateState.ERROR -> RoseError.copy(alpha = 0.12f)
-                                else -> Color(0xFF111827)
+                                else -> Gray900
                             }
                         )
                         .border(
@@ -538,9 +525,9 @@ fun AppUpdaterDialog(
                             when (updateState) {
                                 UpdateState.READY_TO_INSTALL -> EmeraldConnected.copy(alpha = 0.4f)
                                 UpdateState.ERROR -> RoseError.copy(alpha = 0.4f)
-                                else -> Color(0xFF1F2937)
+                                else -> Gray800
                             },
-                            RoundedCornerShape(10.dp)
+                            DeskShapes.control
                         )
                         .padding(12.dp)
                 ) {
@@ -558,7 +545,7 @@ fun AppUpdaterDialog(
                             color = when (updateState) {
                                 UpdateState.READY_TO_INSTALL -> EmeraldConnected
                                 UpdateState.ERROR -> RoseError
-                                else -> Color(0xFFCBD5E1)
+                                else -> Slate300
                             },
                             fontSize = 12.sp,
                             lineHeight = 16.sp
@@ -577,7 +564,7 @@ fun AppUpdaterDialog(
                                 .height(8.dp)
                                 .clip(RoundedCornerShape(4.dp)),
                             color = ElectricCyan,
-                            trackColor = Color(0xFF1E293B),
+                            trackColor = Slate800,
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Row(
@@ -595,7 +582,7 @@ fun AppUpdaterDialog(
                             Text(
                                 text = "$downMb MB / $totMb MB",
                                 fontSize = 11.sp,
-                                color = Color(0xFF94A3B8),
+                                color = Slate400,
                                 fontFamily = FontFamily.Monospace
                             )
                         }
@@ -606,7 +593,7 @@ fun AppUpdaterDialog(
                                 .height(8.dp)
                                 .clip(RoundedCornerShape(4.dp)),
                             color = ElectricCyan,
-                            trackColor = Color(0xFF1E293B),
+                            trackColor = Slate800,
                         )
                     }
                 }
@@ -625,7 +612,7 @@ fun AppUpdaterDialog(
                     Text(
                         text = if (showCustomUrl) "▾ Update URL / Source" else "▸ Update URL / Source",
                         fontSize = 12.sp,
-                        color = Color(0xFF94A3B8)
+                        color = Slate400
                     )
                     Text(
                         text = "Customize",
@@ -643,7 +630,7 @@ fun AppUpdaterDialog(
                         modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = ElectricCyan,
-                            unfocusedBorderColor = Color(0xFF334155),
+                            unfocusedBorderColor = Slate700,
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White
                         ),
@@ -665,9 +652,9 @@ fun AppUpdaterDialog(
                         OutlinedButton(
                             onClick = { downloadUrl = defaultUpdateUrl },
                             modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF94A3B8))
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Slate400)
                         ) {
-                            Text("Reset Local", fontSize = 11.sp, color = Color(0xFF94A3B8))
+                            Text("Reset Local", fontSize = 11.sp, color = Slate400)
                         }
                     }
                 }
@@ -681,7 +668,7 @@ fun AppUpdaterDialog(
                             onClick = { },
                             enabled = false,
                             modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(disabledContainerColor = Color(0xFF1E293B))
+                            colors = ButtonDefaults.buttonColors(disabledContainerColor = Slate800)
                         ) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(16.dp),
@@ -689,7 +676,7 @@ fun AppUpdaterDialog(
                                 strokeWidth = 2.dp
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Checking for updates...", color = Color(0xFF94A3B8))
+                            Text("Checking for updates...", color = Slate400)
                         }
                     }
 
@@ -721,7 +708,7 @@ fun AppUpdaterDialog(
                             Button(
                                 onClick = { checkForUpdates() },
                                 modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E293B))
+                                colors = ButtonDefaults.buttonColors(containerColor = Slate800)
                             ) {
                                 Icon(imageVector = Icons.Default.Refresh, contentDescription = null, tint = Color.White)
                                 Spacer(modifier = Modifier.width(6.dp))
@@ -730,9 +717,9 @@ fun AppUpdaterDialog(
                             OutlinedButton(
                                 onClick = { downloadApkFile(downloadUrl) },
                                 modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF94A3B8))
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Slate400)
                             ) {
-                                Text("Force Re-install", color = Color(0xFF94A3B8), fontSize = 11.sp)
+                                Text("Force Re-install", color = Slate400, fontSize = 11.sp)
                             }
                         }
                     }
@@ -742,7 +729,7 @@ fun AppUpdaterDialog(
                             onClick = { },
                             enabled = false,
                             modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(disabledContainerColor = Color(0xFF1E293B))
+                            colors = ButtonDefaults.buttonColors(disabledContainerColor = Slate800)
                         ) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(16.dp),
@@ -750,7 +737,7 @@ fun AppUpdaterDialog(
                                 strokeWidth = 2.dp
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Downloading Update...", color = Color(0xFF94A3B8))
+                            Text("Downloading Update...", color = Slate400)
                         }
                     }
 
@@ -805,7 +792,7 @@ fun AppUpdaterDialog(
                             Button(
                                 onClick = { checkForUpdates() },
                                 modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E293B))
+                                colors = ButtonDefaults.buttonColors(containerColor = Slate800)
                             ) {
                                 Icon(imageVector = Icons.Default.Refresh, contentDescription = null, tint = Color.White)
                                 Spacer(modifier = Modifier.width(6.dp))

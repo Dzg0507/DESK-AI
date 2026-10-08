@@ -1,5 +1,16 @@
 package com.example.ui.dialogs
 
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.border
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.foundation.layout.height
+import com.example.ui.components.EmptyState
+import com.example.ui.components.StatusNote
+import com.example.ui.components.TagChip
+import com.example.ui.components.deskCard
+import com.example.ui.theme.DeskShapes
+import com.example.ui.theme.Slate800
+import com.example.ui.theme.Slate900
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -56,6 +67,16 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.net.URLEncoder
 import java.util.UUID
+import com.example.ui.theme.AmberPending
+import com.example.ui.theme.Cyan400
+import com.example.ui.theme.DeepNavy
+import com.example.ui.theme.DeepTeal
+import com.example.ui.theme.Gray900
+import com.example.ui.theme.Green400
+import com.example.ui.theme.Red400
+import com.example.ui.theme.Slate200
+import com.example.ui.theme.Slate400
+import com.example.ui.theme.Slate500
 
 /**
  * Repos: the owner's GitHub repos (both accounts) browsed like a file explorer, read-only (docs/API.md "Repos").
@@ -151,7 +172,8 @@ fun ReposScreen(
     }
 
     androidx.activity.compose.BackHandler { back() }
-    Surface(modifier = Modifier.fillMaxSize(), color = Color(0xFF0B1120)) {
+    Surface(modifier = Modifier.fillMaxSize(), color = DeepNavy) {
+      Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Slate900, DeepNavy)))) {
         Column(modifier = Modifier.fillMaxSize().systemBarsPadding().imePadding()) {
             // Header: back, where we are, close
             Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 4.dp),
@@ -159,6 +181,19 @@ fun ReposScreen(
                 IconButton(onClick = { back() }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
                 }
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(androidx.compose.foundation.shape.CircleShape)
+                        .background(Brush.radialGradient(listOf(Cyan400.copy(alpha = 0.30f), Cyan400.copy(alpha = 0.08f)))),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        if (file != null) Icons.Default.Description else Icons.Default.Folder,
+                        contentDescription = null, tint = Cyan400, modifier = Modifier.size(17.dp)
+                    )
+                }
+                Spacer(Modifier.width(10.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(repo?.optString("repo")?.substringAfter("/") ?: "Repos", color = Color.White,
                         fontWeight = FontWeight.Bold, fontSize = 17.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -167,22 +202,24 @@ fun ReposScreen(
                         repo != null -> if (path.isEmpty()) repo!!.optString("repo") else path
                         else -> "Your GitHub repos"
                     }
-                    Text(sub, color = Color(0xFF94A3B8), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(sub, color = Slate400, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 IconButton(onClick = onClose) {
-                    Icon(Icons.Default.Close, contentDescription = "Close", tint = Color(0xFF94A3B8))
+                    Icon(Icons.Default.Close, contentDescription = "Close", tint = Slate400)
                 }
             }
             if (loading) {
-                Box(Modifier.fillMaxWidth().padding(8.dp), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(modifier = Modifier.size(22.dp), color = Color(0xFF22D3EE), strokeWidth = 2.dp)
-                }
+                LinearProgressIndicator(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(2.dp).clip(DeskShapes.pill),
+                    color = Cyan400,
+                    trackColor = Slate800
+                )
             }
             error?.let {
-                Text(it, color = Color(0xFFF87171), fontSize = 13.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+                StatusNote(it, color = Red400, modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp))
             }
             sent?.let {
-                Text(it, color = Color(0xFF4ADE80), fontSize = 13.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+                StatusNote(it, color = Green400, modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp))
             }
 
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
@@ -193,12 +230,12 @@ fun ReposScreen(
                         val text = if (f.isNull("text")) null else f.optString("text")
                         if (text == null) {
                             Text(f.optString("note", "Can't show this file") + "\n" + f.optString("url"),
-                                color = Color(0xFF94A3B8), modifier = Modifier.padding(16.dp))
+                                color = Slate400, modifier = Modifier.padding(16.dp))
                         } else {
                             SelectionContainer {
                                 Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState())
                                     .horizontalScroll(rememberScrollState()).padding(12.dp)) {
-                                    Text(text, color = Color(0xFFE2E8F0), fontFamily = FontFamily.Monospace, fontSize = 12.sp)
+                                    Text(text, color = Slate200, fontFamily = FontFamily.Monospace, fontSize = 12.sp)
                                 }
                             }
                         }
@@ -208,15 +245,17 @@ fun ReposScreen(
                         items(entries) { e ->
                             val isDir = e.optString("type") == "dir"
                             Row(modifier = Modifier.fillMaxWidth()
+                                .padding(horizontal = 8.dp, vertical = 1.dp)
+                                .clip(DeskShapes.control)
                                 .clickable { if (isDir) path = e.optString("path") else openFile(e.optString("path")) }
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                                .padding(horizontal = 8.dp, vertical = 11.dp),
                                 verticalAlignment = Alignment.CenterVertically) {
                                 Icon(if (isDir) Icons.Default.Folder else Icons.Default.Description, contentDescription = null,
-                                    tint = if (isDir) Color(0xFFF59E0B) else Color(0xFF94A3B8), modifier = Modifier.size(20.dp))
+                                    tint = if (isDir) AmberPending else Slate400, modifier = Modifier.size(20.dp))
                                 Spacer(Modifier.width(12.dp))
                                 Text(e.optString("name"), color = Color.White, fontSize = 15.sp, modifier = Modifier.weight(1f),
                                     maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                if (!isDir) Text(size(e.optLong("size")), color = Color(0xFF64748B), fontSize = 12.sp)
+                                if (!isDir) Text(size(e.optLong("size")), color = Slate500, fontSize = 12.sp)
                             }
                         }
                     }
@@ -229,29 +268,40 @@ fun ReposScreen(
                             filter.isBlank() || it.optString("repo").contains(filter.trim(), ignoreCase = true) ||
                                 it.optString("description").contains(filter.trim(), ignoreCase = true)
                         }
-                        LazyColumn(Modifier.fillMaxSize()) {
+                        if (shown.isEmpty() && !loading) {
+                            EmptyState(
+                                icon = Icons.Default.Folder,
+                                title = if (filter.isBlank()) "No repos to show" else "No repos match \"${filter.trim()}\"",
+                                message = if (filter.isBlank()) "Tap Refresh below to load your GitHub repos." else null,
+                                accent = Cyan400
+                            )
+                        }
+                        LazyColumn(
+                            Modifier.fillMaxSize(),
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
                             items(shown) { r ->
                                 Column(modifier = Modifier.fillMaxWidth()
+                                    .deskCard()
                                     .clickable { repo = r; path = ""; file = null; sent = null }
-                                    .padding(horizontal = 16.dp, vertical = 10.dp)) {
+                                    .padding(horizontal = 14.dp, vertical = 11.dp)) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Text(r.optString("repo").substringAfter("/"), color = Color.White,
                                             fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
                                         if (r.optBoolean("private")) {
                                             Spacer(Modifier.width(6.dp))
-                                            Icon(Icons.Default.Lock, contentDescription = "Private", tint = Color(0xFF64748B),
+                                            Icon(Icons.Default.Lock, contentDescription = "Private", tint = Slate500,
                                                 modifier = Modifier.size(13.dp))
                                         }
                                         Spacer(Modifier.weight(1f))
                                         if (!r.isNull("project")) {
-                                            Text("project", color = Color(0xFF22D3EE), fontSize = 11.sp,
-                                                modifier = Modifier.clip(RoundedCornerShape(6.dp))
-                                                    .background(Color(0xFF0E2A33)).padding(horizontal = 6.dp, vertical = 2.dp))
+                                            TagChip(text = "project", color = Cyan400)
                                         }
                                     }
                                     val desc = r.optString("description")
                                     Text((r.optString("repo").substringBefore("/")) + (if (desc.isNotBlank()) " · $desc" else ""),
-                                        color = Color(0xFF94A3B8), fontSize = 12.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                        color = Slate400, fontSize = 12.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
                                 }
                             }
                         }
@@ -260,18 +310,23 @@ fun ReposScreen(
             }
 
             // Bottom: "Work on this" for the open repo, or refresh for the list
-            Column(Modifier.fillMaxWidth().background(Color(0xFF111827)).padding(12.dp)) {
+            Column(
+                Modifier.fillMaxWidth()
+                    .background(Brush.verticalGradient(listOf(Gray900, DeepNavy)))
+                    .border(1.dp, Slate800, RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                    .padding(12.dp)
+            ) {
                 if (repo == null) {
                     OutlinedButton(onClick = { refresh++ }, modifier = Modifier.fillMaxWidth()) { Text("Refresh") }
                 } else if (!working) {
                     Button(onClick = { working = true; sent = null; error = null }, modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF22D3EE), contentColor = Color(0xFF0B1120))) {
+                        colors = ButtonDefaults.buttonColors(containerColor = Cyan400, contentColor = DeepNavy)) {
                         Text("Work on this", fontWeight = FontWeight.Bold)
                     }
                 } else {
                     val where = file?.optString("path") ?: path
                     Text("What should change" + (if (where.isNotEmpty()) " (looking at $where)" else "") + "?",
-                        color = Color(0xFF94A3B8), fontSize = 12.sp)
+                        color = Slate400, fontSize = 12.sp)
                     OutlinedTextField(value = instruction, onValueChange = { instruction = it },
                         placeholder = { Text("e.g. Fix the typo in the header") }, minLines = 2, maxLines = 5,
                         modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp))
@@ -279,13 +334,14 @@ fun ReposScreen(
                         OutlinedButton(onClick = { working = false }, modifier = Modifier.weight(1f)) { Text("Cancel") }
                         Button(onClick = { startWork() }, enabled = !sending && instruction.trim().length >= 8,
                             modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF22D3EE), contentColor = Color(0xFF0B1120))) {
+                            colors = ButtonDefaults.buttonColors(containerColor = Cyan400, contentColor = DeepNavy)) {
                             Text(if (sending) "Starting…" else "Start", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
             }
         }
+      }
     }
 }
 

@@ -1,5 +1,13 @@
 package com.example.ui.dialogs
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.ui.graphics.Brush
+import com.example.ui.components.SheetHeader
+import com.example.ui.components.EmptyState
+import com.example.ui.theme.DeskShapes
+import com.example.ui.theme.EmeraldConnected
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -43,6 +51,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.ComputerRequest
 import kotlinx.coroutines.launch
+import com.example.ui.theme.Amber300
+import com.example.ui.theme.AmberPending
+import com.example.ui.theme.Green600
+import com.example.ui.theme.Red300
+import com.example.ui.theme.Sky300
+import com.example.ui.theme.Slate200
+import com.example.ui.theme.Slate300
+import com.example.ui.theme.Slate400
+import com.example.ui.theme.Slate50
+import com.example.ui.theme.Slate800
+import com.example.ui.theme.Slate900
 
 /**
  * What computer tasks on the Mini are waiting for: each with its screenshot (the spot outlined in red), the
@@ -63,20 +82,29 @@ fun NeedsYouSheet(
     // A password or code on screen: no screenshots, screen recording or recent-apps preview of this sheet
     val secure = requests.any { it.kind == "secret" }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-                     containerColor = Color(0xFF0F172A),
+                     containerColor = Slate900,
                      properties = androidx.compose.material3.ModalBottomSheetProperties(
                          securePolicy = if (secure) androidx.compose.ui.window.SecureFlagPolicy.SecureOn
                                         else androidx.compose.ui.window.SecureFlagPolicy.Inherit)) {
         Column(modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 24.dp)) {
-            Text("⚠️ Needs you", color = Color(0xFFFCD34D), fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            Text("A computer task on the Mini is waiting for your answer.", color = Color(0xFF94A3B8), fontSize = 13.sp)
-            Spacer(Modifier.height(8.dp))
+            SheetHeader(
+                title = "Needs you",
+                icon = Icons.Default.Warning,
+                accent = AmberPending,
+                subtitle = if (requests.isEmpty()) "Nothing waiting on the Mini"
+                           else "${requests.size} computer task${if (requests.size == 1) " is" else "s are"} waiting for your answer"
+            )
+            Spacer(Modifier.height(10.dp))
             // Use the Mini yourself from here, any time (a running task waits until you hand back)
-            OutlinedButton(onClick = { onTakeOver(null) }) { Text("🖐 Take over the computer", color = Color(0xFFE2E8F0)) }
+            OutlinedButton(onClick = { onTakeOver(null) }) { Text("🖐 Take over the computer", color = Slate200) }
             Spacer(Modifier.height(12.dp))
             if (requests.isEmpty()) {
-                Text("Nothing is waiting right now.", color = Color(0xFFCBD5E1), fontSize = 14.sp,
-                     modifier = Modifier.padding(vertical = 24.dp))
+                EmptyState(
+                    icon = Icons.Default.CheckCircle,
+                    title = "Nothing is waiting right now",
+                    message = "When a computer task needs an answer, it shows up here.",
+                    accent = EmeraldConnected
+                )
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     items(requests, key = { it.id }) { req -> RequestCard(req, onAnswer, onScreenshot, onTakeOver) }
@@ -115,11 +143,12 @@ private fun RequestCard(
     }
 
     Column(
-        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color(0xFF1E293B))
-            .border(1.dp, Color(0xFFF59E0B), RoundedCornerShape(14.dp)).padding(12.dp)
+        modifier = Modifier.fillMaxWidth().clip(DeskShapes.card)
+            .background(Brush.verticalGradient(listOf(AmberPending.copy(alpha = 0.08f), Slate800)))
+            .border(1.dp, AmberPending.copy(alpha = 0.7f), DeskShapes.card).padding(14.dp)
     ) {
         req.site()?.let {
-            Text("🌐 $it", color = Color(0xFF7DD3FC), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+            Text("🌐 $it", color = Sky300, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(6.dp))
         }
         if (bitmap != null) {
@@ -130,13 +159,13 @@ private fun RequestCard(
         } else if (req.screenshotPath != null) {
             CircularProgressIndicator(modifier = Modifier.padding(8.dp))
         }
-        Text(req.question, color = Color(0xFFF8FAFC), fontSize = 15.sp, fontWeight = FontWeight.Medium)
+        Text(req.question, color = Slate50, fontSize = 15.sp, fontWeight = FontWeight.Medium)
         Spacer(Modifier.height(10.dp))
         when (req.kind) {
             "approve" -> Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Button(onClick = { send("Approve") }, enabled = !sending,
-                       colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF16A34A))) { Text("✅ Approve") }
-                OutlinedButton(onClick = { send("Deny") }, enabled = !sending) { Text("✋ Deny", color = Color(0xFFFCA5A5)) }
+                       colors = ButtonDefaults.buttonColors(containerColor = Green600)) { Text("✅ Approve") }
+                OutlinedButton(onClick = { send("Deny") }, enabled = !sending) { Text("✋ Deny", color = Red300) }
             }
             "secret" -> Column {
                 var shown by remember { mutableStateOf(false) }
@@ -149,12 +178,12 @@ private fun RequestCard(
                         keyboardType = androidx.compose.ui.text.input.KeyboardType.Password),
                     trailingIcon = {
                         androidx.compose.material3.TextButton(onClick = { shown = !shown }) {
-                            Text(if (shown) "Hide" else "Show", color = Color(0xFF94A3B8), fontSize = 12.sp)
+                            Text(if (shown) "Hide" else "Show", color = Slate400, fontSize = 12.sp)
                         }
                     }
                 )
                 Text("🔒 Typed straight into the outlined box on the Mini. The AI never sees it, and it isn't saved.",
-                     color = Color(0xFF94A3B8), fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
+                     color = Slate400, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
                 Spacer(Modifier.height(6.dp))
                 Button(onClick = { val v = reply; reply = ""; send(v) }, enabled = !sending && reply.isNotEmpty(),
                        modifier = Modifier.align(Alignment.End)) { Text("Send") }
@@ -162,7 +191,7 @@ private fun RequestCard(
             "choice" -> Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 req.choices.forEach { c ->
                     OutlinedButton(onClick = { send(c) }, enabled = !sending, modifier = Modifier.fillMaxWidth()) {
-                        Text(c, color = Color(0xFFE2E8F0))
+                        Text(c, color = Slate200)
                     }
                 }
             }
@@ -176,9 +205,9 @@ private fun RequestCard(
         }
         // Or do it yourself on the Mini's screen (a CAPTCHA, anything odd); the task looks again when you hand back
         androidx.compose.material3.TextButton(onClick = { onTakeOver(req.id) }, enabled = !sending) {
-            Text("🖐 Take over and do it yourself", color = Color(0xFF7DD3FC))
+            Text("🖐 Take over and do it yourself", color = Sky300)
         }
-        if (sending) Text("Sending…", color = Color(0xFF94A3B8), fontSize = 12.sp)
-        error?.let { Text("Couldn't send: $it", color = Color(0xFFFCA5A5), fontSize = 12.sp) }
+        if (sending) Text("Sending…", color = Slate400, fontSize = 12.sp)
+        error?.let { Text("Couldn't send: $it", color = Red300, fontSize = 12.sp) }
     }
 }

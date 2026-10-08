@@ -50,6 +50,45 @@ import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldConnected
 import com.example.ui.theme.RoseError
 import kotlinx.coroutines.launch
+import androidx.compose.animation.animateContentSize
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextOverflow
+import com.example.ui.components.EmptyState
+import com.example.ui.components.LoadingState
+import com.example.ui.components.RichBlock
+import com.example.ui.components.SectionCard
+import com.example.ui.components.SectionLabel
+import com.example.ui.components.SheetHeader
+import com.example.ui.components.StatusPill
+import com.example.ui.components.TagChip
+import com.example.ui.components.deskTinted
+import com.example.ui.components.parseRichText
+import com.example.ui.components.phaseColor
+import com.example.ui.components.phaseLabel
+import com.example.ui.components.relativeTime
+import com.example.ui.components.richInlineString
+import com.example.ui.components.shortSource
+import com.example.ui.theme.DeskShapes
+import com.example.ui.theme.Green600
+import com.example.ui.theme.NeonIndigo
+import com.example.ui.theme.NeonPurple
+import com.example.ui.theme.Red300
+import com.example.ui.theme.AmberPending
+import com.example.ui.theme.ElectricCyanGlow
+import com.example.ui.theme.Sky300
+import com.example.ui.theme.Sky700
+import com.example.ui.theme.Slate100
+import com.example.ui.theme.Slate300
+import com.example.ui.theme.Slate400
+import com.example.ui.theme.Slate500
+import com.example.ui.theme.Slate700
+import com.example.ui.theme.Slate800
+import com.example.ui.theme.Slate900
+import com.example.ui.components.deskSheet
+import com.example.ui.components.deskCard
 
 @Composable
 fun TasksSheet(
@@ -106,58 +145,42 @@ fun TasksSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight(0.85f)
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFF0F172A))
-                .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(16.dp))
+                .deskSheet()
                 .padding(16.dp)
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 // Header
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                val runningCount = tasks.count { it.phase == "in_progress" && !it.cancelled }
+                val queuedCount = tasks.count { it.phase == "backlog" && !it.cancelled }
+                SheetHeader(
+                    title = "Missions",
+                    icon = Icons.Default.Task,
+                    subtitle = when {
+                        runningCount > 0 -> "$runningCount running · $queuedCount queued · ${tasks.size} total"
+                        tasks.isNotEmpty() -> "${tasks.size} on AlwaysOnAgent"
+                        else -> "AlwaysOnAgent task queue"
+                    },
+                    onClose = onDismiss
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Task,
-                            contentDescription = "Task Matrix",
-                            tint = ElectricCyan,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "AlwaysOnAgent Missions",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(
-                            onClick = {
-                                scope.launch {
-                                    isRefreshing = true
-                                    try {
-                                        val f = onRefreshTasks()
-                                        if (f.isNotEmpty()) tasks = f
-                                    } catch (_: Exception) {}
-                                    finally {
-                                        isRefreshing = false
-                                    }
+                    IconButton(
+                        onClick = {
+                            scope.launch {
+                                isRefreshing = true
+                                try {
+                                    val f = onRefreshTasks()
+                                    if (f.isNotEmpty()) tasks = f
+                                } catch (_: Exception) {}
+                                finally {
+                                    isRefreshing = false
                                 }
-                            },
-                            modifier = Modifier.size(28.dp)
-                        ) {
-                            if (isRefreshing) {
-                                CircularProgressIndicator(modifier = Modifier.size(16.dp), color = ElectricCyan, strokeWidth = 2.dp)
-                            } else {
-                                Icon(imageVector = Icons.Default.Refresh, contentDescription = "Refresh", tint = ElectricCyan, modifier = Modifier.size(18.dp))
                             }
-                        }
-                        Spacer(modifier = Modifier.width(4.dp))
-                        IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
-                            Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = Color(0xFF94A3B8))
+                        },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        if (isRefreshing) {
+                            CircularProgressIndicator(modifier = Modifier.size(16.dp), color = ElectricCyan, strokeWidth = 2.dp)
+                        } else {
+                            Icon(imageVector = Icons.Default.Refresh, contentDescription = "Refresh", tint = ElectricCyan, modifier = Modifier.size(18.dp))
                         }
                     }
                 }
@@ -168,13 +191,11 @@ fun TasksSheet(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(Color(0xFF0369A1).copy(alpha = 0.25f))
-                            .border(1.dp, Color(0xFF0284C7).copy(alpha = 0.4f), RoundedCornerShape(6.dp))
-                            .padding(horizontal = 8.dp, vertical = 6.dp),
+                            .deskTinted(ElectricCyan, radius = 10.dp, fillAlpha = 0.10f)
+                            .padding(horizontal = 10.dp, vertical = 7.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("🔔 Opened from Notification: ", fontSize = 11.sp, color = Color(0xFF7DD3FC))
+                        Text("🔔 Opened from Notification: ", fontSize = 11.sp, color = Sky300)
                         Text(initialTaskId, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
                     Spacer(modifier = Modifier.height(8.dp))
@@ -186,10 +207,8 @@ fun TasksSheet(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(Color(0xFF1E293B))
-                            .border(1.dp, Color(0xFFF59E0B), RoundedCornerShape(10.dp))
-                            .padding(10.dp)
+                            .deskTinted(AmberPending, fillAlpha = 0.08f)
+                            .padding(12.dp)
                     ) {
                         Column {
                             Row(
@@ -198,21 +217,21 @@ fun TasksSheet(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    CircularProgressIndicator(modifier = Modifier.size(14.dp), color = Color(0xFFF59E0B), strokeWidth = 2.dp)
+                                    CircularProgressIndicator(modifier = Modifier.size(14.dp), color = AmberPending, strokeWidth = 2.dp)
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text(
                                         text = "LIVE ACTIVE TASK",
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = Color(0xFFF59E0B),
+                                        color = AmberPending,
                                         fontFamily = FontFamily.Monospace
                                     )
                                 }
                                 Box(
                                     modifier = Modifier
-                                        .clip(RoundedCornerShape(4.dp))
-                                        .background(RoseError.copy(alpha = 0.2f))
-                                        .border(1.dp, RoseError.copy(alpha = 0.5f), RoundedCornerShape(4.dp))
+                                        .clip(DeskShapes.pill)
+                                        .background(RoseError.copy(alpha = 0.16f))
+                                        .border(1.dp, RoseError.copy(alpha = 0.5f), DeskShapes.pill)
                                         .clickable {
                                             scope.launch {
                                                 onAbortRunningTask()
@@ -220,7 +239,7 @@ fun TasksSheet(
                                                 if (f.isNotEmpty()) tasks = f
                                             }
                                         }
-                                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                                        .padding(horizontal = 10.dp, vertical = 3.dp)
                                 ) {
                                     Text(
                                         text = "ABORT PROCESS ⏹",
@@ -234,9 +253,11 @@ fun TasksSheet(
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = runningTask.title,
-                                fontSize = 12.sp,
+                                fontSize = 13.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = Color.White
+                                color = Color.White,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -247,10 +268,13 @@ fun TasksSheet(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(if (isCreating) Color(0xFF1E293B) else Color(0xFF0284C7))
+                        .clip(DeskShapes.control)
+                        .background(
+                            if (isCreating) Brush.horizontalGradient(listOf(Slate800, Slate800))
+                            else Brush.horizontalGradient(listOf(ElectricCyanGlow, NeonIndigo))
+                        )
                         .clickable { isCreating = !isCreating }
-                        .padding(vertical = 8.dp),
+                        .padding(vertical = 10.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -275,14 +299,14 @@ fun TasksSheet(
                     OutlinedTextField(
                         value = taskTitle,
                         onValueChange = { taskTitle = it },
-                        placeholder = { Text("Title (e.g. Audit auth middleware...)", color = Color(0xFF64748B), fontSize = 12.sp) },
+                        placeholder = { Text("Title (e.g. Audit auth middleware...)", color = Slate500, fontSize = 12.sp) },
                         textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 13.sp),
                         modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = Color(0xFF1E293B),
-                            unfocusedContainerColor = Color(0xFF1E293B),
+                            focusedContainerColor = Slate800,
+                            unfocusedContainerColor = Slate800,
                             focusedBorderColor = ElectricCyan,
-                            unfocusedBorderColor = Color(0xFF334155)
+                            unfocusedBorderColor = Slate700
                         ),
                         singleLine = true
                     )
@@ -290,23 +314,23 @@ fun TasksSheet(
                     OutlinedTextField(
                         value = taskPrompt,
                         onValueChange = { taskPrompt = it },
-                        placeholder = { Text("Mission instructions and context...", color = Color(0xFF64748B), fontSize = 12.sp) },
+                        placeholder = { Text("Mission instructions and context...", color = Slate500, fontSize = 12.sp) },
                         textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 13.sp),
                         modifier = Modifier.fillMaxWidth(),
                         maxLines = 3,
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = Color(0xFF1E293B),
-                            unfocusedContainerColor = Color(0xFF1E293B),
+                            focusedContainerColor = Slate800,
+                            unfocusedContainerColor = Slate800,
                             focusedBorderColor = ElectricCyan,
-                            unfocusedBorderColor = Color(0xFF334155)
+                            unfocusedBorderColor = Slate700
                         )
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFF10B981))
+                            .clip(DeskShapes.control)
+                            .background(Brush.horizontalGradient(listOf(EmeraldConnected, Green600)))
                             .clickable {
                                 if (taskTitle.isNotBlank() && taskPrompt.isNotBlank()) {
                                     scope.launch {
@@ -328,7 +352,7 @@ fun TasksSheet(
                                     }
                                 }
                             }
-                            .padding(vertical = 8.dp),
+                            .padding(vertical = 10.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(text = "Launch Mission Now 🚀", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
@@ -338,14 +362,21 @@ fun TasksSheet(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // Tasks List
-                Text(
-                    text = "MISSION HISTORY & QUEUE (${tasks.size})",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF94A3B8),
-                    letterSpacing = 0.5.sp
-                )
-                Spacer(modifier = Modifier.height(6.dp))
+                SectionLabel("Mission history & queue", count = tasks.size)
+                Spacer(modifier = Modifier.height(8.dp))
+
+                if (tasks.isEmpty()) {
+                    if (isRefreshing) {
+                        LoadingState("Loading missions…")
+                    } else {
+                        EmptyState(
+                            icon = Icons.Default.Task,
+                            title = "No missions yet",
+                            message = "Dispatch one above, or ask in chat and it will show up here.",
+                            accent = ElectricCyan
+                        )
+                    }
+                }
 
                 LazyColumn(
                     modifier = Modifier.weight(1f),
@@ -396,179 +427,181 @@ fun TaskRowCard(
     onRetry: () -> Unit
 ) {
     val isCancelled = task.cancelled || task.phase == "cancelled"
-    val phaseColor = when {
-        isCancelled -> Color(0xFF94A3B8)
-        task.phase == "completed" -> EmeraldConnected
-        task.phase == "in_progress" -> Color(0xFFF59E0B)
-        task.phase == "failed" -> RoseError
-        else -> ElectricCyan
-    }
+    val phaseColor = phaseColor(task.phase, isCancelled)
+    val failed = task.phase == "failed" && !isCancelled
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(Color(0xFF1E293B))
-            .border(1.dp, Color(0xFF334155), RoundedCornerShape(10.dp))
-            .clickable { onOpen() }
-            .padding(10.dp)
-    ) {
-        Column {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
-            ) {
-                Text(
-                    text = task.title,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFFF1F5F9),
-                    modifier = Modifier.weight(1f)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(phaseColor.copy(alpha = 0.2f))
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
+    SectionCard(accent = phaseColor, onClick = onOpen, contentPadding = 12.dp) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top
+        ) {
+            Text(
+                text = task.title,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Slate100,
+                lineHeight = 19.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            StatusPill(text = phaseLabel(task.phase, isCancelled), color = phaseColor)
+        }
+
+        // Status line (what it's doing / why it stopped)
+        val displayStatus = task.statusText ?: task.outputSummary
+        val statusIsSummary = task.statusText == null
+        if (!displayStatus.isNullOrBlank() && !(statusIsSummary && (task.phase == "completed" || task.phase == "failed"))) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = displayStatus,
+                fontSize = 11.sp,
+                color = if (failed) RoseError else Slate400,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        // What a finished task produced: a short, readable preview (markdown stripped to inline styling).
+        // Tap the preview to see more of it; tap anywhere else for the full details.
+        val summary = task.outputSummary?.trim()
+        if (!summary.isNullOrBlank() && (task.phase == "completed" || task.phase == "failed")) {
+            var expanded by remember(task.id) { mutableStateOf(false) }
+            val preview = remember(summary) { summaryPreview(summary) }
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = preview,
+                fontSize = 12.sp,
+                color = if (failed) Red300 else Slate300,
+                lineHeight = 17.sp,
+                maxLines = if (expanded) Int.MAX_VALUE else 3,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .animateContentSize()
+                    .clickable { expanded = !expanded }
+            )
+        }
+
+        // Task Progress Bar
+        if (task.phase == "in_progress" && !isCancelled) {
+            val prog = task.progress
+            Spacer(modifier = Modifier.height(8.dp))
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = if (isCancelled) "CANCELLED" else task.phase.uppercase(),
-                        fontSize = 9.sp,
+                        text = if (prog != null && prog.label.isNotBlank()) "⚡ ${prog.label}" else "⚡ Running on host",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = AmberPending,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        text = if (prog != null) "${prog.percent}%" else "in flight",
+                        fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = phaseColor,
+                        color = AmberPending,
                         fontFamily = FontFamily.Monospace
                     )
                 }
-            }
-
-            // Status Text or Output Summary
-            val displayStatus = task.statusText ?: task.outputSummary
-            if (!displayStatus.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = displayStatus,
-                    fontSize = 11.sp,
-                    color = if (task.phase == "failed" && !isCancelled) RoseError else Color(0xFF94A3B8)
-                )
-            }
-            // What a finished task produced (the weekly numbers, an answer): the first lines, tap for all of it
-            val summary = task.outputSummary?.trim()
-            if (!summary.isNullOrBlank() && summary != displayStatus && (task.phase == "completed" || task.phase == "failed")) {
-                var expanded by remember(task.id) { mutableStateOf(false) }
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = summary,
-                    fontSize = 11.sp,
-                    color = Color(0xFFCBD5E1),
-                    lineHeight = 15.sp,
-                    maxLines = if (expanded) Int.MAX_VALUE else 6,
-                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                    modifier = Modifier.clickable { expanded = !expanded }
-                )
-            }
-
-            // Task Progress Bar
-            Spacer(modifier = Modifier.height(6.dp))
-            if (task.phase == "in_progress" && !isCancelled) {
-                val prog = task.progress
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = if (prog != null && prog.label.isNotBlank()) "⚡ ${prog.label.uppercase()}" else "⚡ EXECUTING LIVE ON HOST",
-                            fontSize = 9.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFF59E0B),
-                            fontFamily = FontFamily.Monospace
-                        )
-                        Text(
-                            text = if (prog != null) "${prog.percent}%" else "In Flight",
-                            fontSize = 9.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFF59E0B),
-                            fontFamily = FontFamily.Monospace
-                        )
-                    }
-                    if (prog != null && prog.detail.isNotBlank()) {
-                        Text(
-                            text = prog.detail,
-                            fontSize = 9.sp,
-                            color = Color(0xFF94A3B8)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(3.dp))
-                    if (prog != null) {
-                        LinearProgressIndicator(
-                            progress = { (prog.percent.coerceIn(0, 100)) / 100f },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(4.dp)
-                                .clip(RoundedCornerShape(2.dp)),
-                            color = Color(0xFFF59E0B),
-                            trackColor = Color(0xFF0F172A)
-                        )
-                    } else {
-                        LinearProgressIndicator(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(3.dp)
-                                .clip(RoundedCornerShape(1.5.dp)),
-                            color = Color(0xFFF59E0B),
-                            trackColor = Color(0xFF0F172A)
-                        )
-                    }
+                if (prog != null && prog.detail.isNotBlank()) {
+                    Text(
+                        text = prog.detail,
+                        fontSize = 10.sp,
+                        color = Slate400,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
-                Spacer(modifier = Modifier.height(6.dp))
-            } else if (task.phase == "completed") {
-                LinearProgressIndicator(
-                    progress = { 1f },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(2.dp)
-                        .clip(RoundedCornerShape(1.dp)),
-                    color = EmeraldConnected.copy(alpha = 0.6f),
-                    trackColor = Color(0xFF0F172A)
-                )
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(4.dp))
+                if (prog != null) {
+                    LinearProgressIndicator(
+                        progress = { (prog.percent.coerceIn(0, 100)) / 100f },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(4.dp)
+                            .clip(DeskShapes.pill),
+                        color = AmberPending,
+                        trackColor = Slate900
+                    )
+                } else {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(3.dp)
+                            .clip(DeskShapes.pill),
+                        color = AmberPending,
+                        trackColor = Slate900
+                    )
+                }
             }
+        }
 
+        // Footer: when · where from · id/engine, then the action
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val stamp = task.completedAt ?: task.startedAt ?: task.createdAt
+            val whenText = remember(stamp) { relativeTime(stamp) }
+            val source = remember(task.source) { shortSource(task.source) }
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "#${task.id.take(12)} • ${task.engine}",
-                    fontSize = 10.sp,
-                    color = Color(0xFF64748B),
-                    fontFamily = FontFamily.Monospace
-                )
-
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    if ((task.phase == "in_progress" || task.phase == "backlog") && !isCancelled) {
-                        Text(
-                            text = "Cancel",
-                            fontSize = 11.sp,
-                            color = RoseError,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.clickable { onCancel() }
-                        )
-                    } else if (task.phase == "failed" && !isCancelled) {
-                        Text(
-                            text = "Retry",
-                            fontSize = 11.sp,
-                            color = ElectricCyan,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.clickable { onRetry() }
-                        )
-                    }
+                if (whenText != null) {
+                    TagChip(text = whenText, icon = Icons.Default.Schedule, color = Slate400)
                 }
+                if (source != null) {
+                    TagChip(text = source, color = if (source.startsWith("Schedule")) NeonPurple else ElectricCyan)
+                }
+                Text(
+                    text = if (whenText == null && source == null) "#${task.id.take(12)} • ${task.engine}" else task.engine,
+                    fontSize = 10.sp,
+                    color = Slate500,
+                    fontFamily = FontFamily.Monospace,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
+
+            if ((task.phase == "in_progress" || task.phase == "backlog") && !isCancelled) {
+                TagChip(text = "Cancel", color = RoseError, onClick = onCancel)
+            } else if (failed) {
+                TagChip(text = "Retry", color = ElectricCyan, icon = Icons.Default.Refresh, onClick = onRetry)
+            }
+        }
+    }
+}
+
+/** The first few readable lines of a result: headings/bullets/paragraphs with inline styling, no markdown marks. */
+private fun summaryPreview(text: String): AnnotatedString {
+    val lines = parseRichText(text).mapNotNull { b ->
+        when (b) {
+            is RichBlock.Heading -> b.text
+            is RichBlock.Paragraph -> b.text
+            is RichBlock.Bullet -> "• " + b.text
+            is RichBlock.Numbered -> "${b.number}. " + b.text
+            is RichBlock.TagLine -> "[${b.tag}] " + b.text
+            is RichBlock.BranchBadge -> b.text
+            is RichBlock.DiffStatSummary -> "${b.files} file${if (b.files == 1) "" else "s"} changed (+${b.insertions} −${b.deletions})"
+            else -> null
+        }
+    }.filter { it.isNotBlank() }.take(8)
+    if (lines.isEmpty()) return AnnotatedString(text.trim())
+    return buildAnnotatedString {
+        lines.forEachIndexed { i, line ->
+            if (i > 0) append("\n")
+            append(richInlineString(line, Slate300))
         }
     }
 }

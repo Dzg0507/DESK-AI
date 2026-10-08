@@ -59,6 +59,14 @@ import com.example.ui.theme.CodeBlockBackground
 import com.example.ui.theme.ElectricCyan
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.example.ui.theme.EmeraldConnected
+import com.example.ui.theme.Slate200
+import com.example.ui.theme.Slate300
+import com.example.ui.theme.Slate400
+import com.example.ui.theme.Slate800
+import com.example.ui.theme.Slate900
+import com.example.ui.theme.SlateDarkBorder
+import com.example.ui.theme.SlateDarkSurface
 
 sealed class MarkdownElement {
     data class Paragraph(val text: String) : MarkdownElement()
@@ -183,8 +191,8 @@ fun MarkdownImage(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF0F172A))
-            .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(12.dp))
+            .background(Slate900)
+            .border(1.dp, Slate800, RoundedCornerShape(12.dp))
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Box(
@@ -228,7 +236,7 @@ fun MarkdownImage(
                 Text(
                     text = alt.ifBlank { "Generated Image" },
                     fontSize = 11.sp,
-                    color = Color(0xFF94A3B8),
+                    color = Slate400,
                     modifier = Modifier.weight(1f),
                     maxLines = 1
                 )
@@ -245,7 +253,7 @@ fun MarkdownImage(
                     Text(
                         text = "🌐 Browser",
                         fontSize = 11.sp,
-                        color = Color(0xFFCBD5E1),
+                        color = Slate300,
                         modifier = Modifier
                             .clickable {
                                 try {
@@ -281,14 +289,14 @@ fun CodeBlockCard(language: String, code: String) {
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
             .background(CodeBlockBackground)
-            .border(1.dp, Color(0xFF2E3A52), RoundedCornerShape(10.dp))
+            .border(1.dp, SlateDarkBorder, RoundedCornerShape(10.dp))
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             // Header Bar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFF131B2E))
+                    .background(SlateDarkSurface)
                     .padding(horizontal = 12.dp, vertical = 6.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -318,7 +326,7 @@ fun CodeBlockCard(language: String, code: String) {
                     Icon(
                         imageVector = if (copied) Icons.Default.Check else Icons.Default.ContentCopy,
                         contentDescription = "Copy Code",
-                        tint = if (copied) Color(0xFF10B981) else Color(0xFF94A3B8),
+                        tint = if (copied) EmeraldConnected else Slate400,
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -335,7 +343,7 @@ fun CodeBlockCard(language: String, code: String) {
                     text = code,
                     fontFamily = FontFamily.Monospace,
                     fontSize = 13.sp,
-                    color = Color(0xFFE2E8F0),
+                    color = Slate200,
                     lineHeight = 19.sp
                 )
             }
@@ -451,7 +459,7 @@ private fun AnnotatedString.Builder.appendWithLinks(s: String) {
         withLink(
             LinkAnnotation.Url(
                 url,
-                TextLinkStyles(style = SpanStyle(color = Color(0xFF38BDF8), textDecoration = TextDecoration.Underline))
+                TextLinkStyles(style = SpanStyle(color = ElectricCyan, textDecoration = TextDecoration.Underline))
             )
         ) { append(label ?: url) }
         i = m.range.last + 1

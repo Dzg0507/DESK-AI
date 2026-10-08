@@ -1,5 +1,6 @@
 package com.example.ui.dialogs
 
+import com.example.ui.theme.DeskShapes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -67,6 +68,21 @@ import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldConnected
 import com.example.ui.theme.NeonIndigo
 import com.example.ui.theme.RoseError
+import com.example.ui.theme.AmberPending
+import com.example.ui.theme.CodeBlockBackground
+import com.example.ui.theme.Cyan400
+import com.example.ui.theme.DeepCard
+import com.example.ui.theme.DeepCardAlt
+import com.example.ui.theme.DeepPanel
+import com.example.ui.theme.Green400
+import com.example.ui.theme.NeonPurple
+import com.example.ui.theme.Purple400
+import com.example.ui.theme.Slate200
+import com.example.ui.theme.Slate300
+import com.example.ui.theme.Slate400
+import com.example.ui.theme.Slate500
+import com.example.ui.theme.Slate800
+import com.example.ui.theme.Slate900
 
 data class CommandEntry(
     val command: String,
@@ -131,7 +147,7 @@ fun CommandPaletteDialog(
                 description = "Sleep background daemon (0% host CPU/GPU)",
                 category = "Daemon Controls",
                 icon = Icons.Default.PowerSettingsNew,
-                color = Color(0xFF94A3B8),
+                color = Slate400,
                 isDirectAction = true
             ),
             CommandEntry(
@@ -153,7 +169,7 @@ fun CommandPaletteDialog(
                 description = "Dispatches local 3D motion video rendering pipeline",
                 category = "Media & Automation",
                 icon = Icons.Default.Videocam,
-                color = Color(0xFFC084FC),
+                color = Purple400,
                 isDirectAction = false
             ),
             CommandEntry(
@@ -163,7 +179,7 @@ fun CommandPaletteDialog(
                 description = "Renders 3D video and uploads to @Thevibecheckproject",
                 category = "Media & Automation",
                 icon = Icons.Default.Videocam,
-                color = Color(0xFFF43F5E),
+                color = RoseError,
                 isDirectAction = false
             ),
             CommandEntry(
@@ -173,7 +189,7 @@ fun CommandPaletteDialog(
                 description = "Generate visual concept or graphic assets",
                 category = "Media & Automation",
                 icon = Icons.Default.Terminal,
-                color = Color(0xFF38BDF8),
+                color = ElectricCyan,
                 isDirectAction = false
             ),
 
@@ -217,7 +233,7 @@ fun CommandPaletteDialog(
                 description = "Inspect active missions in the worker pool",
                 category = "Task Orchestration",
                 icon = Icons.Default.Task,
-                color = Color(0xFFF59E0B),
+                color = AmberPending,
                 isDirectAction = true
             ),
             CommandEntry(
@@ -237,7 +253,7 @@ fun CommandPaletteDialog(
                 description = "Re-enqueue a failed task back to the worker pool",
                 category = "Task Orchestration",
                 icon = Icons.Default.PlayArrow,
-                color = Color(0xFFF59E0B),
+                color = AmberPending,
                 isDirectAction = false
             ),
             CommandEntry(
@@ -279,8 +295,8 @@ fun CommandPaletteDialog(
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            Color(0xFF0F172A),
-                            Color(0xFF090D16),
+                            Slate900,
+                            CodeBlockBackground,
                             Color(0xFF05070B)
                         )
                     )
@@ -288,7 +304,7 @@ fun CommandPaletteDialog(
                 .border(
                     1.dp,
                     Brush.verticalGradient(
-                        colors = listOf(ElectricCyan.copy(alpha = 0.5f), Color(0xFF1E293B))
+                        colors = listOf(ElectricCyan.copy(alpha = 0.5f), Slate800)
                     ),
                     RoundedCornerShape(20.dp)
                 )
@@ -304,9 +320,9 @@ fun CommandPaletteDialog(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
+                                .clip(DeskShapes.control)
                                 .background(ElectricCyan.copy(alpha = 0.15f))
-                                .border(1.dp, ElectricCyan.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+                                .border(1.dp, ElectricCyan.copy(alpha = 0.4f), DeskShapes.control)
                                 .padding(horizontal = 8.dp, vertical = 4.dp)
                         ) {
                             Text(
@@ -338,7 +354,7 @@ fun CommandPaletteDialog(
                                     text = if (isConnected) "ONLINE: ${serverUrl.removePrefix("http://").take(22)}" else "BRIDGE OFFLINE",
                                     fontSize = 10.sp,
                                     fontFamily = FontFamily.Monospace,
-                                    color = if (isConnected) Color(0xFF94A3B8) else RoseError
+                                    color = if (isConnected) Slate400 else RoseError
                                 )
                             }
                         }
@@ -349,12 +365,12 @@ fun CommandPaletteDialog(
                         modifier = Modifier
                             .size(32.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF1E293B))
+                            .background(Slate800)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = "Close",
-                            tint = Color(0xFFCBD5E1),
+                            tint = Slate300,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -369,7 +385,7 @@ fun CommandPaletteDialog(
                     placeholder = {
                         Text(
                             "Search commands, actions, or views...",
-                            color = Color(0xFF64748B),
+                            color = Slate500,
                             fontSize = 13.sp
                         )
                     },
@@ -387,7 +403,7 @@ fun CommandPaletteDialog(
                                 Icon(
                                     imageVector = Icons.Default.Close,
                                     contentDescription = "Clear search",
-                                    tint = Color(0xFF94A3B8),
+                                    tint = Slate400,
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
@@ -395,14 +411,14 @@ fun CommandPaletteDialog(
                     },
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Color(0xFF131D31),
-                        unfocusedContainerColor = Color(0xFF101726),
+                        focusedContainerColor = DeepCard,
+                        unfocusedContainerColor = DeepPanel,
                         focusedBorderColor = ElectricCyan,
-                        unfocusedBorderColor = Color(0xFF1E293B),
+                        unfocusedBorderColor = Slate800,
                         focusedTextColor = Color.White,
-                        unfocusedTextColor = Color(0xFFE2E8F0)
+                        unfocusedTextColor = Slate200
                     ),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = DeskShapes.card,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp)
@@ -436,7 +452,7 @@ fun CommandPaletteDialog(
                                         text = "4 VIEWS BUNDLED",
                                         fontSize = 9.sp,
                                         fontFamily = FontFamily.Monospace,
-                                        color = Color(0xFF64748B)
+                                        color = Slate500
                                     )
                                 }
 
@@ -466,7 +482,7 @@ fun CommandPaletteDialog(
                                             title = "Video Gallery",
                                             subtitle = "Stream 3D Renders & TikToks",
                                             icon = Icons.Default.Videocam,
-                                            accentColor = Color(0xFFC084FC),
+                                            accentColor = Purple400,
                                             modifier = Modifier.weight(1f),
                                             onClick = {
                                                 onDismiss()
@@ -497,7 +513,7 @@ fun CommandPaletteDialog(
                                             title = "Mission Tasks",
                                             subtitle = "Active Queue & Worker Pool",
                                             icon = Icons.Default.Task,
-                                            accentColor = Color(0xFFF59E0B),
+                                            accentColor = AmberPending,
                                             modifier = Modifier.weight(1f),
                                             onClick = {
                                                 onDismiss()
@@ -515,7 +531,7 @@ fun CommandPaletteDialog(
                                             title = "AgentWork",
                                             subtitle = "Autonomous Code & Git Repos",
                                             icon = Icons.Default.Build,
-                                            accentColor = Color(0xFF38BDF8),
+                                            accentColor = ElectricCyan,
                                             modifier = Modifier.weight(1f),
                                             onClick = {
                                                 onDismiss()
@@ -528,7 +544,7 @@ fun CommandPaletteDialog(
                                             title = "Maintenance",
                                             subtitle = "Backup, Restart & System Logs",
                                             icon = Icons.Default.CleaningServices,
-                                            accentColor = Color(0xFFA855F7),
+                                            accentColor = NeonPurple,
                                             modifier = Modifier.weight(1f),
                                             onClick = {
                                                 onDismiss()
@@ -542,7 +558,7 @@ fun CommandPaletteDialog(
                                         title = "Schedules",
                                         subtitle = "Videos, reminders & tasks on a timer",
                                         icon = Icons.Default.Schedule,
-                                        accentColor = Color(0xFF22D3EE),
+                                        accentColor = Cyan400,
                                         modifier = Modifier.fillMaxWidth(),
                                         onClick = {
                                             onDismiss()
@@ -555,7 +571,7 @@ fun CommandPaletteDialog(
                                         title = "Take over",
                                         subtitle = "Use the Mini's screen from your phone",
                                         icon = Icons.Default.TouchApp,
-                                        accentColor = Color(0xFFF59E0B),
+                                        accentColor = AmberPending,
                                         modifier = Modifier.fillMaxWidth(),
                                         onClick = {
                                             onDismiss()
@@ -568,7 +584,7 @@ fun CommandPaletteDialog(
                                         title = "Repos",
                                         subtitle = "Browse your GitHub repos and work on one",
                                         icon = Icons.Default.FolderOpen,
-                                        accentColor = Color(0xFF4ADE80),
+                                        accentColor = Green400,
                                         modifier = Modifier.fillMaxWidth(),
                                         onClick = {
                                             onDismiss()
@@ -583,12 +599,12 @@ fun CommandPaletteDialog(
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .background(Color(0xFF131C2E))
+                                        .clip(DeskShapes.card)
+                                        .background(DeepCardAlt)
                                         .border(
                                             1.dp,
-                                            if (hasUpdateAvailable) ElectricCyan else Color(0xFF1E293B),
-                                            RoundedCornerShape(12.dp)
+                                            if (hasUpdateAvailable) ElectricCyan else Slate800,
+                                            DeskShapes.card
                                         )
                                         .clickable {
                                             onDismiss()
@@ -605,7 +621,7 @@ fun CommandPaletteDialog(
                                             Icon(
                                                 imageVector = Icons.Default.SystemUpdate,
                                                 contentDescription = null,
-                                                tint = if (hasUpdateAvailable) ElectricCyan else Color(0xFF94A3B8),
+                                                tint = if (hasUpdateAvailable) ElectricCyan else Slate400,
                                                 modifier = Modifier.size(18.dp)
                                             )
                                             Spacer(modifier = Modifier.width(10.dp))
@@ -619,7 +635,7 @@ fun CommandPaletteDialog(
                                                 Text(
                                                     text = "Check version manifest & download fresh GitHub releases",
                                                     fontSize = 10.sp,
-                                                    color = Color(0xFF94A3B8)
+                                                    color = Slate400
                                                 )
                                             }
                                         }
@@ -627,7 +643,7 @@ fun CommandPaletteDialog(
                                         if (hasUpdateAvailable) {
                                             Box(
                                                 modifier = Modifier
-                                                    .clip(RoundedCornerShape(6.dp))
+                                                    .clip(DeskShapes.chip)
                                                     .background(ElectricCyan)
                                                     .padding(horizontal = 6.dp, vertical = 2.dp)
                                             ) {
@@ -642,7 +658,7 @@ fun CommandPaletteDialog(
                                             Text(
                                                 text = "Check",
                                                 fontSize = 11.sp,
-                                                color = Color(0xFF64748B)
+                                                color = Slate500
                                             )
                                         }
                                     }
@@ -658,7 +674,7 @@ fun CommandPaletteDialog(
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 1.sp,
-                            color = Color(0xFF94A3B8)
+                            color = Slate400
                         )
                     }
 
@@ -692,9 +708,9 @@ fun WorkstationCard(
 ) {
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF131D31))
-            .border(1.dp, accentColor.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
+            .clip(DeskShapes.card)
+            .background(DeepCard)
+            .border(1.dp, accentColor.copy(alpha = 0.35f), DeskShapes.card)
             .clickable { onClick() }
             .padding(12.dp)
     ) {
@@ -707,9 +723,9 @@ fun WorkstationCard(
                 Box(
                     modifier = Modifier
                         .size(32.dp)
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(DeskShapes.control)
                         .background(accentColor.copy(alpha = 0.15f))
-                        .border(1.dp, accentColor.copy(alpha = 0.4f), RoundedCornerShape(8.dp)),
+                        .border(1.dp, accentColor.copy(alpha = 0.4f), DeskShapes.control),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -741,7 +757,7 @@ fun WorkstationCard(
             Text(
                 text = subtitle,
                 fontSize = 10.sp,
-                color = Color(0xFF94A3B8),
+                color = Slate400,
                 maxLines = 1
             )
         }
@@ -756,9 +772,9 @@ fun CommandItemRow(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(Color(0xFF0F172A))
-            .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(10.dp))
+            .clip(DeskShapes.control)
+            .background(Slate900)
+            .border(1.dp, Slate800, DeskShapes.control)
             .clickable { onClick() }
             .padding(horizontal = 12.dp, vertical = 10.dp)
     ) {
@@ -773,9 +789,9 @@ fun CommandItemRow(
             ) {
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(6.dp))
+                        .clip(DeskShapes.chip)
                         .background(entry.color.copy(alpha = 0.12f))
-                        .border(1.dp, entry.color.copy(alpha = 0.35f), RoundedCornerShape(6.dp))
+                        .border(1.dp, entry.color.copy(alpha = 0.35f), DeskShapes.chip)
                         .padding(horizontal = 7.dp, vertical = 3.dp)
                 ) {
                     Text(
@@ -799,7 +815,7 @@ fun CommandItemRow(
                     Text(
                         text = entry.description,
                         fontSize = 10.sp,
-                        color = Color(0xFF94A3B8),
+                        color = Slate400,
                         maxLines = 1
                     )
                 }
@@ -809,8 +825,8 @@ fun CommandItemRow(
 
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(Color(0xFF1E293B))
+                    .clip(DeskShapes.chip)
+                    .background(Slate800)
                     .padding(horizontal = 6.dp, vertical = 3.dp)
             ) {
                 Text(
@@ -818,7 +834,7 @@ fun CommandItemRow(
                     fontSize = 9.sp,
                     fontFamily = FontFamily.Monospace,
                     fontWeight = FontWeight.Bold,
-                    color = if (entry.isDirectAction) EmeraldConnected else Color(0xFFCBD5E1)
+                    color = if (entry.isDirectAction) EmeraldConnected else Slate300
                 )
             }
         }

@@ -1,5 +1,10 @@
 package com.example.ui.dialogs
 
+import com.example.ui.components.SheetHeader
+import com.example.ui.components.SectionLabel
+import com.example.ui.components.EmptyState
+import com.example.ui.theme.DeskShapes
+import com.example.ui.theme.NeonPurple
 import android.content.Intent
 import android.net.Uri
 import android.view.ViewGroup
@@ -79,6 +84,20 @@ import com.example.ui.theme.EmeraldConnected
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.Locale
+import com.example.ui.theme.CodeBlockBackground
+import com.example.ui.theme.ElectricCyanGlow
+import com.example.ui.theme.Red400
+import com.example.ui.theme.Red500
+import com.example.ui.theme.Slate100
+import com.example.ui.theme.Slate200
+import com.example.ui.theme.Slate300
+import com.example.ui.theme.Slate400
+import com.example.ui.theme.Slate500
+import com.example.ui.theme.Slate700
+import com.example.ui.theme.Slate800
+import com.example.ui.theme.Slate900
+import com.example.ui.components.deskSheet
+import com.example.ui.components.deskCard
 
 @Composable
 fun MediaGallerySheet(
@@ -157,51 +176,31 @@ fun MediaGallerySheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight(0.90f)
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFF0F172A))
-                .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(16.dp))
+                .deskSheet()
                 .padding(16.dp)
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 // Header
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                SheetHeader(
+                    title = "Agent Media Hub",
+                    icon = if (selectedTab == 0) Icons.Default.Image else Icons.Default.Videocam,
+                    accent = if (selectedTab == 0) NeonPurple else ElectricCyan,
+                    subtitle = "${images.size} images · ${videos.size} videos",
+                    onClose = onDismiss
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(
+                        onClick = {
+                            refreshVideos()
+                            refreshImages()
+                        },
+                        modifier = Modifier.size(32.dp)
+                    ) {
                         Icon(
-                            imageVector = if (selectedTab == 0) Icons.Default.Image else Icons.Default.Videocam,
-                            contentDescription = "Media Hub",
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Refresh Media",
                             tint = ElectricCyan,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(18.dp)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Agent Media Hub",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(
-                            onClick = {
-                                refreshVideos()
-                                refreshImages()
-                            },
-                            modifier = Modifier.size(28.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Refresh,
-                                contentDescription = "Refresh Media",
-                                tint = Color(0xFF94A3B8)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(4.dp))
-                        IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
-                            Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = Color(0xFF94A3B8))
-                        }
                     }
                 }
 
@@ -211,8 +210,9 @@ fun MediaGallerySheet(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0xFF1E293B))
+                        .clip(DeskShapes.control)
+                        .background(Slate800)
+                        .border(1.dp, Slate700, DeskShapes.control)
                         .padding(4.dp),
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
@@ -220,12 +220,12 @@ fun MediaGallerySheet(
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(if (selectedTab == 0) ElectricCyan.copy(alpha = 0.22f) else Color.Transparent)
+                            .clip(DeskShapes.chip)
+                            .background(if (selectedTab == 0) NeonPurple.copy(alpha = 0.22f) else Color.Transparent)
                             .border(
                                 width = 1.dp,
-                                color = if (selectedTab == 0) ElectricCyan else Color.Transparent,
-                                shape = RoundedCornerShape(8.dp)
+                                color = if (selectedTab == 0) NeonPurple else Color.Transparent,
+                                shape = DeskShapes.chip
                             )
                             .clickable { selectedTab = 0 }
                             .padding(vertical = 8.dp),
@@ -235,7 +235,7 @@ fun MediaGallerySheet(
                             Icon(
                                 imageVector = Icons.Default.Image,
                                 contentDescription = null,
-                                tint = if (selectedTab == 0) ElectricCyan else Color(0xFF94A3B8),
+                                tint = if (selectedTab == 0) NeonPurple else Slate400,
                                 modifier = Modifier.size(15.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
@@ -243,7 +243,7 @@ fun MediaGallerySheet(
                                 text = "Images (${images.size})",
                                 fontSize = 12.sp,
                                 fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal,
-                                color = if (selectedTab == 0) Color.White else Color(0xFF94A3B8)
+                                color = if (selectedTab == 0) Color.White else Slate400
                             )
                         }
                     }
@@ -252,12 +252,12 @@ fun MediaGallerySheet(
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(DeskShapes.chip)
                             .background(if (selectedTab == 1) ElectricCyan.copy(alpha = 0.22f) else Color.Transparent)
                             .border(
                                 width = 1.dp,
                                 color = if (selectedTab == 1) ElectricCyan else Color.Transparent,
-                                shape = RoundedCornerShape(8.dp)
+                                shape = DeskShapes.chip
                             )
                             .clickable { selectedTab = 1 }
                             .padding(vertical = 8.dp),
@@ -267,7 +267,7 @@ fun MediaGallerySheet(
                             Icon(
                                 imageVector = Icons.Default.Videocam,
                                 contentDescription = null,
-                                tint = if (selectedTab == 1) ElectricCyan else Color(0xFF94A3B8),
+                                tint = if (selectedTab == 1) ElectricCyan else Slate400,
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
@@ -275,7 +275,7 @@ fun MediaGallerySheet(
                                 text = "Videos (${videos.size})",
                                 fontSize = 12.sp,
                                 fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal,
-                                color = if (selectedTab == 1) Color.White else Color(0xFF94A3B8)
+                                color = if (selectedTab == 1) Color.White else Slate400
                             )
                         }
                     }
@@ -291,13 +291,7 @@ fun MediaGallerySheet(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "AGENT CREATIONS (${images.size})",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF94A3B8),
-                            letterSpacing = 0.5.sp
-                        )
+                        SectionLabel("Agent creations", count = images.size)
                         if (isImagesLoading) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(14.dp),
@@ -315,22 +309,12 @@ fun MediaGallerySheet(
                                 .weight(1f),
                             contentAlignment = Alignment.Center
                         ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(text = "🎨", fontSize = 32.sp)
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = "No images created yet",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = Color(0xFF94A3B8)
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "Run /image <prompt> in chat to generate visuals!",
-                                    fontSize = 11.sp,
-                                    color = Color(0xFF64748B)
-                                )
-                            }
+                            EmptyState(
+                                icon = Icons.Default.Image,
+                                title = "No images created yet",
+                                message = "Run /image <prompt> in chat to generate visuals!",
+                                accent = NeonPurple
+                            )
                         }
                     } else {
                         LazyVerticalGrid(
@@ -367,15 +351,15 @@ fun MediaGallerySheet(
                     OutlinedTextField(
                         value = customQuote,
                         onValueChange = { customQuote = it },
-                        placeholder = { Text("Custom quote (leave blank for daily affirmation)...", color = Color(0xFF64748B), fontSize = 12.sp) },
+                        placeholder = { Text("Custom quote (leave blank for daily affirmation)...", color = Slate500, fontSize = 12.sp) },
                         textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 12.sp),
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = Color(0xFF1E293B),
-                            unfocusedContainerColor = Color(0xFF1E293B),
+                            focusedContainerColor = Slate800,
+                            unfocusedContainerColor = Slate800,
                             focusedBorderColor = ElectricCyan,
-                            unfocusedBorderColor = Color(0xFF334155)
+                            unfocusedBorderColor = Slate700
                         )
                     )
 
@@ -391,8 +375,8 @@ fun MediaGallerySheet(
                             modifier = Modifier
                                 .weight(1f)
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(Color(0xFF1E293B))
-                                .border(1.dp, Color(0xFF334155), RoundedCornerShape(8.dp))
+                                .background(Slate800)
+                                .border(1.dp, Slate700, RoundedCornerShape(8.dp))
                             .clickable {
                                 scope.launch {
                                     val res = onTriggerRender(customQuote.ifBlank { null })
@@ -413,7 +397,7 @@ fun MediaGallerySheet(
                                 text = "🎬 Render 3D Video",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFFE2E8F0)
+                                color = Slate200
                             )
                         }
 
@@ -422,7 +406,7 @@ fun MediaGallerySheet(
                             modifier = Modifier
                                 .weight(1f)
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(Color(0xFF0284C7))
+                                .background(ElectricCyanGlow)
                                 .clickable {
                                     scope.launch {
                                         val res = onTriggerTikTok(customQuote.ifBlank { null })
@@ -486,13 +470,7 @@ fun MediaGallerySheet(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "RENDERED VIDEOS (${videos.size})",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF94A3B8),
-                            letterSpacing = 0.5.sp
-                        )
+                        SectionLabel("Rendered videos", count = videos.size)
                         if (isLoading) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(14.dp),
@@ -510,22 +488,12 @@ fun MediaGallerySheet(
                                 .weight(1f),
                             contentAlignment = Alignment.Center
                         ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(text = "🎥", fontSize = 32.sp)
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = "No videos rendered yet",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = Color(0xFF94A3B8)
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "Tap 'Render 3D Video' above to generate your first clip!",
-                                    fontSize = 11.sp,
-                                    color = Color(0xFF64748B)
-                                )
-                            }
+                            EmptyState(
+                                icon = Icons.Default.Videocam,
+                                title = "No videos rendered yet",
+                                message = "Tap 'Render 3D Video' above to generate your first clip!",
+                                accent = ElectricCyan
+                            )
                         }
                     } else {
                         LazyColumn(
@@ -597,9 +565,7 @@ fun VideoGalleryCard(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF1E293B))
-            .border(1.dp, Color(0xFF334155), RoundedCornerShape(12.dp))
+            .deskCard()
             .clickable { onPlay() }
             .padding(10.dp)
     ) {
@@ -613,8 +579,8 @@ fun VideoGalleryCard(
                     .width(60.dp)
                     .height(86.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFF0F172A))
-                    .border(1.dp, Color(0xFF334155), RoundedCornerShape(8.dp)),
+                    .background(Slate900)
+                    .border(1.dp, Slate700, RoundedCornerShape(8.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 if (thumbRequest != null) {
@@ -637,7 +603,7 @@ fun VideoGalleryCard(
                                 Icon(
                                     imageVector = Icons.Default.Videocam,
                                     contentDescription = null,
-                                    tint = Color(0xFF64748B),
+                                    tint = Slate500,
                                     modifier = Modifier.size(24.dp)
                                 )
                             }
@@ -647,7 +613,7 @@ fun VideoGalleryCard(
                     Icon(
                         imageVector = Icons.Default.Videocam,
                         contentDescription = null,
-                        tint = Color(0xFF64748B),
+                        tint = Slate500,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -667,14 +633,14 @@ fun VideoGalleryCard(
                     text = video.filename,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFFF1F5F9),
+                    color = Slate100,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = "${video.sizeMb} MB • ${video.createdAt}",
                     fontSize = 10.sp,
-                    color = Color(0xFF64748B),
+                    color = Slate500,
                     fontFamily = FontFamily.Monospace
                 )
                 Row(
@@ -685,8 +651,8 @@ fun VideoGalleryCard(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(6.dp))
-                            .background(Color(0xFF0F172A))
-                            .border(1.dp, Color(0xFF334155), RoundedCornerShape(6.dp))
+                            .background(Slate900)
+                            .border(1.dp, Slate700, RoundedCornerShape(6.dp))
                             .clickable { onPlay() }
                             .padding(horizontal = 9.dp, vertical = 5.dp)
                     ) {
@@ -702,8 +668,8 @@ fun VideoGalleryCard(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(6.dp))
-                            .background(Color(0xFF0284C7).copy(alpha = 0.25f))
-                            .border(1.dp, Color(0xFF0284C7).copy(alpha = 0.5f), RoundedCornerShape(6.dp))
+                            .background(ElectricCyanGlow.copy(alpha = 0.25f))
+                            .border(1.dp, ElectricCyanGlow.copy(alpha = 0.5f), RoundedCornerShape(6.dp))
                             .clickable { onPostTikTok() }
                             .padding(horizontal = 9.dp, vertical = 5.dp)
                     ) {
@@ -711,7 +677,7 @@ fun VideoGalleryCard(
                             text = "🚀 Post TikTok",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF38BDF8)
+                            color = ElectricCyan
                         )
                     }
                 }
@@ -765,16 +731,14 @@ fun ImageGalleryCard(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF1E293B))
-            .border(1.dp, Color(0xFF334155), RoundedCornerShape(12.dp))
+            .deskCard()
     ) {
         Column {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(130.dp)
-                    .background(Color(0xFF0F172A))
+                    .background(Slate900)
                     .clickable { onClick() },
                 contentAlignment = Alignment.Center
             ) {
@@ -801,14 +765,14 @@ fun ImageGalleryCard(
                             Icon(
                                 imageVector = Icons.Default.Image,
                                 contentDescription = null,
-                                tint = Color(0xFF64748B),
+                                tint = Slate500,
                                 modifier = Modifier.size(26.dp)
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "Preview error",
                                 fontSize = 10.sp,
-                                color = Color(0xFF64748B)
+                                color = Slate500
                             )
                         }
                     }
@@ -828,13 +792,13 @@ fun ImageGalleryCard(
                         text = image.filename,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,
-                        color = Color(0xFFF1F5F9),
+                        color = Slate100,
                         maxLines = 1
                     )
                     Text(
                         text = "${image.sizeMb} MB",
                         fontSize = 9.sp,
-                        color = Color(0xFF64748B),
+                        color = Slate500,
                         fontFamily = FontFamily.Monospace
                     )
                 }
@@ -858,7 +822,7 @@ fun ImageGalleryCard(
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Delete image",
-                            tint = Color(0xFFEF4444),
+                            tint = Red500,
                             modifier = Modifier.size(16.dp)
                         )
                     }
@@ -950,8 +914,8 @@ fun VideoPlayerDialog(
                 .fillMaxWidth(0.94f)
                 .fillMaxHeight(0.85f)
                 .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFF090D16))
-                .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(16.dp))
+                .background(CodeBlockBackground)
+                .border(1.dp, Slate800, RoundedCornerShape(16.dp))
                 .padding(14.dp)
         ) {
             Column(
@@ -975,7 +939,7 @@ fun VideoPlayerDialog(
                         Text(
                             text = "${video.sizeMb} MB • ${video.createdAt}",
                             fontSize = 11.sp,
-                            color = Color(0xFF94A3B8),
+                            color = Slate400,
                             fontFamily = FontFamily.Monospace
                         )
                     }
@@ -1030,7 +994,7 @@ fun VideoPlayerDialog(
                             Icon(
                                 imageVector = Icons.Default.Share,
                                 contentDescription = "Share Video URL",
-                                tint = Color(0xFF94A3B8),
+                                tint = Slate400,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -1042,7 +1006,7 @@ fun VideoPlayerDialog(
                             Icon(
                                 imageVector = Icons.Default.Close,
                                 contentDescription = "Close Player",
-                                tint = Color(0xFF94A3B8),
+                                tint = Slate400,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -1058,7 +1022,7 @@ fun VideoPlayerDialog(
                         .weight(1f)
                         .clip(RoundedCornerShape(12.dp))
                         .background(Color.Black)
-                        .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(12.dp)),
+                        .border(1.dp, Slate800, RoundedCornerShape(12.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     AndroidView(
@@ -1125,7 +1089,7 @@ fun VideoPlayerDialog(
                                 text = downloadText,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = Color(0xFFF1F5F9),
+                                color = Slate100,
                                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
                             )
                             if (downloadProgress > 0f) {
@@ -1137,14 +1101,14 @@ fun VideoPlayerDialog(
                                         .height(4.dp)
                                         .clip(RoundedCornerShape(2.dp)),
                                     color = ElectricCyan,
-                                    trackColor = Color(0xFF1E293B)
+                                    trackColor = Slate800
                                 )
                             }
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = "Buffering directly into app for zero-stutter playback",
                                 fontSize = 10.sp,
-                                color = Color(0xFF64748B)
+                                color = Slate500
                             )
                         }
                     }
@@ -1164,7 +1128,7 @@ fun VideoPlayerDialog(
                                 Text(
                                     text = playbackError!!,
                                     fontSize = 11.sp,
-                                    color = Color(0xFFF87171),
+                                    color = Red400,
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                 )
                                 Spacer(modifier = Modifier.height(14.dp))
@@ -1186,8 +1150,8 @@ fun VideoPlayerDialog(
                                     Box(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(8.dp))
-                                            .background(Color(0xFF1E293B))
-                                            .border(1.dp, Color(0xFF334155), RoundedCornerShape(8.dp))
+                                            .background(Slate800)
+                                            .border(1.dp, Slate700, RoundedCornerShape(8.dp))
                                         .clickable {
                                             try {
                                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(video.url))
@@ -1199,7 +1163,7 @@ fun VideoPlayerDialog(
                                         Text(
                                             text = "Open in Browser",
                                             fontSize = 12.sp,
-                                            color = Color(0xFFCBD5E1)
+                                            color = Slate300
                                         )
                                     }
                                 }
@@ -1221,7 +1185,7 @@ fun VideoPlayerDialog(
                         modifier = Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFF0284C7))
+                            .background(ElectricCyanGlow)
                             .clickable {
                                 onPostTikTok()
                                 onDismiss()
@@ -1242,8 +1206,8 @@ fun VideoPlayerDialog(
                         modifier = Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFF1E293B))
-                            .border(1.dp, Color(0xFF334155), RoundedCornerShape(8.dp))
+                            .background(Slate800)
+                            .border(1.dp, Slate700, RoundedCornerShape(8.dp))
                             .clickable { onDismiss() }
                             .padding(vertical = 10.dp),
                         contentAlignment = Alignment.Center
@@ -1252,7 +1216,7 @@ fun VideoPlayerDialog(
                             text = "Done",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFFCBD5E1)
+                            color = Slate300
                         )
                     }
                 }

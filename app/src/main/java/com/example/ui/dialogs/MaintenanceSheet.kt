@@ -56,6 +56,31 @@ import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldConnected
 import com.example.ui.theme.RoseError
 import kotlinx.coroutines.launch
+import com.example.ui.theme.AmberPending
+import com.example.ui.theme.CodeBlockBackground
+import com.example.ui.theme.Slate300
+import com.example.ui.theme.Slate400
+import com.example.ui.theme.Slate500
+import com.example.ui.theme.Slate800
+import com.example.ui.theme.Slate900
+import com.example.ui.components.deskSheet
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.ui.graphics.Brush
+import com.example.ui.components.EmptyState
+import com.example.ui.components.LoadingState
+import com.example.ui.components.SectionLabel
+import com.example.ui.components.SheetHeader
+import com.example.ui.components.deskTinted
+import com.example.ui.theme.Amber200
+import com.example.ui.theme.DeskShapes
+import com.example.ui.theme.Rose300
+import com.example.ui.theme.Slate200
 
 @Composable
 fun MaintenanceSheet(
@@ -104,66 +129,24 @@ fun MaintenanceSheet(
             modifier = Modifier
                 .fillMaxWidth(0.95f)
                 .fillMaxHeight(0.88f)
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFF0F172A))
-                .border(1.dp, ElectricCyan.copy(alpha = 0.4f), RoundedCornerShape(16.dp))
+                .deskSheet()
                 .padding(16.dp)
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
                 // Header
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                SheetHeader(
+                    title = "System Maintenance & Logs",
+                    icon = Icons.Default.Terminal,
+                    subtitle = "Host daemon supervisor & diagnostics",
+                    onClose = onDismiss
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .background(ElectricCyan.copy(alpha = 0.15f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Terminal,
-                                contentDescription = null,
-                                tint = ElectricCyan,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column {
-                            Text(
-                                text = "System Maintenance & Logs",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
-                            Text(
-                                text = "Host daemon supervisor & diagnostics",
-                                fontSize = 11.sp,
-                                color = Color(0xFF94A3B8)
-                            )
-                        }
-                    }
-
-                    Row {
-                        IconButton(onClick = { refreshLogs() }) {
-                            Icon(
-                                imageVector = Icons.Default.Refresh,
-                                contentDescription = "Refresh Logs",
-                                tint = ElectricCyan,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        IconButton(onClick = onDismiss) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Close",
-                                tint = Color(0xFF94A3B8),
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
+                    IconButton(onClick = { refreshLogs() }, modifier = Modifier.size(32.dp)) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Refresh Logs",
+                            tint = ElectricCyan,
+                            modifier = Modifier.size(18.dp)
+                        )
                     }
                 }
 
@@ -197,7 +180,7 @@ fun MaintenanceSheet(
                     MaintenanceButton(
                         title = "Cleanup",
                         icon = Icons.Default.CleaningServices,
-                        color = Color(0xFFF59E0B),
+                        color = AmberPending,
                         enabled = !isOperating,
                         modifier = Modifier.weight(1f)
                     ) {
@@ -277,14 +260,41 @@ fun MaintenanceSheet(
                     }
                 }
 
-                if (actionStatus != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = actionStatus!!,
-                        fontSize = 11.sp,
-                        color = if (actionSuccess) EmeraldConnected else RoseError,
-                        fontFamily = FontFamily.Monospace
-                    )
+                // The last action's result: amber while it runs, green when it worked, rose when it didn't
+                val status = actionStatus
+                AnimatedVisibility(visible = status != null, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
+                    val tone = when {
+                        isOperating -> AmberPending
+                        actionSuccess -> EmeraldConnected
+                        else -> RoseError
+                    }
+                    Row(
+                        modifier = Modifier
+                            .padding(top = 10.dp)
+                            .fillMaxWidth()
+                            .deskTinted(tone, radius = 10.dp, fillAlpha = 0.08f)
+                            .padding(horizontal = 10.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (isOperating) {
+                            CircularProgressIndicator(modifier = Modifier.size(12.dp), color = tone, strokeWidth = 1.5.dp)
+                        } else {
+                            Icon(
+                                imageVector = if (actionSuccess) Icons.Default.CheckCircle else Icons.Default.ErrorOutline,
+                                contentDescription = null,
+                                tint = tone,
+                                modifier = Modifier.size(14.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = status.orEmpty(),
+                            fontSize = 11.sp,
+                            lineHeight = 15.sp,
+                            color = if (isOperating) Amber200 else if (actionSuccess) Slate200 else Rose300,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(14.dp))
@@ -295,13 +305,7 @@ fun MaintenanceSheet(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "LIVE SYSTEM LOGS (LAST ${logs.size})",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF94A3B8),
-                        letterSpacing = 0.8.sp
-                    )
+                    SectionLabel("Live system logs", count = logs.size)
                     if (isLoadingLogs) {
                         CircularProgressIndicator(modifier = Modifier.size(12.dp), color = ElectricCyan, strokeWidth = 1.5.dp)
                     }
@@ -312,18 +316,18 @@ fun MaintenanceSheet(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0xFF090D16))
-                        .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(10.dp))
+                        .clip(DeskShapes.card)
+                        .background(CodeBlockBackground)
+                        .border(1.dp, Slate800, DeskShapes.card)
                         .padding(8.dp)
                 ) {
-                    if (logs.isEmpty() && !isLoadingLogs) {
-                        Text(
-                            text = "No log records returned from host daemon.",
-                            fontSize = 11.sp,
-                            color = Color(0xFF64748B),
-                            fontFamily = FontFamily.Monospace,
-                            modifier = Modifier.padding(8.dp)
+                    if (logs.isEmpty() && isLoadingLogs) {
+                        LoadingState("Reading host logs…")
+                    } else if (logs.isEmpty()) {
+                        EmptyState(
+                            icon = Icons.Default.Terminal,
+                            title = "No log records",
+                            message = "The host daemon returned no log lines. Tap refresh to try again."
                         )
                     } else {
                         LazyColumn(
@@ -335,7 +339,7 @@ fun MaintenanceSheet(
                             items(styledLogs) { (level, line) ->
                                 val rowTint = when (level) {
                                     LogLevel.ERROR -> RoseError.copy(alpha = 0.08f)
-                                    LogLevel.WARNING -> Color(0xFFF59E0B).copy(alpha = 0.06f)
+                                    LogLevel.WARNING -> AmberPending.copy(alpha = 0.06f)
                                     else -> Color.Transparent
                                 }
                                 Text(
@@ -343,7 +347,7 @@ fun MaintenanceSheet(
                                     fontSize = 10.sp,
                                     lineHeight = 14.sp,
                                     fontFamily = FontFamily.Monospace,
-                                    color = Color(0xFFCBD5E1),
+                                    color = Slate300,
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(4.dp))
@@ -370,24 +374,28 @@ private fun MaintenanceButton(
 ) {
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(color.copy(alpha = if (enabled) 0.15f else 0.05f))
-            .border(1.dp, color.copy(alpha = if (enabled) 0.4f else 0.1f), RoundedCornerShape(8.dp))
+            .clip(DeskShapes.control)
+            .background(
+                Brush.verticalGradient(
+                    listOf(color.copy(alpha = if (enabled) 0.20f else 0.05f), color.copy(alpha = if (enabled) 0.08f else 0.03f))
+                )
+            )
+            .border(1.dp, color.copy(alpha = if (enabled) 0.4f else 0.1f), DeskShapes.control)
             .clickable(enabled = enabled, onClick = onClick)
-            .padding(vertical = 8.dp),
+            .padding(vertical = 10.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Icon(imageVector = icon, contentDescription = title, tint = color, modifier = Modifier.size(16.dp))
-            Spacer(modifier = Modifier.height(3.dp))
+            Icon(imageVector = icon, contentDescription = title, tint = color.copy(alpha = if (enabled) 1f else 0.4f), modifier = Modifier.size(18.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = title,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = if (enabled) Color.White else Slate500
             )
         }
     }

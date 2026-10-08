@@ -59,6 +59,31 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Locale
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.ui.text.style.TextOverflow
+import com.example.ui.components.StatusNote
+import com.example.ui.components.StatusPill
+import com.example.ui.components.TagChip
+import com.example.ui.components.deskTinted
+import com.example.ui.components.phaseColor
+import com.example.ui.components.phaseLabel
+import com.example.ui.components.relativeTime
+import com.example.ui.theme.Amber300
+import com.example.ui.theme.DeskShapes
+import com.example.ui.theme.NeonIndigo
+import com.example.ui.theme.NeonPurple
+import com.example.ui.theme.Red300
+import com.example.ui.theme.Sky300
+import com.example.ui.theme.Slate200
+import com.example.ui.theme.Slate300
+import com.example.ui.theme.Slate400
+import com.example.ui.theme.Slate500
+import com.example.ui.theme.Slate700
+import com.example.ui.theme.Slate800
+import com.example.ui.theme.Slate900
+import com.example.ui.components.deskSheet
+import com.example.ui.components.deskCard
 
 /**
  * A mission's details, opened by tapping its card in the Missions list: what was asked, who or what started it,
@@ -98,22 +123,14 @@ fun TaskDetailsSheet(
 
     val t = current
     val isCancelled = t.cancelled || t.phase == "cancelled"
-    val phaseColor = when {
-        isCancelled -> Color(0xFF94A3B8)
-        t.phase == "completed" -> EmeraldConnected
-        t.phase == "in_progress" -> Color(0xFFF59E0B)
-        t.phase == "failed" -> RoseError
-        else -> ElectricCyan
-    }
+    val phaseColor = phaseColor(t.phase, isCancelled)
 
     Dialog(onDismissRequest = onDismiss) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight(0.85f)
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFF0F172A))
-                .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(16.dp))
+                .deskSheet()
                 .padding(16.dp)
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
@@ -123,27 +140,29 @@ fun TaskDetailsSheet(
                     verticalAlignment = Alignment.Top
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(t.title, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(t.title, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White, lineHeight = 22.sp)
+                        Spacer(modifier = Modifier.height(6.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(4.dp))
-                                    .background(phaseColor.copy(alpha = 0.2f))
-                                    .padding(horizontal = 6.dp, vertical = 2.dp)
-                            ) {
-                                Text(
-                                    text = if (isCancelled) "CANCELLED" else t.phase.uppercase(),
-                                    fontSize = 9.sp, fontWeight = FontWeight.Bold, color = phaseColor,
-                                    fontFamily = FontFamily.Monospace
-                                )
+                            StatusPill(text = phaseLabel(t.phase, isCancelled), color = phaseColor)
+                            val ago = remember(t.completedAt, t.startedAt, t.createdAt) {
+                                relativeTime(t.completedAt ?: t.startedAt ?: t.createdAt)
+                            }
+                            if (ago != null) {
+                                Spacer(modifier = Modifier.width(6.dp))
+                                TagChip(text = ago, icon = Icons.Default.Schedule)
                             }
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("#${t.id}", fontSize = 10.sp, color = Color(0xFF64748B), fontFamily = FontFamily.Monospace)
+                            Text("#${t.id}", fontSize = 10.sp, color = Slate500, fontFamily = FontFamily.Monospace,
+                                maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
-                    IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
-                        Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = Color(0xFF94A3B8))
+                    IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
+                        Box(
+                            modifier = Modifier.size(28.dp).clip(CircleShape).background(Slate800),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = Slate400, modifier = Modifier.size(16.dp))
+                        }
                     }
                 }
 
@@ -173,19 +192,19 @@ fun TaskDetailsSheet(
                         )
                     }
 
-                    DetailSection("WHO STARTED IT") {
+                    DetailSection("WHO STARTED IT", accent = NeonPurple) {
                         DetailText(friendlySource(t.source))
                     }
-                    DetailSection("WHAT WAS ASKED") {
+                    DetailSection("WHAT WAS ASKED", accent = ElectricCyan) {
                         SelectionContainer { DetailText(t.prompt.ifBlank { t.title }) }
                     }
-                    DetailSection("WHEN") {
+                    DetailSection("WHEN", accent = Sky300) {
                         DetailRow("Created", formatStamp(t.createdAt))
                         DetailRow("Started", formatStamp(t.startedAt))
                         DetailRow("Finished", formatStamp(t.completedAt))
                         durationOf(t.startedAt, t.completedAt)?.let { DetailRow("Took", it) }
                     }
-                    DetailSection("HOW") {
+                    DetailSection("HOW", accent = NeonIndigo) {
                         DetailRow("Engine", t.engine)
                         if (!t.engineUsed.isNullOrBlank() && t.engineUsed != t.engine) DetailRow("Engine used", t.engineUsed)
                         DetailRow("Priority", t.priority)
@@ -196,7 +215,7 @@ fun TaskDetailsSheet(
                     if (!summary.isNullOrBlank()) {
                         DetailSection(
                             if (t.needsInput) "NEEDS YOUR INPUT" else "RESULT",
-                            accent = if (t.needsInput) AmberPending else Color(0xFF94A3B8),
+                            accent = if (t.needsInput) AmberPending else phaseColor,
                             trailing = {
                                 SmallChip("Copy") {
                                     clipboard.setText(AnnotatedString(summary))
@@ -210,7 +229,7 @@ fun TaskDetailsSheet(
                             // diffstat colors and branch badges (ui/components/RichText.kt). Both allow long-press copy.
                             SelectionContainer {
                                 if (showRaw) {
-                                    Text(summary, fontSize = 11.sp, color = Color(0xFFCBD5E1), lineHeight = 16.sp,
+                                    Text(summary, fontSize = 11.sp, color = Slate300, lineHeight = 16.sp,
                                         fontFamily = FontFamily.Monospace)
                                 } else {
                                     RichText(summary)
@@ -223,10 +242,8 @@ fun TaskDetailsSheet(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(RoseError.copy(alpha = 0.08f))
-                                .border(1.dp, RoseError.copy(alpha = 0.45f), RoundedCornerShape(10.dp))
-                                .padding(10.dp),
+                                .deskTinted(RoseError, fillAlpha = 0.08f)
+                                .padding(12.dp),
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -239,15 +256,15 @@ fun TaskDetailsSheet(
                             }
                             SelectionContainer {
                                 if (showRaw) {
-                                    Text(error, fontSize = 11.sp, color = Color(0xFFFCA5A5), lineHeight = 16.sp,
+                                    Text(error, fontSize = 11.sp, color = Red300, lineHeight = 16.sp,
                                         fontFamily = FontFamily.Monospace)
                                 } else {
-                                    RichText(error, baseColor = Color(0xFFFCA5A5))
+                                    RichText(error, baseColor = Red300)
                                 }
                             }
                         }
                     }
-                    note?.let { Text(it, fontSize = 11.sp, color = Color(0xFF7DD3FC)) }
+                    note?.let { StatusNote(it, color = if (it.startsWith("⚠")) Amber300 else Sky300) }
                 }
             }
         }
@@ -294,9 +311,7 @@ private fun TaskVideoPreview(thumbUrl: String?, authToken: String, playable: Boo
             modifier = Modifier
                 .width(150.dp)
                 .height(266.dp)                     // 9:16, the videos' shape
-                .clip(RoundedCornerShape(12.dp))
-                .background(Color(0xFF1E293B))
-                .border(1.dp, Color(0xFF334155), RoundedCornerShape(12.dp))
+                .deskCard()
                 .then(if (playable) Modifier.clickable { onPlay() } else Modifier),
             contentAlignment = Alignment.Center
         ) {
@@ -313,12 +328,12 @@ private fun TaskVideoPreview(thumbUrl: String?, authToken: String, playable: Boo
                     },
                     error = {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.Videocam, contentDescription = null, tint = Color(0xFF64748B), modifier = Modifier.size(28.dp))
+                            Icon(Icons.Default.Videocam, contentDescription = null, tint = Slate500, modifier = Modifier.size(28.dp))
                         }
                     }
                 )
             } else {
-                Icon(Icons.Default.Videocam, contentDescription = null, tint = Color(0xFF64748B), modifier = Modifier.size(28.dp))
+                Icon(Icons.Default.Videocam, contentDescription = null, tint = Slate500, modifier = Modifier.size(28.dp))
             }
             if (playable) FrostedPlayBadge(size = 44.dp)
         }
@@ -326,7 +341,7 @@ private fun TaskVideoPreview(thumbUrl: String?, authToken: String, playable: Boo
         Text(
             text = if (playable) "Tap to play" else "Video no longer kept",
             fontSize = 11.sp,
-            color = if (playable) ElectricCyan else Color(0xFF94A3B8)
+            color = if (playable) ElectricCyan else Slate400
         )
     }
 }
@@ -334,27 +349,23 @@ private fun TaskVideoPreview(thumbUrl: String?, authToken: String, playable: Boo
 @Composable
 private fun DetailSection(
     label: String,
-    accent: Color = Color(0xFF94A3B8),
+    accent: Color = Slate400,
     trailing: (@Composable () -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(Color(0xFF1E293B))
-            .border(1.dp, Color(0xFF334155), RoundedCornerShape(10.dp))
-            .padding(10.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+            .deskCard()
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(5.dp)
     ) {
-        if (trailing == null) {
-            Text(label, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = accent, letterSpacing = 0.5.sp)
-        } else {
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(label, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = accent, letterSpacing = 0.5.sp,
-                    modifier = Modifier.weight(1f))
-                trailing()
-            }
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(accent))
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(label, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = accent, letterSpacing = 1.sp,
+                modifier = Modifier.weight(1f))
+            if (trailing != null) trailing()
         }
         content()
     }
@@ -364,27 +375,27 @@ private fun DetailSection(
 private fun SmallChip(label: String, color: Color = ElectricCyan, active: Boolean = false, onClick: () -> Unit) {
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(6.dp))
+            .clip(DeskShapes.pill)
             .background(color.copy(alpha = if (active) 0.25f else 0.10f))
-            .border(1.dp, color.copy(alpha = 0.4f), RoundedCornerShape(6.dp))
+            .border(1.dp, color.copy(alpha = 0.4f), DeskShapes.pill)
             .clickable(onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = 2.dp)
+            .padding(horizontal = 10.dp, vertical = 3.dp)
     ) {
         Text(label, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, color = color)
     }
 }
 
 @Composable
-private fun DetailText(text: String, color: Color = Color(0xFFE2E8F0)) {
+private fun DetailText(text: String, color: Color = Slate200) {
     Text(text, fontSize = 12.sp, color = color, lineHeight = 17.sp)
 }
 
 @Composable
 private fun DetailRow(label: String, value: String) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(label, fontSize = 11.sp, color = Color(0xFF94A3B8))
+        Text(label, fontSize = 11.sp, color = Slate400)
         Spacer(modifier = Modifier.width(12.dp))
-        Text(value, fontSize = 11.sp, color = Color(0xFFE2E8F0), fontFamily = FontFamily.Monospace)
+        Text(value, fontSize = 11.sp, color = Slate200, fontFamily = FontFamily.Monospace)
     }
 }
 

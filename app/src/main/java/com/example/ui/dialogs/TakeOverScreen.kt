@@ -72,6 +72,19 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.json.JSONObject
+import com.example.ui.theme.AmberPending
+import com.example.ui.theme.DeepNavy
+import com.example.ui.theme.NearBlack
+import com.example.ui.theme.Red300
+import com.example.ui.theme.Red400
+import com.example.ui.theme.Slate100
+import com.example.ui.theme.Slate200
+import com.example.ui.theme.Slate300
+import com.example.ui.theme.Slate400
+import com.example.ui.theme.Slate700
+import com.example.ui.theme.Slate800
+import com.example.ui.theme.Slate900
+import com.example.ui.theme.Slate950
 
 /**
  * Take over: the Mini's screen, live, and the owner's taps and typing replayed there with the real mouse and keyboard
@@ -171,7 +184,7 @@ fun TakeOverScreen(
     // owner's phone, so the keyboard covered the controls (builds 45-46). The back button hands back.
     androidx.activity.compose.BackHandler { handBack() }
     run {
-        Surface(modifier = Modifier.fillMaxSize(), color = Color(0xFF0B1120)) {
+        Surface(modifier = Modifier.fillMaxSize(), color = DeepNavy) {
             Column(modifier = Modifier.fillMaxSize().systemBarsPadding().imePadding()) {
                 // Top: which computer, who's in control (and the last action), and ✓ to hand back
                 Row(
@@ -182,9 +195,9 @@ fun TakeOverScreen(
                         Row(Modifier.width(96.dp)) {
                             listOf("mini" to "Mini", "laptop" to "Laptop").forEach { (id, label) ->
                                 Text(label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
-                                     color = if (machine == id) Color(0xFF111111) else Color(0xFFCBD5E1),
+                                     color = if (machine == id) NearBlack else Slate300,
                                      modifier = Modifier.padding(end = 4.dp).clip(RoundedCornerShape(8.dp))
-                                         .background(if (machine == id) Color(0xFFF59E0B) else Color(0xFF1E293B))
+                                         .background(if (machine == id) AmberPending else Slate800)
                                          .clickable { switchTo(id) }.padding(horizontal = 7.dp, vertical = 4.dp))
                             }
                         }
@@ -198,17 +211,17 @@ fun TakeOverScreen(
                                 active -> "You're in control"
                                 else -> "Connecting…"
                             },
-                            color = if (error != null) Color(0xFFFCA5A5) else Color(0xFFF1F5F9),
+                            color = if (error != null) Red300 else Slate100,
                             fontWeight = FontWeight.SemiBold, fontSize = 15.sp
                         )
                         Text(
                             text = error ?: note.ifBlank { "Tap to click · hold to right-click · pinch to zoom" },
-                            color = Color(0xFF94A3B8), fontSize = 11.sp, maxLines = 1
+                            color = Slate400, fontSize = 11.sp, maxLines = 1
                         )
                     }
                     Box(Modifier.width(96.dp), contentAlignment = Alignment.CenterEnd) {
                         IconButton(onClick = { handBack() },
-                                   modifier = Modifier.size(42.dp).clip(CircleShape).background(Color(0xFF334155))) {
+                                   modifier = Modifier.size(42.dp).clip(CircleShape).background(Slate700)) {
                             Icon(Icons.Default.Check, contentDescription = "Hand back", tint = Color.White)
                         }
                     }
@@ -220,7 +233,7 @@ fun TakeOverScreen(
                 // opens and the controls never move under it.
                 Box(
                     modifier = Modifier.fillMaxWidth().weight(1f).padding(horizontal = 6.dp)
-                        .clip(RoundedCornerShape(10.dp)).background(Color(0xFF020617)).clipToBounds()
+                        .clip(RoundedCornerShape(10.dp)).background(Slate950).clipToBounds()
                         .pointerInput(Unit) {
                             detectTransformGestures { _, panBy, zoom, _ ->
                                 scale = (scale * zoom).coerceIn(1f, 6f)
@@ -231,7 +244,7 @@ fun TakeOverScreen(
                 ) {
                     val bmp = frame
                     if (bmp == null) {
-                        if (error == null) CircularProgressIndicator(color = Color(0xFFF59E0B))
+                        if (error == null) CircularProgressIndicator(color = AmberPending)
                     } else {
                         Image(
                             bitmap = bmp, contentDescription = "The computer's screen", contentScale = ContentScale.FillBounds,
@@ -274,12 +287,12 @@ fun TakeOverScreen(
                 // Container 2: a slim icon bar (like a remote-desktop app). Typing is hidden until ⌨ is tapped: then
                 // the special keys and the text bar appear right on top of the phone's keyboard, and closing the
                 // keyboard hides them again (2026-10-06, the owner: the keyboard "pops up and is all in the way").
-                Column(modifier = Modifier.fillMaxWidth().padding(top = 6.dp).background(Color(0xFF0F172A))) {
+                Column(modifier = Modifier.fillMaxWidth().padding(top = 6.dp).background(Slate900)) {
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 6.dp),
                         horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically
                     ) {
-                        BarIcon(Icons.Default.StopCircle, "Hand back", tint = Color(0xFFF87171)) { handBack() }
+                        BarIcon(Icons.Default.StopCircle, "Hand back", tint = Red400) { handBack() }
                         BarIcon(Icons.Default.Keyboard, "Keyboard", on = typing) {
                             if (typing) { typing = false; keyboard?.hide() } else typing = true
                         }
@@ -336,23 +349,23 @@ fun TakeOverScreen(
 
 @Composable
 private fun BarIcon(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, on: Boolean = false,
-                    tint: Color = Color(0xFFE2E8F0), onClick: () -> Unit) {
+                    tint: Color = Slate200, onClick: () -> Unit) {
     IconButton(onClick = onClick,
-               modifier = Modifier.size(44.dp).clip(CircleShape).background(if (on) Color(0xFFF1F5F9) else Color.Transparent)) {
-        Icon(icon, contentDescription = label, tint = if (on) Color(0xFF0F172A) else tint)
+               modifier = Modifier.size(44.dp).clip(CircleShape).background(if (on) Slate100 else Color.Transparent)) {
+        Icon(icon, contentDescription = label, tint = if (on) Slate900 else tint)
     }
 }
 
 @Composable
 private fun BarText(text: String, label: String, on: Boolean = false, onClick: () -> Unit) {
-    Box(modifier = Modifier.size(44.dp).clip(CircleShape).background(if (on) Color(0xFFF1F5F9) else Color.Transparent)
+    Box(modifier = Modifier.size(44.dp).clip(CircleShape).background(if (on) Slate100 else Color.Transparent)
             .clickable(onClickLabel = label, onClick = onClick),
         contentAlignment = Alignment.Center) {
-        Text(text, color = if (on) Color(0xFF0F172A) else Color(0xFFE2E8F0), fontWeight = FontWeight.Bold, fontSize = 15.sp)
+        Text(text, color = if (on) Slate900 else Slate200, fontWeight = FontWeight.Bold, fontSize = 15.sp)
     }
 }
 
 @Composable
 private fun KeyButton(label: String, onClick: () -> Unit) {
-    OutlinedButton(onClick = onClick, shape = RoundedCornerShape(10.dp)) { Text(label, color = Color(0xFFE2E8F0)) }
+    OutlinedButton(onClick = onClick, shape = RoundedCornerShape(10.dp)) { Text(label, color = Slate200) }
 }

@@ -1,5 +1,10 @@
 package com.example.ui.screens
 
+import androidx.compose.ui.graphics.Brush
+import com.example.ui.theme.ChatBackground
+import com.example.ui.theme.EmeraldConnected
+import com.example.ui.theme.AmberPending
+import com.example.ui.components.EmptyState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -83,6 +88,12 @@ import com.example.ui.dialogs.TasksSheet
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.RoseError
 import kotlinx.coroutines.launch
+import com.example.ui.theme.Amber200
+import com.example.ui.theme.Amber900
+import com.example.ui.theme.Slate400
+import com.example.ui.theme.Slate800
+import com.example.ui.theme.Slate900
+import com.example.ui.theme.SlateDarkBackground
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -195,7 +206,7 @@ fun ChatScreen(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet(
-                drawerContainerColor = Color(0xFF0F172A)
+                drawerContainerColor = Slate900
             ) {
                 SessionDrawerContent(
                     sessions = allSessions,
@@ -223,12 +234,21 @@ fun ChatScreen(
                 TopAppBar(
                     title = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
+                            // Connection dot: emerald when the bridge is up, rose when it isn't
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(if (isConnected) EmeraldConnected else RoseError)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = currentSession?.title ?: "AlwaysOnAgent",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White,
-                                maxLines = 1
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                             )
                         }
                     },
@@ -253,7 +273,7 @@ fun ChatScreen(
                             Icon(
                                 imageVector = Icons.Default.AddComment,
                                 contentDescription = "New chat",
-                                tint = Color(0xFF94A3B8)
+                                tint = Slate400
                             )
                         }
 
@@ -277,7 +297,7 @@ fun ChatScreen(
                                 Icon(
                                     imageVector = Icons.Default.SystemUpdate,
                                     contentDescription = "Update App",
-                                    tint = if (hasUpdateAvailable) ElectricCyan else Color(0xFF94A3B8)
+                                    tint = if (hasUpdateAvailable) ElectricCyan else Slate400
                                 )
                             }
                         }
@@ -289,12 +309,12 @@ fun ChatScreen(
                             Icon(
                                 imageVector = Icons.Default.MoreVert,
                                 contentDescription = "Bridge Settings",
-                                tint = Color(0xFF94A3B8)
+                                tint = Slate400
                             )
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color(0xFF0B0F19),
+                        containerColor = SlateDarkBackground,
                         titleContentColor = Color.White
                     )
                 )
@@ -307,20 +327,25 @@ fun ChatScreen(
                     .padding(innerPadding)
                     // The Scaffold already padded for the system bars; the input bar adds only the keyboard's extra height
                     .consumeWindowInsets(innerPadding)
-                    .background(Color(0xFF080B11))
+                    .background(Brush.verticalGradient(listOf(ChatBackground, SlateDarkBackground)))
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
                     // A computer task is waiting for the owner (also when the alert was missed)
                     if (needsYou.isNotEmpty()) {
                         androidx.compose.foundation.layout.Row(
                             modifier = Modifier.fillMaxWidth()
-                                .background(androidx.compose.ui.graphics.Color(0xFF78350F))
+                                .background(Brush.horizontalGradient(listOf(Amber900, Amber900.copy(alpha = 0.75f))))
                                 .clickable { showNeedsYou = true }
-                                .padding(horizontal = 14.dp, vertical = 10.dp)
+                                .padding(horizontal = 14.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text("⚠️ Needs you (${needsYou.size}): ${needsYou.first().question.take(70)}",
-                                 color = androidx.compose.ui.graphics.Color(0xFFFDE68A), fontSize = 13.sp,
-                                 fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, maxLines = 1)
+                                 color = Amber200, fontSize = 13.sp,
+                                 fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, maxLines = 1,
+                                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                 modifier = Modifier.weight(1f))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Open ›", color = AmberPending, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                     // AlwaysOnAgent Live Status & Pulse Bar
@@ -437,6 +462,17 @@ fun ChatScreen(
                             }
                         }
 
+                        // A brand-new conversation: a friendly prompt instead of a blank screen
+                        if (messages.isEmpty() && !hasEarlierMessages) {
+                            EmptyState(
+                                icon = Icons.Default.AddComment,
+                                title = "Ask AlwaysOnAgent anything",
+                                message = "Chat, dispatch a mission, or type / for commands.",
+                                accent = ElectricCyan,
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        }
+
                         // Scroll-to-bottom FAB
                         if (showScrollToBottom) {
                             FloatingActionButton(
@@ -447,7 +483,7 @@ fun ChatScreen(
                                         }
                                     }
                                 },
-                                containerColor = Color(0xFF1E293B),
+                                containerColor = Slate800,
                                 contentColor = ElectricCyan,
                                 shape = CircleShape,
                                 modifier = Modifier
