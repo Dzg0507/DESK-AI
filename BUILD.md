@@ -17,9 +17,27 @@ have to uninstall it first, losing its data.
 
 | File | Where it comes from | Goes to |
 |---|---|---|
-| `debug.keystore` | the owner's PC: `C:\Projects\DeskAI-source\debug.keystore`. Its SHA-256 certificate fingerprint starts `3315b429e7e2f1d5`. | repo root (gitignored) |
+| `debug.keystore` | the owner's PC: `C:\Projects\DeskAI-source\debug.keystore`. Its SHA-256 certificate fingerprint starts `3315b429e7e2f1d5`. **Never rotate it** (the phone would have to uninstall the app). | outside the repo: `%USERPROFILE%\.deskai\debug.keystore`, named in `local.properties` |
 | `google-services.json` | the Firebase console (project `alwaysonagent-deskai`); on the owner's PC in `Downloads` | `app/google-services.json` (don't commit it) |
-| `local.properties` | `sdk.dir=C\:/Users/<you>/AppData/Local/Android/Sdk` | repo root (gitignored) |
+| `local.properties` | see below | repo root (gitignored) |
+
+`local.properties` (never committed) holds the SDK path and the signing settings; `app/build.gradle.kts` reads
+them, then the environment (`DESKAI_DEBUG_KEYSTORE`, `DESKAI_DEBUG_STORE_PASSWORD`, `DESKAI_DEBUG_KEY_ALIAS`,
+`DESKAI_DEBUG_KEY_PASSWORD`), then falls back to `debug.keystore` in the repo root (gitignored) with the SDK's
+default debug passwords:
+
+```properties
+sdk.dir=C\:/Users/<you>/AppData/Local/Android/Sdk
+deskai.debug.keystore=C\:/Users/<you>/.deskai/debug.keystore
+deskai.debug.storePassword=android
+deskai.debug.keyAlias=androiddebugkey
+deskai.debug.keyPassword=android
+```
+
+**Keys never go in git**, not even inside a zip (`.gitignore` blocks `*.keystore`, `*.jks`, `DeskAI-source.zip`).
+Until 2026-10-07 `DeskAI-source.zip` and `web_dist/DeskAI-source.zip` (committed 2026-09-27) carried
+`debug.keystore`; they were removed from tracking but stay in git history. The key wasn't rotated on purpose:
+it only signs this sideloaded debug app, and a new key would force an uninstall.
 
 Tools: JDK 17, the Android SDK (command-line tools, platforms `android-36` and `android-36.1`, build-tools
 36.x), and Gradle 9.3.1. There's no Gradle wrapper in the repo, so use an installed Gradle; the AGP version is in
