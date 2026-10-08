@@ -67,6 +67,12 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
+import com.example.ui.theme.Red400
+import com.example.ui.theme.Slate300
+import com.example.ui.theme.Slate400
+import com.example.ui.theme.Slate700
+import com.example.ui.theme.Slate800
+import com.example.ui.theme.Slate900
 
 @Composable
 fun ImageViewerDialog(
@@ -148,7 +154,7 @@ fun ImageViewerDialog(
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 CircularProgressIndicator(color = ElectricCyan, strokeWidth = 3.dp)
                                 Spacer(modifier = Modifier.height(12.dp))
-                                Text("Loading high-res image...", color = Color(0xFF94A3B8), fontSize = 12.sp)
+                                Text("Loading high-res image...", color = Slate400, fontSize = 12.sp)
                             }
                         }
                     },
@@ -157,7 +163,7 @@ fun ImageViewerDialog(
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text("⚠️", fontSize = 32.sp)
                                 Spacer(modifier = Modifier.height(8.dp))
-                                Text("Unable to load image stream", color = Color(0xFFF87171), fontSize = 13.sp)
+                                Text("Unable to load image stream", color = Red400, fontSize = 13.sp)
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
                                     "Tap here to open in browser",
@@ -188,7 +194,7 @@ fun ImageViewerDialog(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFF0F172A).copy(alpha = 0.88f))
+                    .background(Slate900.copy(alpha = 0.88f))
                     .padding(horizontal = 14.dp, vertical = 10.dp)
                     .align(Alignment.TopCenter),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -205,7 +211,7 @@ fun ImageViewerDialog(
                     Text(
                         text = "Double-tap or pinch to zoom",
                         fontSize = 11.sp,
-                        color = Color(0xFF94A3B8),
+                        color = Slate400,
                         fontFamily = FontFamily.Monospace
                     )
                 }
@@ -215,7 +221,7 @@ fun ImageViewerDialog(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFF1E293B))
+                            .background(Slate800)
                             .clickable(enabled = !isSaving) {
                                 isSaving = true
                                 scope.launch {
@@ -245,7 +251,7 @@ fun ImageViewerDialog(
                         Icon(
                             imageVector = Icons.Default.Share,
                             contentDescription = "Share",
-                            tint = Color(0xFFCBD5E1),
+                            tint = Slate300,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -262,7 +268,7 @@ fun ImageViewerDialog(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.OpenInNew,
                             contentDescription = "Open in Browser",
-                            tint = Color(0xFFCBD5E1),
+                            tint = Slate300,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -288,8 +294,8 @@ fun ImageViewerDialog(
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 24.dp)
                     .clip(RoundedCornerShape(30.dp))
-                    .background(Color(0xFF1E293B).copy(alpha = 0.92f))
-                    .border(1.dp, Color(0xFF334155), RoundedCornerShape(30.dp))
+                    .background(Slate800.copy(alpha = 0.92f))
+                    .border(1.dp, Slate700, RoundedCornerShape(30.dp))
                     .padding(horizontal = 14.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -299,7 +305,7 @@ fun ImageViewerDialog(
                     modifier = Modifier
                         .size(32.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF0F172A))
+                        .background(Slate900)
                         .clickable {
                             val next = (scale - 0.5f).coerceAtLeast(1f)
                             scale = next
@@ -326,7 +332,7 @@ fun ImageViewerDialog(
                     modifier = Modifier
                         .size(32.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF0F172A))
+                        .background(Slate900)
                         .clickable {
                             scale = (scale + 0.5f).coerceAtMost(6.0f)
                         },
@@ -340,7 +346,7 @@ fun ImageViewerDialog(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFF0F172A))
+                            .background(Slate900)
                             .clickable {
                                 scale = 1f
                                 offset = Offset.Zero
@@ -352,11 +358,11 @@ fun ImageViewerDialog(
                             Icon(
                                 imageVector = Icons.Default.Refresh,
                                 contentDescription = "Reset",
-                                tint = Color(0xFF94A3B8),
+                                tint = Slate400,
                                 modifier = Modifier.size(14.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("1x", fontSize = 11.sp, color = Color(0xFF94A3B8))
+                            Text("1x", fontSize = 11.sp, color = Slate400)
                         }
                     }
                 }

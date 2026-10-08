@@ -49,6 +49,14 @@ import com.example.data.model.RecipeItem
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.RoseError
 import kotlinx.coroutines.launch
+import com.example.ui.theme.ElectricCyanGlow
+import com.example.ui.theme.Slate100
+import com.example.ui.theme.Slate200
+import com.example.ui.theme.Slate400
+import com.example.ui.theme.Slate500
+import com.example.ui.theme.Slate700
+import com.example.ui.theme.Slate800
+import com.example.ui.theme.Slate900
 
 @Composable
 fun MemorySheet(
@@ -89,8 +97,8 @@ fun MemorySheet(
                 .fillMaxWidth()
                 .fillMaxHeight(0.85f)
                 .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFF0F172A))
-                .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(16.dp))
+                .background(Slate900)
+                .border(1.dp, Slate800, RoundedCornerShape(16.dp))
                 .padding(16.dp)
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -116,7 +124,7 @@ fun MemorySheet(
                         )
                     }
                     IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
-                        Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = Color(0xFF94A3B8))
+                        Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = Slate400)
                     }
                 }
 
@@ -130,15 +138,15 @@ fun MemorySheet(
                     OutlinedTextField(
                         value = newFactText,
                         onValueChange = { newFactText = it },
-                        placeholder = { Text("Remember something (e.g. My preferred editor is VS Code)...", color = Color(0xFF64748B), fontSize = 12.sp) },
+                        placeholder = { Text("Remember something (e.g. My preferred editor is VS Code)...", color = Slate500, fontSize = 12.sp) },
                         textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 12.sp),
                         modifier = Modifier.weight(1f),
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = Color(0xFF1E293B),
-                            unfocusedContainerColor = Color(0xFF1E293B),
+                            focusedContainerColor = Slate800,
+                            unfocusedContainerColor = Slate800,
                             focusedBorderColor = ElectricCyan,
-                            unfocusedBorderColor = Color(0xFF334155)
+                            unfocusedBorderColor = Slate700
                         )
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -146,7 +154,7 @@ fun MemorySheet(
                         modifier = Modifier
                             .size(44.dp)
                             .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFF0284C7))
+                            .background(ElectricCyanGlow)
                             .clickable {
                                 if (newFactText.isNotBlank()) {
                                     scope.launch {
@@ -179,8 +187,8 @@ fun MemorySheet(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(10.dp))
-                                    .background(Color(0xFF1E293B))
-                                    .border(1.dp, Color(0xFF334155), RoundedCornerShape(10.dp))
+                                    .background(Slate800)
+                                    .border(1.dp, Slate700, RoundedCornerShape(10.dp))
                                     .padding(12.dp)
                             ) {
                                 Text(
@@ -194,7 +202,7 @@ fun MemorySheet(
                                 Text(
                                     text = profile,
                                     fontSize = 13.sp,
-                                    color = Color(0xFFE2E8F0),
+                                    color = Slate200,
                                     lineHeight = 19.sp
                                 )
                             }
@@ -208,7 +216,7 @@ fun MemorySheet(
                                 text = "📘 RECIPES (${recipes.count { !it.retired }})",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF94A3B8),
+                                color = Slate400,
                                 letterSpacing = 0.5.sp,
                                 modifier = Modifier.padding(top = 6.dp)
                             )
@@ -249,7 +257,7 @@ fun MemorySheet(
                             },
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF94A3B8),
+                            color = Slate400,
                             letterSpacing = 0.5.sp,
                             modifier = Modifier.padding(top = 6.dp)
                         )
@@ -259,8 +267,8 @@ fun MemorySheet(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(Color(0xFF1E293B))
-                                .border(1.dp, Color(0xFF334155), RoundedCornerShape(10.dp))
+                                .background(Slate800)
+                                .border(1.dp, Slate700, RoundedCornerShape(10.dp))
                                 .padding(10.dp)
                         ) {
                             Row(
@@ -276,13 +284,13 @@ fun MemorySheet(
                                     Text(
                                         text = fact.content,
                                         fontSize = 12.sp,
-                                        color = Color(0xFFF1F5F9)
+                                        color = Slate100
                                     )
                                     fact.origin()?.let { origin ->
                                         Text(
                                             text = origin,
                                             fontSize = 11.sp,
-                                            color = Color(0xFF94A3B8),
+                                            color = Slate400,
                                             fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
                                             lineHeight = 15.sp,
                                             modifier = Modifier.padding(top = 2.dp)
@@ -291,7 +299,7 @@ fun MemorySheet(
                                     Text(
                                         text = "#${fact.id} • category: ${fact.category}",
                                         fontSize = 10.sp,
-                                        color = Color(0xFF64748B),
+                                        color = Slate500,
                                         fontFamily = FontFamily.Monospace
                                     )
                                 }
@@ -329,8 +337,8 @@ private fun RecipeCard(recipe: RecipeItem, onTogglePin: () -> Unit, onRestore: (
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
-            .background(Color(0xFF1E293B))
-            .border(1.dp, if (recipe.pinned) ElectricCyan.copy(alpha = 0.5f) else Color(0xFF334155), RoundedCornerShape(10.dp))
+            .background(Slate800)
+            .border(1.dp, if (recipe.pinned) ElectricCyan.copy(alpha = 0.5f) else Slate700, RoundedCornerShape(10.dp))
             .padding(10.dp)
     ) {
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -339,17 +347,17 @@ private fun RecipeCard(recipe: RecipeItem, onTogglePin: () -> Unit, onRestore: (
                     text = "When ${recipe.whenText.trimEnd('.')}:",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color = if (recipe.retired) Color(0xFF64748B) else ElectricCyan
+                    color = if (recipe.retired) Slate500 else ElectricCyan
                 )
                 Text(
                     text = recipe.doText,
                     fontSize = 12.sp,
-                    color = if (recipe.retired) Color(0xFF64748B) else Color(0xFFF1F5F9)
+                    color = if (recipe.retired) Slate500 else Slate100
                 )
                 Text(
                     text = recipe.origin(),
                     fontSize = 11.sp,
-                    color = Color(0xFF94A3B8),
+                    color = Slate400,
                     fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
                     lineHeight = 15.sp,
                     modifier = Modifier.padding(top = 2.dp)
@@ -357,7 +365,7 @@ private fun RecipeCard(recipe: RecipeItem, onTogglePin: () -> Unit, onRestore: (
                 Text(
                     text = "${recipe.area} • ${recipe.track()}",
                     fontSize = 10.sp,
-                    color = Color(0xFF64748B),
+                    color = Slate500,
                     fontFamily = FontFamily.Monospace
                 )
             }
@@ -365,7 +373,7 @@ private fun RecipeCard(recipe: RecipeItem, onTogglePin: () -> Unit, onRestore: (
                 Text(
                     text = "↺",
                     fontSize = 15.sp,
-                    color = Color(0xFF94A3B8),
+                    color = Slate400,
                     modifier = Modifier.clickable(onClick = onRestore).padding(6.dp)
                 )
             } else {

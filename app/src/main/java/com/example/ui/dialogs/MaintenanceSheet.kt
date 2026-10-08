@@ -56,6 +56,13 @@ import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldConnected
 import com.example.ui.theme.RoseError
 import kotlinx.coroutines.launch
+import com.example.ui.theme.AmberPending
+import com.example.ui.theme.CodeBlockBackground
+import com.example.ui.theme.Slate300
+import com.example.ui.theme.Slate400
+import com.example.ui.theme.Slate500
+import com.example.ui.theme.Slate800
+import com.example.ui.theme.Slate900
 
 @Composable
 fun MaintenanceSheet(
@@ -105,7 +112,7 @@ fun MaintenanceSheet(
                 .fillMaxWidth(0.95f)
                 .fillMaxHeight(0.88f)
                 .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFF0F172A))
+                .background(Slate900)
                 .border(1.dp, ElectricCyan.copy(alpha = 0.4f), RoundedCornerShape(16.dp))
                 .padding(16.dp)
         ) {
@@ -142,7 +149,7 @@ fun MaintenanceSheet(
                             Text(
                                 text = "Host daemon supervisor & diagnostics",
                                 fontSize = 11.sp,
-                                color = Color(0xFF94A3B8)
+                                color = Slate400
                             )
                         }
                     }
@@ -160,7 +167,7 @@ fun MaintenanceSheet(
                             Icon(
                                 imageVector = Icons.Default.Close,
                                 contentDescription = "Close",
-                                tint = Color(0xFF94A3B8),
+                                tint = Slate400,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -197,7 +204,7 @@ fun MaintenanceSheet(
                     MaintenanceButton(
                         title = "Cleanup",
                         icon = Icons.Default.CleaningServices,
-                        color = Color(0xFFF59E0B),
+                        color = AmberPending,
                         enabled = !isOperating,
                         modifier = Modifier.weight(1f)
                     ) {
@@ -299,7 +306,7 @@ fun MaintenanceSheet(
                         text = "LIVE SYSTEM LOGS (LAST ${logs.size})",
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF94A3B8),
+                        color = Slate400,
                         letterSpacing = 0.8.sp
                     )
                     if (isLoadingLogs) {
@@ -313,15 +320,15 @@ fun MaintenanceSheet(
                         .fillMaxWidth()
                         .weight(1f)
                         .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0xFF090D16))
-                        .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(10.dp))
+                        .background(CodeBlockBackground)
+                        .border(1.dp, Slate800, RoundedCornerShape(10.dp))
                         .padding(8.dp)
                 ) {
                     if (logs.isEmpty() && !isLoadingLogs) {
                         Text(
                             text = "No log records returned from host daemon.",
                             fontSize = 11.sp,
-                            color = Color(0xFF64748B),
+                            color = Slate500,
                             fontFamily = FontFamily.Monospace,
                             modifier = Modifier.padding(8.dp)
                         )
@@ -335,7 +342,7 @@ fun MaintenanceSheet(
                             items(styledLogs) { (level, line) ->
                                 val rowTint = when (level) {
                                     LogLevel.ERROR -> RoseError.copy(alpha = 0.08f)
-                                    LogLevel.WARNING -> Color(0xFFF59E0B).copy(alpha = 0.06f)
+                                    LogLevel.WARNING -> AmberPending.copy(alpha = 0.06f)
                                     else -> Color.Transparent
                                 }
                                 Text(
@@ -343,7 +350,7 @@ fun MaintenanceSheet(
                                     fontSize = 10.sp,
                                     lineHeight = 14.sp,
                                     fontFamily = FontFamily.Monospace,
-                                    color = Color(0xFFCBD5E1),
+                                    color = Slate300,
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(4.dp))

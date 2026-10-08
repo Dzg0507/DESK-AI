@@ -40,6 +40,14 @@ import com.example.ui.theme.NeonIndigo
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.example.ui.theme.ElectricCyanGlow
+import com.example.ui.theme.Slate300
+import com.example.ui.theme.Slate400
+import com.example.ui.theme.Slate500
+import com.example.ui.theme.Slate600
+import com.example.ui.theme.Slate800
+import com.example.ui.theme.Slate900
+import com.example.ui.theme.SlateDarkSurface
 
 @Composable
 fun SessionDrawerContent(
@@ -55,7 +63,7 @@ fun SessionDrawerContent(
         modifier = modifier
             .fillMaxHeight()
             .width(300.dp)
-            .background(Color(0xFF0F172A))
+            .background(Slate900)
             .padding(16.dp)
     ) {
         // App / Brand Header
@@ -67,7 +75,7 @@ fun SessionDrawerContent(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFF0284C7)),
+                    .background(ElectricCyanGlow),
                 contentAlignment = Alignment.Center
             ) {
                 Text(text = "⚡", fontSize = 18.sp)
@@ -95,7 +103,7 @@ fun SessionDrawerContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(10.dp))
-                .background(Color(0xFF1E293B))
+                .background(Slate800)
                 .clickable { onNewSession() }
                 .padding(vertical = 10.dp, horizontal = 12.dp)
         ) {
@@ -122,7 +130,7 @@ fun SessionDrawerContent(
             text = "CONVERSATIONS",
             fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
-            color = Color(0xFF64748B),
+            color = Slate500,
             letterSpacing = 0.5.sp,
             modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
         )
@@ -140,7 +148,7 @@ fun SessionDrawerContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp))
-                        .background(if (isActive) Color(0xFF1E293B) else Color.Transparent)
+                        .background(if (isActive) Slate800 else Color.Transparent)
                         .clickable { onSelectSession(session) }
                         .padding(horizontal = 10.dp, vertical = 8.dp)
                 ) {
@@ -156,7 +164,7 @@ fun SessionDrawerContent(
                             Icon(
                                 imageVector = if (session.pinned) Icons.Default.PushPin else Icons.Default.ChatBubbleOutline,
                                 contentDescription = null,
-                                tint = if (session.pinned) NeonIndigo else (if (isActive) ElectricCyan else Color(0xFF64748B)),
+                                tint = if (session.pinned) NeonIndigo else (if (isActive) ElectricCyan else Slate500),
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
@@ -164,14 +172,14 @@ fun SessionDrawerContent(
                                 Text(
                                     text = session.title,
                                     fontSize = 13.sp,
-                                    color = if (isActive) Color.White else Color(0xFFCBD5E1),
+                                    color = if (isActive) Color.White else Slate300,
                                     fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal,
                                     maxLines = 1
                                 )
                                 Text(
                                     text = timeStr,
                                     fontSize = 10.sp,
-                                    color = Color(0xFF64748B),
+                                    color = Slate500,
                                     fontFamily = FontFamily.Monospace
                                 )
                             }
@@ -185,7 +193,7 @@ fun SessionDrawerContent(
                                 Icon(
                                     imageVector = Icons.Default.DeleteOutline,
                                     contentDescription = "Delete",
-                                    tint = Color(0xFF475569),
+                                    tint = Slate600,
                                     modifier = Modifier.size(14.dp)
                                 )
                             }
@@ -200,7 +208,7 @@ fun SessionDrawerContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(8.dp))
-                .background(Color(0xFF131B2E))
+                .background(SlateDarkSurface)
                 .padding(10.dp)
         ) {
             Column {
@@ -213,7 +221,7 @@ fun SessionDrawerContent(
                 Text(
                     text = "Autonomous AI Worker & Desktop Bridge",
                     fontSize = 9.sp,
-                    color = Color(0xFF94A3B8)
+                    color = Slate400
                 )
             }
         }

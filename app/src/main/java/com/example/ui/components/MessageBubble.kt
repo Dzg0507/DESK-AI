@@ -85,6 +85,17 @@ import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import com.example.data.model.MessageAttachment
 import java.io.File
+import com.example.ui.theme.Blue500
+import com.example.ui.theme.ElectricCyanGlow
+import com.example.ui.theme.Slate100
+import com.example.ui.theme.Slate200
+import com.example.ui.theme.Slate300
+import com.example.ui.theme.Slate400
+import com.example.ui.theme.Slate500
+import com.example.ui.theme.Slate600
+import com.example.ui.theme.Slate700
+import com.example.ui.theme.Slate800
+import com.example.ui.theme.Slate900
 
 @Composable
 fun MessageBubble(
@@ -127,7 +138,7 @@ fun MessageBubble(
                 modifier = Modifier
                     .size(32.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFF1E293B))
+                    .background(Slate800)
                     .border(1.dp, ElectricCyan.copy(alpha = 0.5f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
@@ -185,7 +196,7 @@ fun MessageBubble(
                     )
                     .border(
                         1.dp,
-                        if (isUser) Color(0xFF3B82F6) else Color(0xFF334155),
+                        if (isUser) Blue500 else Slate700,
                         RoundedCornerShape(
                             topStart = 16.dp,
                             topEnd = 16.dp,
@@ -207,7 +218,7 @@ fun MessageBubble(
                     } else if (message.content.isNotBlank() || attached.isEmpty()) {
                         MarkdownContent(
                             content = message.content,
-                            textColor = if (isUser) Color.White else Color(0xFFF1F5F9),
+                            textColor = if (isUser) Color.White else Slate100,
                             serverBaseUrl = serverBaseUrl,
                             authToken = authToken
                         )
@@ -287,7 +298,7 @@ fun MessageBubble(
                     Text(
                         text = timeFormatted,
                         fontSize = 10.sp,
-                        color = if (isUser) Color(0xCCFFFFFF) else Color(0xFF94A3B8),
+                        color = if (isUser) Color(0xCCFFFFFF) else Slate400,
                         modifier = Modifier.align(if (isUser) Alignment.End else Alignment.Start)
                     )
                 }
@@ -303,7 +314,7 @@ fun MessageBubble(
                     modifier = Modifier
                         .padding(top = 4.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(Color(0xFF1E293B))
+                        .background(Slate800)
                         .padding(horizontal = 4.dp, vertical = 2.dp),
                     horizontalArrangement = Arrangement.spacedBy(2.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -321,7 +332,7 @@ fun MessageBubble(
                         Icon(
                             imageVector = Icons.Default.ContentCopy,
                             contentDescription = "Copy",
-                            tint = Color(0xFFCBD5E1),
+                            tint = Slate300,
                             modifier = Modifier.size(14.dp)
                         )
                     }
@@ -395,8 +406,8 @@ fun ProposalCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
-            .background(Color(0xFF0F172A))
-            .border(1.dp, if (isAddProject) ElectricCyan else Color(0xFF38BDF8).copy(alpha = 0.4f), RoundedCornerShape(10.dp))
+            .background(Slate900)
+            .border(1.dp, if (isAddProject) ElectricCyan else ElectricCyan.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
             .padding(10.dp)
     ) {
         Column {
@@ -439,7 +450,7 @@ fun ProposalCard(
                     text = "Project: $project",
                     fontSize = 11.sp,
                     fontFamily = FontFamily.Monospace,
-                    color = Color(0xFF94A3B8),
+                    color = Slate400,
                     modifier = Modifier.padding(top = 2.dp)
                 )
             }
@@ -448,7 +459,7 @@ fun ProposalCard(
             Text(
                 text = instruction,
                 fontSize = 12.sp,
-                color = Color(0xFFE2E8F0)
+                color = Slate200
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -483,7 +494,7 @@ fun ProposalCard(
                     Text(
                         text = "Dismissed",
                         fontSize = 11.sp,
-                        color = Color(0xFF64748B),
+                        color = Slate500,
                         fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
                     )
                 }
@@ -497,7 +508,7 @@ fun ProposalCard(
                             modifier = Modifier
                                 .weight(1f)
                                 .clip(RoundedCornerShape(6.dp))
-                                .background(if (isAddProject) Color(0xFF0284C7) else Color(0xFF0284C7))
+                                .background(if (isAddProject) ElectricCyanGlow else ElectricCyanGlow)
                                 .clickable { onRun() }
                                 .padding(vertical = 6.dp),
                             contentAlignment = Alignment.Center
@@ -524,7 +535,7 @@ fun ProposalCard(
                             modifier = Modifier
                                 .weight(1f)
                                 .clip(RoundedCornerShape(6.dp))
-                                .background(Color(0xFF334155))
+                                .background(Slate700)
                                 .clickable { onDismiss() }
                                 .padding(vertical = 6.dp),
                             contentAlignment = Alignment.Center
@@ -533,14 +544,14 @@ fun ProposalCard(
                                 Icon(
                                     imageVector = Icons.Default.Close,
                                     contentDescription = "Dismiss",
-                                    tint = Color(0xFFCBD5E1),
+                                    tint = Slate300,
                                     modifier = Modifier.size(13.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = "Dismiss",
                                     fontSize = 11.sp,
-                                    color = Color(0xFFCBD5E1)
+                                    color = Slate300
                                 )
                             }
                         }
@@ -562,8 +573,8 @@ fun QuestionChoicesCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
-            .background(Color(0xFF0F172A))
-            .border(1.dp, Color(0xFF334155), RoundedCornerShape(10.dp))
+            .background(Slate900)
+            .border(1.dp, Slate700, RoundedCornerShape(10.dp))
             .padding(10.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
@@ -609,15 +620,15 @@ fun QuestionChoicesCard(
                         .background(
                             when {
                                 isSelected -> EmeraldConnected.copy(alpha = 0.25f)
-                                isAnswered -> Color(0xFF1E293B).copy(alpha = 0.5f)
-                                else -> Color(0xFF1E293B)
+                                isAnswered -> Slate800.copy(alpha = 0.5f)
+                                else -> Slate800
                             }
                         )
                         .border(
                             1.dp,
                             when {
                                 isSelected -> EmeraldConnected
-                                isAnswered -> Color(0xFF334155)
+                                isAnswered -> Slate700
                                 else -> ElectricCyan.copy(alpha = 0.6f)
                             },
                             RoundedCornerShape(8.dp)
@@ -636,7 +647,7 @@ fun QuestionChoicesCard(
                             text = option,
                             fontSize = 12.sp,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                            color = if (isSelected) EmeraldConnected else if (isAnswered) Color(0xFF94A3B8) else Color.White
+                            color = if (isSelected) EmeraldConnected else if (isAnswered) Slate400 else Color.White
                         )
                         if (isSelected) {
                             Icon(
@@ -656,8 +667,8 @@ fun QuestionChoicesCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp))
-                        .background(if (isOtherSelected) EmeraldConnected.copy(alpha = 0.25f) else Color(0xFF1E293B))
-                        .border(1.dp, if (isOtherSelected) EmeraldConnected else Color(0xFF475569), RoundedCornerShape(8.dp))
+                        .background(if (isOtherSelected) EmeraldConnected.copy(alpha = 0.25f) else Slate800)
+                        .border(1.dp, if (isOtherSelected) EmeraldConnected else Slate600, RoundedCornerShape(8.dp))
                         .clickable(enabled = !isAnswered) {
                             onFocusOther()
                         }
@@ -672,12 +683,12 @@ fun QuestionChoicesCard(
                             text = if (isOtherSelected) "Other: ${question.answeredOption}" else "Other… (Type answer)",
                             fontSize = 12.sp,
                             fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                            color = if (isOtherSelected) EmeraldConnected else Color(0xFF94A3B8)
+                            color = if (isOtherSelected) EmeraldConnected else Slate400
                         )
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = null,
-                            tint = if (isOtherSelected) EmeraldConnected else Color(0xFF94A3B8),
+                            tint = if (isOtherSelected) EmeraldConnected else Slate400,
                             modifier = Modifier.size(13.dp)
                         )
                     }
@@ -698,7 +709,7 @@ private fun ThinkingIndicator() {
         label = "thinking_phase"
     )
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 2.dp)) {
-        Text(text = "Thinking", fontSize = 14.sp, color = Color(0xFF94A3B8))
+        Text(text = "Thinking", fontSize = 14.sp, color = Slate400)
         Spacer(modifier = Modifier.width(4.dp))
         repeat(3) { i ->
             val lit = phase.toInt() == i
@@ -707,7 +718,7 @@ private fun ThinkingIndicator() {
                     .padding(horizontal = 2.dp)
                     .size(5.dp)
                     .clip(CircleShape)
-                    .background(if (lit) ElectricCyan else Color(0xFF475569))
+                    .background(if (lit) ElectricCyan else Slate600)
             )
         }
     }

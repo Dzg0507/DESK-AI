@@ -58,6 +58,14 @@ import com.example.ui.theme.EmeraldConnected
 import com.example.ui.theme.NeonIndigo
 import com.example.ui.theme.RoseError
 import kotlinx.coroutines.launch
+import com.example.ui.theme.ElectricCyanGlow
+import com.example.ui.theme.Slate300
+import com.example.ui.theme.Slate400
+import com.example.ui.theme.Slate500
+import com.example.ui.theme.Slate700
+import com.example.ui.theme.Slate800
+import com.example.ui.theme.Slate900
+import com.example.ui.theme.SlateDarkSurface
 
 @Composable
 fun ConnectionHubDialog(
@@ -104,8 +112,8 @@ fun ConnectionHubDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFF0F172A))
-                .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(16.dp))
+                .background(Slate900)
+                .border(1.dp, Slate800, RoundedCornerShape(16.dp))
                 .padding(20.dp)
         ) {
             Column(
@@ -138,7 +146,7 @@ fun ConnectionHubDialog(
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = "Close",
-                            tint = Color(0xFF94A3B8)
+                            tint = Slate400
                         )
                     }
                 }
@@ -150,7 +158,7 @@ fun ConnectionHubDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp))
-                        .background(Color(0xFF1E293B))
+                        .background(Slate800)
                         .border(1.dp, ElectricCyan.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
                         .clickable {
                             val clipMgr = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -190,13 +198,13 @@ fun ConnectionHubDialog(
 
                 // Section 1: Home Network (Local LAN)
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.Default.Home, contentDescription = "Home", tint = Color(0xFF38BDF8), modifier = Modifier.size(16.dp))
+                    Icon(imageVector = Icons.Default.Home, contentDescription = "Home", tint = ElectricCyan, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "HOME WI-FI / LOCAL LAN URL",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF94A3B8),
+                        color = Slate400,
                         letterSpacing = 0.5.sp
                     )
                 }
@@ -204,7 +212,7 @@ fun ConnectionHubDialog(
                 OutlinedTextField(
                     value = localUrl,
                     onValueChange = { localUrl = it.replace("192.168.12.2.246", "192.168.12.246") },
-                    placeholder = { Text("e.g. http://192.168.1.100:8080 or http://10.0.2.2:8080", color = Color(0xFF64748B), fontSize = 12.sp) },
+                    placeholder = { Text("e.g. http://192.168.1.100:8080 or http://10.0.2.2:8080", color = Slate500, fontSize = 12.sp) },
                     textStyle = androidx.compose.ui.text.TextStyle(
                         color = Color.White,
                         fontFamily = FontFamily.Monospace,
@@ -213,9 +221,9 @@ fun ConnectionHubDialog(
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = ElectricCyan,
-                        unfocusedBorderColor = Color(0xFF334155),
-                        focusedContainerColor = Color(0xFF1E293B),
-                        unfocusedContainerColor = Color(0xFF1E293B)
+                        unfocusedBorderColor = Slate700,
+                        focusedContainerColor = Slate800,
+                        unfocusedContainerColor = Slate800
                     ),
                     singleLine = true
                 )
@@ -254,7 +262,7 @@ fun ConnectionHubDialog(
                 OutlinedTextField(
                     value = remoteUrl,
                     onValueChange = { remoteUrl = it },
-                    placeholder = { Text("e.g. http://100.x.y.z:8080 or https://tunnel.trycloudflare.com", color = Color(0xFF64748B), fontSize = 12.sp) },
+                    placeholder = { Text("e.g. http://100.x.y.z:8080 or https://tunnel.trycloudflare.com", color = Slate500, fontSize = 12.sp) },
                     textStyle = androidx.compose.ui.text.TextStyle(
                         color = Color.White,
                         fontFamily = FontFamily.Monospace,
@@ -263,16 +271,16 @@ fun ConnectionHubDialog(
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = NeonIndigo,
-                        unfocusedBorderColor = Color(0xFF334155),
-                        focusedContainerColor = Color(0xFF1E293B),
-                        unfocusedContainerColor = Color(0xFF1E293B)
+                        unfocusedBorderColor = Slate700,
+                        focusedContainerColor = Slate800,
+                        unfocusedContainerColor = Slate800
                     ),
                     singleLine = true
                 )
                 Text(
                     text = "Tailscale uses http:// (not https) with :8080 (e.g. http://100.x.y.z:8080)",
                     fontSize = 10.sp,
-                    color = Color(0xFF94A3B8),
+                    color = Slate400,
                     modifier = Modifier.padding(top = 2.dp, start = 2.dp)
                 )
 
@@ -283,7 +291,7 @@ fun ConnectionHubDialog(
                             .fillMaxWidth()
                             .padding(top = 8.dp)
                             .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFF131B2E))
+                            .background(SlateDarkSurface)
                             .border(1.dp, NeonIndigo.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
                             .padding(10.dp)
                     ) {
@@ -299,7 +307,7 @@ fun ConnectionHubDialog(
                                 text = "1. **Tailscale (Recommended & Easiest):** Install free Tailscale on your PC & phone. Enter your PC's 100.x.y.z IP: `http://100.x.y.z:8080`. No router setup required!\n\n" +
                                         "2. **Cloudflare Tunnel (`cloudflared`):** Run `cloudflared tunnel --url http://localhost:8080`. Gives you a free secure HTTPS URL.\n\n" +
                                         "3. **ngrok:** Run `ngrok http 8080` on your PC and paste the `https://...` URL here.",
-                                color = Color(0xFFCBD5E1),
+                                color = Slate300,
                                 fontSize = 11.sp,
                                 lineHeight = 16.sp
                             )
@@ -319,7 +327,7 @@ fun ConnectionHubDialog(
                         text = "HUD AUTH TOKEN (HUD_AUTH_TOKEN)",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF94A3B8)
+                        color = Slate400
                     )
 
                     // Quick generate helper
@@ -342,7 +350,7 @@ fun ConnectionHubDialog(
                 OutlinedTextField(
                     value = token,
                     onValueChange = { token = it },
-                    placeholder = { Text("Required for phone access. Matches HUD_AUTH_TOKEN in PC .env", color = Color(0xFF64748B), fontSize = 12.sp) },
+                    placeholder = { Text("Required for phone access. Matches HUD_AUTH_TOKEN in PC .env", color = Slate500, fontSize = 12.sp) },
                     textStyle = androidx.compose.ui.text.TextStyle(
                         color = Color.White,
                         fontFamily = FontFamily.Monospace,
@@ -351,9 +359,9 @@ fun ConnectionHubDialog(
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = ElectricCyan,
-                        unfocusedBorderColor = Color(0xFF334155),
-                        focusedContainerColor = Color(0xFF1E293B),
-                        unfocusedContainerColor = Color(0xFF1E293B)
+                        unfocusedBorderColor = Slate700,
+                        focusedContainerColor = Slate800,
+                        unfocusedContainerColor = Slate800
                     ),
                     singleLine = true
                 )
@@ -365,7 +373,7 @@ fun ConnectionHubDialog(
                     text = "EXECUTION ENGINE",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF94A3B8)
+                    color = Slate400
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Row(
@@ -378,8 +386,8 @@ fun ConnectionHubDialog(
                             modifier = Modifier
                                 .weight(1f)
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(if (isSelected) ElectricCyan.copy(alpha = 0.2f) else Color(0xFF1E293B))
-                                .border(1.dp, if (isSelected) ElectricCyan else Color(0xFF334155), RoundedCornerShape(8.dp))
+                                .background(if (isSelected) ElectricCyan.copy(alpha = 0.2f) else Slate800)
+                                .border(1.dp, if (isSelected) ElectricCyan else Slate700, RoundedCornerShape(8.dp))
                                 .clickable { engine = item }
                                 .padding(vertical = 6.dp),
                             contentAlignment = Alignment.Center
@@ -388,7 +396,7 @@ fun ConnectionHubDialog(
                                 text = item.uppercase(),
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (isSelected) ElectricCyan else Color(0xFF94A3B8),
+                                color = if (isSelected) ElectricCyan else Slate400,
                                 fontFamily = FontFamily.Monospace
                             )
                         }
@@ -402,8 +410,8 @@ fun ConnectionHubDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0xFF1E293B))
-                        .border(1.dp, Color(0xFF334155), RoundedCornerShape(10.dp))
+                        .background(Slate800)
+                        .border(1.dp, Slate700, RoundedCornerShape(10.dp))
                         .clickable(enabled = !isPinging) {
                             scope.launch {
                                 isPinging = true
@@ -479,7 +487,7 @@ fun ConnectionHubDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp))
-                        .background(Color(0xFF1E293B))
+                        .background(Slate800)
                         .border(1.dp, ElectricCyan.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
                         .clickable { showUpdaterFromHub = true }
                         .padding(horizontal = 12.dp, vertical = 10.dp),
@@ -509,7 +517,7 @@ fun ConnectionHubDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0xFF0284C7))
+                        .background(ElectricCyanGlow)
                         .clickable {
                             val normalizedLocal = BridgeConfig.normalizeUrl(localUrl)
                             val normalizedRemote = if (remoteUrl.isNotBlank()) BridgeConfig.normalizeUrl(remoteUrl) else ""

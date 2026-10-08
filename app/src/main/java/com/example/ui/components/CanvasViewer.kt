@@ -38,6 +38,12 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.data.model.CanvasRef
+import com.example.ui.theme.Slate300
+import com.example.ui.theme.Slate400
+import com.example.ui.theme.Slate800
+import com.example.ui.theme.Slate900
+import com.example.ui.theme.Violet400
+import com.example.ui.theme.Violet600
 
 /** The card under a chat reply that wrote or changed a draft; tapping it opens the canvas. */
 @Composable
@@ -46,7 +52,7 @@ fun CanvasCard(ref: CanvasRef, onOpen: (CanvasRef) -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF1E293B))
+            .background(Slate800)
             .clickable { onOpen(ref) }
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -58,10 +64,10 @@ fun CanvasCard(ref: CanvasRef, onOpen: (CanvasRef) -> Unit) {
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(
                 (if (ref.kind == "page") "Page preview" else "Draft") + " · version ${ref.version}",
-                color = Color(0xFF94A3B8), fontSize = 12.sp
+                color = Slate400, fontSize = 12.sp
             )
         }
-        Text("Open", color = Color(0xFFA78BFA), fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+        Text("Open", color = Violet400, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
     }
 }
 
@@ -94,16 +100,16 @@ fun CanvasDialog(
     val headers = if (authToken.isNotBlank()) mapOf("X-HUD-Token" to authToken.trim()) else emptyMap()
 
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        Column(Modifier.fillMaxSize().background(Color(0xFF0F172A))) {
+        Column(Modifier.fillMaxSize().background(Slate900)) {
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("✕", color = Color(0xFFCBD5E1), fontSize = 20.sp, modifier = Modifier.clickable { onDismiss() }.padding(6.dp))
+                Text("✕", color = Slate300, fontSize = 20.sp, modifier = Modifier.clickable { onDismiss() }.padding(6.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(ref.title, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 16.sp,
                     maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                Text("💬 Discuss", color = Color(0xFFA78BFA), fontSize = 13.sp,
+                Text("💬 Discuss", color = Violet400, fontSize = 13.sp,
                     modifier = Modifier.clickable { onDiscuss(ref); onDismiss() }.padding(6.dp))
             }
             if (versions.size > 1) {
@@ -115,11 +121,11 @@ fun CanvasDialog(
                         val selected = v == shown
                         Text(
                             "v$v",
-                            color = if (selected) Color.White else Color(0xFF94A3B8),
+                            color = if (selected) Color.White else Slate400,
                             fontSize = 13.sp,
                             modifier = Modifier
                                 .clip(RoundedCornerShape(50))
-                                .background(if (selected) Color(0xFF7C3AED) else Color(0xFF1E293B))
+                                .background(if (selected) Violet600 else Slate800)
                                 .clickable { shown = v }
                                 .padding(horizontal = 12.dp, vertical = 6.dp)
                         )

@@ -83,6 +83,12 @@ import com.example.ui.dialogs.TasksSheet
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.RoseError
 import kotlinx.coroutines.launch
+import com.example.ui.theme.Amber200
+import com.example.ui.theme.Amber900
+import com.example.ui.theme.Slate400
+import com.example.ui.theme.Slate800
+import com.example.ui.theme.Slate900
+import com.example.ui.theme.SlateDarkBackground
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -195,7 +201,7 @@ fun ChatScreen(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet(
-                drawerContainerColor = Color(0xFF0F172A)
+                drawerContainerColor = Slate900
             ) {
                 SessionDrawerContent(
                     sessions = allSessions,
@@ -253,7 +259,7 @@ fun ChatScreen(
                             Icon(
                                 imageVector = Icons.Default.AddComment,
                                 contentDescription = "New chat",
-                                tint = Color(0xFF94A3B8)
+                                tint = Slate400
                             )
                         }
 
@@ -277,7 +283,7 @@ fun ChatScreen(
                                 Icon(
                                     imageVector = Icons.Default.SystemUpdate,
                                     contentDescription = "Update App",
-                                    tint = if (hasUpdateAvailable) ElectricCyan else Color(0xFF94A3B8)
+                                    tint = if (hasUpdateAvailable) ElectricCyan else Slate400
                                 )
                             }
                         }
@@ -289,12 +295,12 @@ fun ChatScreen(
                             Icon(
                                 imageVector = Icons.Default.MoreVert,
                                 contentDescription = "Bridge Settings",
-                                tint = Color(0xFF94A3B8)
+                                tint = Slate400
                             )
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color(0xFF0B0F19),
+                        containerColor = SlateDarkBackground,
                         titleContentColor = Color.White
                     )
                 )
@@ -314,12 +320,12 @@ fun ChatScreen(
                     if (needsYou.isNotEmpty()) {
                         androidx.compose.foundation.layout.Row(
                             modifier = Modifier.fillMaxWidth()
-                                .background(androidx.compose.ui.graphics.Color(0xFF78350F))
+                                .background(Amber900)
                                 .clickable { showNeedsYou = true }
                                 .padding(horizontal = 14.dp, vertical = 10.dp)
                         ) {
                             Text("⚠️ Needs you (${needsYou.size}): ${needsYou.first().question.take(70)}",
-                                 color = androidx.compose.ui.graphics.Color(0xFFFDE68A), fontSize = 13.sp,
+                                 color = Amber200, fontSize = 13.sp,
                                  fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, maxLines = 1)
                         }
                     }
@@ -447,7 +453,7 @@ fun ChatScreen(
                                         }
                                     }
                                 },
-                                containerColor = Color(0xFF1E293B),
+                                containerColor = Slate800,
                                 contentColor = ElectricCyan,
                                 shape = CircleShape,
                                 modifier = Modifier

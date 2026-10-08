@@ -63,6 +63,14 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
+import com.example.ui.theme.AmberPending
+import com.example.ui.theme.ElectricCyanGlow
+import com.example.ui.theme.Sky300
+import com.example.ui.theme.Slate200
+import com.example.ui.theme.Slate400
+import com.example.ui.theme.Slate700
+import com.example.ui.theme.Slate800
+import com.example.ui.theme.Slate900
 
 @Composable
 fun LiveTaskCard(
@@ -135,10 +143,10 @@ fun LiveTaskCard(
     val isBacklog = (item?.phase == "backlog" || item == null) && !isCancelled && !isNotFound
 
     val phaseColor = when {
-        isNotFound -> Color(0xFF94A3B8)
-        isCancelled -> Color(0xFF94A3B8)
+        isNotFound -> Slate400
+        isCancelled -> Slate400
         isCompleted -> EmeraldConnected
-        isInProgress -> Color(0xFFF59E0B)
+        isInProgress -> AmberPending
         isFailed -> RoseError
         else -> ElectricCyan
     }
@@ -147,7 +155,7 @@ fun LiveTaskCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF0F172A))
+            .background(Slate900)
             .border(1.dp, phaseColor.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
             .padding(12.dp)
     ) {
@@ -219,7 +227,7 @@ fun LiveTaskCard(
                     text = item.title,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFFE2E8F0)
+                    color = Slate200
                 )
             }
 
@@ -235,7 +243,7 @@ fun LiveTaskCard(
             Text(
                 text = statusDisplay,
                 fontSize = 11.sp,
-                color = if (isFailed) RoseError else Color(0xFF94A3B8),
+                color = if (isFailed) RoseError else Slate400,
                 lineHeight = 15.sp
             )
 
@@ -250,7 +258,7 @@ fun LiveTaskCard(
                     Text(
                         text = summary,
                         fontSize = 12.sp,
-                        color = Color(0xFFE2E8F0),
+                        color = Slate200,
                         lineHeight = 17.sp,
                         maxLines = if (expanded || !long) Int.MAX_VALUE else 24,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
@@ -261,7 +269,7 @@ fun LiveTaskCard(
                         text = if (expanded) "Show less" else "Show all",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF7DD3FC),
+                        color = Sky300,
                         modifier = Modifier.clickable { expanded = !expanded }.padding(top = 4.dp)
                     )
                 }
@@ -314,13 +322,13 @@ fun LiveTaskCard(
                                 text = prog.label.ifBlank { "Processing" },
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFFF59E0B)
+                                color = AmberPending
                             )
                             Text(
                                 text = "${prog.percent}% • $timeText",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = Color(0xFFF59E0B),
+                                color = AmberPending,
                                 fontFamily = FontFamily.Monospace
                             )
                         }
@@ -329,7 +337,7 @@ fun LiveTaskCard(
                             Text(
                                 text = prog.detail,
                                 fontSize = 10.sp,
-                                color = Color(0xFF94A3B8)
+                                color = Slate400
                             )
                         }
 
@@ -344,8 +352,8 @@ fun LiveTaskCard(
                                 .fillMaxWidth()
                                 .height(5.dp)
                                 .clip(RoundedCornerShape(2.5.dp)),
-                            color = Color(0xFFF59E0B),
-                            trackColor = Color(0xFF1E293B)
+                            color = AmberPending,
+                            trackColor = Slate800
                         )
                     }
                 } else {
@@ -355,8 +363,8 @@ fun LiveTaskCard(
                             .fillMaxWidth()
                             .height(4.dp)
                             .clip(RoundedCornerShape(2.dp)),
-                        color = Color(0xFFF59E0B),
-                        trackColor = Color(0xFF1E293B)
+                        color = AmberPending,
+                        trackColor = Slate800
                     )
                 }
             } else if (isCompleted) {
@@ -367,7 +375,7 @@ fun LiveTaskCard(
                         .height(3.dp)
                         .clip(RoundedCornerShape(1.5.dp)),
                     color = EmeraldConnected,
-                    trackColor = Color(0xFF1E293B)
+                    trackColor = Slate800
                 )
             }
 
@@ -396,17 +404,17 @@ fun LiveTaskCard(
                         val chipBg = when (act.variant) {
                             "primary" -> ElectricCyan.copy(alpha = 0.18f)
                             "danger" -> RoseError.copy(alpha = 0.18f)
-                            else -> Color(0xFF1E293B)
+                            else -> Slate800
                         }
                         val chipBorder = when (act.variant) {
                             "primary" -> ElectricCyan.copy(alpha = 0.8f)
                             "danger" -> RoseError.copy(alpha = 0.8f)
-                            else -> Color(0xFF334155)
+                            else -> Slate700
                         }
                         val chipTextColor = when (act.variant) {
                             "primary" -> ElectricCyan
                             "danger" -> RoseError
-                            else -> Color(0xFFE2E8F0)
+                            else -> Slate200
                         }
 
                         Box(
@@ -445,7 +453,7 @@ fun LiveTaskCard(
                     Text(
                         text = cancelFeedback!!,
                         fontSize = 11.sp,
-                        color = Color(0xFFF59E0B),
+                        color = AmberPending,
                         fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
                     )
                 } else {
@@ -458,7 +466,7 @@ fun LiveTaskCard(
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(6.dp))
-                                .background(Color(0xFF334155))
+                                .background(Slate700)
                                 .border(1.dp, RoseError.copy(alpha = 0.6f), RoundedCornerShape(6.dp))
                                 .clickable(enabled = !isCancelling) {
                                     scope.launch {
@@ -499,7 +507,7 @@ fun LiveTaskCard(
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(6.dp))
-                                .background(Color(0xFF0284C7))
+                                .background(ElectricCyanGlow)
                                 .clickable {
                                     onPlayVideo(result.url, result.filename.ifBlank { "Rendered Video" })
                                 }
@@ -528,7 +536,7 @@ fun LiveTaskCard(
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(6.dp))
-                                .background(Color(0xFF1E293B))
+                                .background(Slate800)
                                 .border(1.dp, ElectricCyan, RoundedCornerShape(6.dp))
                                 .clickable {
                                     scope.launch {

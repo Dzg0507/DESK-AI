@@ -49,6 +49,13 @@ import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldConnected
 import com.example.ui.theme.NeonIndigo
 import com.example.ui.theme.RoseError
+import com.example.ui.theme.AmberPending
+import com.example.ui.theme.Slate300
+import com.example.ui.theme.Slate400
+import com.example.ui.theme.Slate50
+import com.example.ui.theme.Slate700
+import com.example.ui.theme.Slate800
+import com.example.ui.theme.Slate900
 
 @Composable
 fun AgentStatusBar(
@@ -88,8 +95,8 @@ fun AgentStatusBar(
 
     val beaconColor = when {
         !isConnected -> RoseError
-        isPaused -> Color(0xFF94A3B8)
-        isRunning -> Color(0xFFF59E0B)
+        isPaused -> Slate400
+        isRunning -> AmberPending
         else -> EmeraldConnected
     }
 
@@ -104,8 +111,8 @@ fun AgentStatusBar(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
-            .background(Color(0xFF0F172A))
-            .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
+            .background(Slate900)
+            .border(1.dp, Slate800, RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
             .padding(horizontal = 14.dp, vertical = 10.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -152,7 +159,7 @@ fun AgentStatusBar(
                         )
                         Text(
                             text = serverUrl.removePrefix("http://").removePrefix("https://").take(24),
-                            color = Color(0xFF94A3B8),
+                            color = Slate400,
                             fontSize = 10.sp,
                             fontFamily = FontFamily.Monospace
                         )
@@ -165,8 +172,8 @@ fun AgentStatusBar(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
-                            .background(if (isPaused) ElectricCyan.copy(alpha = 0.15f) else Color(0xFF1E293B))
-                            .border(1.dp, if (isPaused) ElectricCyan else Color(0xFF334155), RoundedCornerShape(8.dp))
+                            .background(if (isPaused) ElectricCyan.copy(alpha = 0.15f) else Slate800)
+                            .border(1.dp, if (isPaused) ElectricCyan else Slate700, RoundedCornerShape(8.dp))
                             .clickable { onToggleDaemon() }
                             .padding(horizontal = 8.dp, vertical = 4.dp),
                         contentAlignment = Alignment.Center
@@ -175,13 +182,13 @@ fun AgentStatusBar(
                             Icon(
                                 imageVector = if (isPaused) Icons.Default.PlayArrow else Icons.Default.PowerSettingsNew,
                                 contentDescription = if (isPaused) "Wake Daemon" else "Standby",
-                                tint = if (isPaused) ElectricCyan else Color(0xFFCBD5E1),
+                                tint = if (isPaused) ElectricCyan else Slate300,
                                 modifier = Modifier.size(14.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = if (isPaused) "Wake" else "Standby",
-                                color = if (isPaused) ElectricCyan else Color(0xFFCBD5E1),
+                                color = if (isPaused) ElectricCyan else Slate300,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -198,7 +205,7 @@ fun AgentStatusBar(
                         Icon(
                             imageVector = Icons.Default.Task,
                             contentDescription = "Tasks",
-                            tint = Color(0xFF94A3B8),
+                            tint = Slate400,
                             modifier = Modifier.size(17.dp)
                         )
                     }
@@ -211,7 +218,7 @@ fun AgentStatusBar(
                         Icon(
                             imageVector = Icons.Default.Memory,
                             contentDescription = "Memory",
-                            tint = Color(0xFF94A3B8),
+                            tint = Slate400,
                             modifier = Modifier.size(17.dp)
                         )
                     }
@@ -224,7 +231,7 @@ fun AgentStatusBar(
                         Icon(
                             imageVector = Icons.Default.Videocam,
                             contentDescription = "3D Videos",
-                            tint = Color(0xFF94A3B8),
+                            tint = Slate400,
                             modifier = Modifier.size(17.dp)
                         )
                     }
@@ -237,7 +244,7 @@ fun AgentStatusBar(
                         Icon(
                             imageVector = Icons.Default.Settings,
                             contentDescription = "Connection Hub",
-                            tint = Color(0xFF94A3B8),
+                            tint = Slate400,
                             modifier = Modifier.size(17.dp)
                         )
                     }
@@ -254,7 +261,7 @@ fun AgentStatusBar(
                 MetricChip(label = "ENGINE", value = stats.defaultEngine.uppercase(), color = NeonIndigo)
                 MetricChip(label = "COMPLETED", value = "${stats.tasksCompleted}", color = EmeraldConnected)
                 if (stats.tasksInProgress > 0) {
-                    MetricChip(label = "ACTIVE", value = "${stats.tasksInProgress}", color = Color(0xFFF59E0B))
+                    MetricChip(label = "ACTIVE", value = "${stats.tasksInProgress}", color = AmberPending)
                 }
                 MetricChip(label = "QUEUE", value = "${stats.tasksBacklog}", color = ElectricCyan)
             }
@@ -273,21 +280,21 @@ fun AgentStatusBar(
                                 modifier = Modifier
                                     .size(6.dp)
                                     .clip(CircleShape)
-                                    .background(Color(0xFFF59E0B))
+                                    .background(AmberPending)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = "DAEMON BUSY: EXECUTING TASK PIPELINE",
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFFF59E0B),
+                                color = AmberPending,
                                 letterSpacing = 0.5.sp
                             )
                         }
                         Text(
                             text = "${stats.tasksInProgress} active",
                             fontSize = 9.sp,
-                            color = Color(0xFF94A3B8),
+                            color = Slate400,
                             fontFamily = FontFamily.Monospace
                         )
                     }
@@ -297,8 +304,8 @@ fun AgentStatusBar(
                             .fillMaxWidth()
                             .height(4.dp)
                             .clip(RoundedCornerShape(2.dp)),
-                        color = Color(0xFFF59E0B),
-                        trackColor = Color(0xFF1E293B)
+                        color = AmberPending,
+                        trackColor = Slate800
                     )
                 }
             }
@@ -325,7 +332,7 @@ fun MetricChip(label: String, value: String, color: Color) {
             )
             Text(
                 text = value,
-                color = Color(0xFFF8FAFC),
+                color = Slate50,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily.Monospace

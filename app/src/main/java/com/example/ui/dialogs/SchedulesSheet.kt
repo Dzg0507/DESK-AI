@@ -73,11 +73,23 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Locale
+import com.example.ui.theme.AmberPending
+import com.example.ui.theme.DeepCard
+import com.example.ui.theme.DeepPanel
+import com.example.ui.theme.HotPink
+import com.example.ui.theme.NeonPurple
+import com.example.ui.theme.Slate200
+import com.example.ui.theme.Slate300
+import com.example.ui.theme.Slate400
+import com.example.ui.theme.Slate500
+import com.example.ui.theme.Slate700
+import com.example.ui.theme.Slate800
+import com.example.ui.theme.Slate900
 
-private val Muted = Color(0xFF94A3B8)
-private val Faint = Color(0xFF64748B)
-private val Card = Color(0xFF1E293B)
-private val TikTokPink = Color(0xFFFF4D8D)
+private val Muted = Slate400
+private val Faint = Slate500
+private val Card = Slate800
+private val TikTokPink = HotPink
 
 /** "Tue, Sep 29 18:00" from the server's ISO time (min SDK 24, so no java.time). */
 private fun formatRun(iso: String?): String {
@@ -97,8 +109,8 @@ private fun kindIcon(kind: String): ImageVector = when (kind) {
 }
 
 private fun kindColor(kind: String): Color = when (kind) {
-    "reminder" -> Color(0xFFF59E0B)
-    "task" -> Color(0xFFA855F7)
+    "reminder" -> AmberPending
+    "task" -> NeonPurple
     else -> ElectricCyan
 }
 
@@ -140,7 +152,7 @@ fun SchedulesSheet(
                 .fillMaxWidth(0.95f)
                 .fillMaxHeight(0.85f)
                 .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFF0F172A))
+                .background(Slate900)
                 .border(1.dp, ElectricCyan.copy(alpha = 0.4f), RoundedCornerShape(16.dp))
                 .padding(16.dp)
         ) {
@@ -280,7 +292,7 @@ private fun ScheduleCard(s: AgentSchedule, onToggle: (Boolean) -> Unit, onRunNow
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
             .background(Card)
-            .border(1.dp, if (s.enabled) accent.copy(alpha = 0.35f) else Color(0xFF334155), RoundedCornerShape(10.dp))
+            .border(1.dp, if (s.enabled) accent.copy(alpha = 0.35f) else Slate700, RoundedCornerShape(10.dp))
             .padding(10.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -304,7 +316,7 @@ private fun ScheduleCard(s: AgentSchedule, onToggle: (Boolean) -> Unit, onRunNow
         Spacer(modifier = Modifier.height(6.dp))
         when (s.kind) {
             "video" -> Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("🎬 A fresh affirmation video", fontSize = 11.sp, color = Color(0xFFCBD5E1))
+                Text("🎬 A fresh affirmation video", fontSize = 11.sp, color = Slate300)
                 if (s.postToTiktok) {
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
@@ -314,9 +326,9 @@ private fun ScheduleCard(s: AgentSchedule, onToggle: (Boolean) -> Unit, onRunNow
                     )
                 }
             }
-            "reminder" -> Text("⏰ \"${s.text ?: s.name}\"", fontSize = 11.sp, color = Color(0xFFCBD5E1))
+            "reminder" -> Text("⏰ \"${s.text ?: s.name}\"", fontSize = 11.sp, color = Slate300)
             else -> Text("⚙️ ${s.instruction ?: ""}" + (s.project?.let { " · on $it" } ?: ""), fontSize = 11.sp,
-                color = Color(0xFFCBD5E1), maxLines = 2)
+                color = Slate300, maxLines = 2)
         }
         Spacer(modifier = Modifier.height(4.dp))
         Text(
@@ -388,9 +400,9 @@ private fun ScheduleForm(
     val canSave = preview?.valid == true && detailOk && !saving
 
     val fieldColors = OutlinedTextFieldDefaults.colors(
-        focusedContainerColor = Color(0xFF131D31), unfocusedContainerColor = Color(0xFF101726),
-        focusedBorderColor = ElectricCyan, unfocusedBorderColor = Color(0xFF1E293B),
-        focusedTextColor = Color.White, unfocusedTextColor = Color(0xFFE2E8F0)
+        focusedContainerColor = DeepCard, unfocusedContainerColor = DeepPanel,
+        focusedBorderColor = ElectricCyan, unfocusedBorderColor = Slate800,
+        focusedTextColor = Color.White, unfocusedTextColor = Slate200
     )
 
     @Composable
@@ -400,7 +412,7 @@ private fun ScheduleForm(
     fun chip(text: String, selected: Boolean, color: Color = ElectricCyan, onClick: () -> Unit) {
         Text(
             text = text, fontSize = 12.sp, fontWeight = FontWeight.Bold,
-            color = if (selected) Color.Black else Color(0xFFCBD5E1),
+            color = if (selected) Color.Black else Slate300,
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
                 .background(if (selected) color else Card)
@@ -490,7 +502,7 @@ private fun ScheduleForm(
 
             // What the server makes of it
             val p = preview
-            Column(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color(0xFF131D31)).padding(10.dp)) {
+            Column(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(DeepCard).padding(10.dp)) {
                 when {
                     !customCron && days.isEmpty() -> Text("Pick at least one day", fontSize = 12.sp, color = RoseError)
                     p == null -> Text("Checking…", fontSize = 12.sp, color = Muted)
@@ -521,7 +533,7 @@ private fun ScheduleForm(
             ) { Text("CANCEL", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Muted) }
             Box(
                 modifier = Modifier.weight(2f).clip(RoundedCornerShape(10.dp))
-                    .background(if (canSave) ElectricCyan else Color(0xFF334155))
+                    .background(if (canSave) ElectricCyan else Slate700)
                     .clickable(enabled = canSave) {
                         scope.launch {
                             saving = true

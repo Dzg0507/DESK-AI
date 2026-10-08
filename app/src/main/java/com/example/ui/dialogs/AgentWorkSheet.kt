@@ -53,6 +53,16 @@ import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldConnected
 import com.example.ui.theme.RoseError
 import kotlinx.coroutines.launch
+import com.example.ui.theme.DeepCard
+import com.example.ui.theme.DeepPanel
+import com.example.ui.theme.Slate200
+import com.example.ui.theme.Slate300
+import com.example.ui.theme.Slate400
+import com.example.ui.theme.Slate500
+import com.example.ui.theme.Slate600
+import com.example.ui.theme.Slate700
+import com.example.ui.theme.Slate800
+import com.example.ui.theme.Slate900
 
 @Composable
 fun AgentWorkSheet(
@@ -106,7 +116,7 @@ fun AgentWorkSheet(
                 .fillMaxWidth(0.95f)
                 .fillMaxHeight(0.85f)
                 .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFF0F172A))
+                .background(Slate900)
                 .border(1.dp, ElectricCyan.copy(alpha = 0.4f), RoundedCornerShape(16.dp))
                 .padding(16.dp)
         ) {
@@ -143,7 +153,7 @@ fun AgentWorkSheet(
                             Text(
                                 text = "Autonomous code workflows on host repositories",
                                 fontSize = 11.sp,
-                                color = Color(0xFF94A3B8)
+                                color = Slate400
                             )
                         }
                     }
@@ -161,7 +171,7 @@ fun AgentWorkSheet(
                             Icon(
                                 imageVector = Icons.Default.Close,
                                 contentDescription = "Close",
-                                tint = Color(0xFF94A3B8),
+                                tint = Slate400,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -180,7 +190,7 @@ fun AgentWorkSheet(
                         text = "TARGET REPOSITORY / PROJECT",
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF94A3B8),
+                        color = Slate400,
                         letterSpacing = 0.8.sp
                     )
                     if (onAddProject != null) {
@@ -203,7 +213,7 @@ fun AgentWorkSheet(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(10.dp))
-                            .background(Color(0xFF1E293B))
+                            .background(Slate800)
                             .border(1.dp, ElectricCyan.copy(alpha = 0.5f), RoundedCornerShape(10.dp))
                             .padding(10.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp)
@@ -217,7 +227,7 @@ fun AgentWorkSheet(
                         OutlinedTextField(
                             value = newProjName,
                             onValueChange = { newProjName = it },
-                            placeholder = { Text("Project name (e.g. recipe-app)", color = Color(0xFF64748B), fontSize = 11.sp) },
+                            placeholder = { Text("Project name (e.g. recipe-app)", color = Slate500, fontSize = 11.sp) },
                             textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 12.sp),
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
@@ -225,7 +235,7 @@ fun AgentWorkSheet(
                         OutlinedTextField(
                             value = newProjRepo,
                             onValueChange = { newProjRepo = it },
-                            placeholder = { Text("https://github.com/owner/repo.git", color = Color(0xFF64748B), fontSize = 11.sp) },
+                            placeholder = { Text("https://github.com/owner/repo.git", color = Slate500, fontSize = 11.sp) },
                             textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 12.sp),
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
@@ -233,7 +243,7 @@ fun AgentWorkSheet(
                         OutlinedTextField(
                             value = newProjDesc,
                             onValueChange = { newProjDesc = it },
-                            placeholder = { Text("Description (e.g. Recipe companion app)", color = Color(0xFF64748B), fontSize = 11.sp) },
+                            placeholder = { Text("Description (e.g. Recipe companion app)", color = Slate500, fontSize = 11.sp) },
                             textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 12.sp),
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
@@ -249,7 +259,7 @@ fun AgentWorkSheet(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(6.dp))
-                                .background(if (isAddingProj) Color(0xFF475569) else ElectricCyan)
+                                .background(if (isAddingProj) Slate600 else ElectricCyan)
                                 .clickable(enabled = !isAddingProj && newProjName.isNotBlank() && newProjRepo.isNotBlank()) {
                                     scope.launch {
                                         isAddingProj = true
@@ -283,7 +293,7 @@ fun AgentWorkSheet(
                                     Text("Validating with GitHub...", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                 }
                             } else {
-                                Text("Register Project Now", color = Color(0xFF0F172A), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Text("Register Project Now", color = Slate900, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -298,20 +308,20 @@ fun AgentWorkSheet(
                     ) {
                         CircularProgressIndicator(modifier = Modifier.size(16.dp), color = ElectricCyan, strokeWidth = 2.dp)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Scanning host repositories...", fontSize = 11.sp, color = Color(0xFF94A3B8))
+                        Text("Scanning host repositories...", fontSize = 11.sp, color = Slate400)
                     }
                 } else if (projects.isEmpty()) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFF1E293B))
+                            .background(Slate800)
                             .padding(12.dp)
                     ) {
                         Text(
                             text = "No AgentWork projects configured on PC yet.\nAdd project folders in supervisor settings.",
                             fontSize = 11.sp,
-                            color = Color(0xFF94A3B8),
+                            color = Slate400,
                             lineHeight = 16.sp
                         )
                     }
@@ -321,7 +331,7 @@ fun AgentWorkSheet(
                             .fillMaxWidth()
                             .height(110.dp)
                             .clip(RoundedCornerShape(10.dp))
-                            .background(Color(0xFF131D31))
+                            .background(DeepCard)
                             .padding(6.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
@@ -344,7 +354,7 @@ fun AgentWorkSheet(
                                 Icon(
                                     imageVector = Icons.Default.Folder,
                                     contentDescription = null,
-                                    tint = if (isSel) ElectricCyan else Color(0xFF64748B),
+                                    tint = if (isSel) ElectricCyan else Slate500,
                                     modifier = Modifier.size(14.dp)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
@@ -353,13 +363,13 @@ fun AgentWorkSheet(
                                         text = proj.name,
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = if (isSel) Color.White else Color(0xFFCBD5E1)
+                                        color = if (isSel) Color.White else Slate300
                                     )
                                     if (proj.description.isNotBlank()) {
                                         Text(
                                             text = proj.description,
                                             fontSize = 10.sp,
-                                            color = Color(0xFF94A3B8),
+                                            color = Slate400,
                                             maxLines = 1
                                         )
                                     }
@@ -376,7 +386,7 @@ fun AgentWorkSheet(
                     text = "ENGINEERING MISSION INSTRUCTION (Min 8 characters)",
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF94A3B8),
+                    color = Slate400,
                     letterSpacing = 0.8.sp
                 )
                 Spacer(modifier = Modifier.height(6.dp))
@@ -387,7 +397,7 @@ fun AgentWorkSheet(
                     placeholder = {
                         Text(
                             "e.g., Add a holidays page with responsive CSS and tests",
-                            color = Color(0xFF64748B),
+                            color = Slate500,
                             fontSize = 12.sp
                         )
                     },
@@ -395,12 +405,12 @@ fun AgentWorkSheet(
                         .fillMaxWidth()
                         .weight(1f),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Color(0xFF131D31),
-                        unfocusedContainerColor = Color(0xFF101726),
+                        focusedContainerColor = DeepCard,
+                        unfocusedContainerColor = DeepPanel,
                         focusedBorderColor = ElectricCyan,
-                        unfocusedBorderColor = Color(0xFF1E293B),
+                        unfocusedBorderColor = Slate800,
                         focusedTextColor = Color.White,
-                        unfocusedTextColor = Color(0xFFE2E8F0)
+                        unfocusedTextColor = Slate200
                     ),
                     shape = RoundedCornerShape(10.dp)
                 )
@@ -425,7 +435,7 @@ fun AgentWorkSheet(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(10.dp))
-                        .background(if (canSubmit) ElectricCyan else Color(0xFF334155))
+                        .background(if (canSubmit) ElectricCyan else Slate700)
                         .clickable(enabled = canSubmit) {
                             val projName = selectedProject?.name ?: projects.firstOrNull()?.name ?: return@clickable
                             scope.launch {
@@ -451,14 +461,14 @@ fun AgentWorkSheet(
                             CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.Black, strokeWidth = 2.dp)
                             Spacer(modifier = Modifier.width(8.dp))
                         } else {
-                            Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null, tint = if (canSubmit) Color.Black else Color(0xFF94A3B8), modifier = Modifier.size(18.dp))
+                            Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null, tint = if (canSubmit) Color.Black else Slate400, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(6.dp))
                         }
                         Text(
                             text = if (isSubmitting) "STARTING AGENTWORK..." else "START AGENTWORK MISSION",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
-                            color = if (canSubmit) Color.Black else Color(0xFF94A3B8)
+                            color = if (canSubmit) Color.Black else Slate400
                         )
                     }
                 }

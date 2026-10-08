@@ -59,6 +59,15 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Locale
+import com.example.ui.theme.Red300
+import com.example.ui.theme.Sky300
+import com.example.ui.theme.Slate200
+import com.example.ui.theme.Slate300
+import com.example.ui.theme.Slate400
+import com.example.ui.theme.Slate500
+import com.example.ui.theme.Slate700
+import com.example.ui.theme.Slate800
+import com.example.ui.theme.Slate900
 
 /**
  * A mission's details, opened by tapping its card in the Missions list: what was asked, who or what started it,
@@ -99,9 +108,9 @@ fun TaskDetailsSheet(
     val t = current
     val isCancelled = t.cancelled || t.phase == "cancelled"
     val phaseColor = when {
-        isCancelled -> Color(0xFF94A3B8)
+        isCancelled -> Slate400
         t.phase == "completed" -> EmeraldConnected
-        t.phase == "in_progress" -> Color(0xFFF59E0B)
+        t.phase == "in_progress" -> AmberPending
         t.phase == "failed" -> RoseError
         else -> ElectricCyan
     }
@@ -112,8 +121,8 @@ fun TaskDetailsSheet(
                 .fillMaxWidth()
                 .fillMaxHeight(0.85f)
                 .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFF0F172A))
-                .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(16.dp))
+                .background(Slate900)
+                .border(1.dp, Slate800, RoundedCornerShape(16.dp))
                 .padding(16.dp)
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
@@ -139,11 +148,11 @@ fun TaskDetailsSheet(
                                 )
                             }
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("#${t.id}", fontSize = 10.sp, color = Color(0xFF64748B), fontFamily = FontFamily.Monospace)
+                            Text("#${t.id}", fontSize = 10.sp, color = Slate500, fontFamily = FontFamily.Monospace)
                         }
                     }
                     IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
-                        Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = Color(0xFF94A3B8))
+                        Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = Slate400)
                     }
                 }
 
@@ -196,7 +205,7 @@ fun TaskDetailsSheet(
                     if (!summary.isNullOrBlank()) {
                         DetailSection(
                             if (t.needsInput) "NEEDS YOUR INPUT" else "RESULT",
-                            accent = if (t.needsInput) AmberPending else Color(0xFF94A3B8),
+                            accent = if (t.needsInput) AmberPending else Slate400,
                             trailing = {
                                 SmallChip("Copy") {
                                     clipboard.setText(AnnotatedString(summary))
@@ -210,7 +219,7 @@ fun TaskDetailsSheet(
                             // diffstat colors and branch badges (ui/components/RichText.kt). Both allow long-press copy.
                             SelectionContainer {
                                 if (showRaw) {
-                                    Text(summary, fontSize = 11.sp, color = Color(0xFFCBD5E1), lineHeight = 16.sp,
+                                    Text(summary, fontSize = 11.sp, color = Slate300, lineHeight = 16.sp,
                                         fontFamily = FontFamily.Monospace)
                                 } else {
                                     RichText(summary)
@@ -239,15 +248,15 @@ fun TaskDetailsSheet(
                             }
                             SelectionContainer {
                                 if (showRaw) {
-                                    Text(error, fontSize = 11.sp, color = Color(0xFFFCA5A5), lineHeight = 16.sp,
+                                    Text(error, fontSize = 11.sp, color = Red300, lineHeight = 16.sp,
                                         fontFamily = FontFamily.Monospace)
                                 } else {
-                                    RichText(error, baseColor = Color(0xFFFCA5A5))
+                                    RichText(error, baseColor = Red300)
                                 }
                             }
                         }
                     }
-                    note?.let { Text(it, fontSize = 11.sp, color = Color(0xFF7DD3FC)) }
+                    note?.let { Text(it, fontSize = 11.sp, color = Sky300) }
                 }
             }
         }
@@ -295,8 +304,8 @@ private fun TaskVideoPreview(thumbUrl: String?, authToken: String, playable: Boo
                 .width(150.dp)
                 .height(266.dp)                     // 9:16, the videos' shape
                 .clip(RoundedCornerShape(12.dp))
-                .background(Color(0xFF1E293B))
-                .border(1.dp, Color(0xFF334155), RoundedCornerShape(12.dp))
+                .background(Slate800)
+                .border(1.dp, Slate700, RoundedCornerShape(12.dp))
                 .then(if (playable) Modifier.clickable { onPlay() } else Modifier),
             contentAlignment = Alignment.Center
         ) {
@@ -313,12 +322,12 @@ private fun TaskVideoPreview(thumbUrl: String?, authToken: String, playable: Boo
                     },
                     error = {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.Videocam, contentDescription = null, tint = Color(0xFF64748B), modifier = Modifier.size(28.dp))
+                            Icon(Icons.Default.Videocam, contentDescription = null, tint = Slate500, modifier = Modifier.size(28.dp))
                         }
                     }
                 )
             } else {
-                Icon(Icons.Default.Videocam, contentDescription = null, tint = Color(0xFF64748B), modifier = Modifier.size(28.dp))
+                Icon(Icons.Default.Videocam, contentDescription = null, tint = Slate500, modifier = Modifier.size(28.dp))
             }
             if (playable) FrostedPlayBadge(size = 44.dp)
         }
@@ -326,7 +335,7 @@ private fun TaskVideoPreview(thumbUrl: String?, authToken: String, playable: Boo
         Text(
             text = if (playable) "Tap to play" else "Video no longer kept",
             fontSize = 11.sp,
-            color = if (playable) ElectricCyan else Color(0xFF94A3B8)
+            color = if (playable) ElectricCyan else Slate400
         )
     }
 }
@@ -334,7 +343,7 @@ private fun TaskVideoPreview(thumbUrl: String?, authToken: String, playable: Boo
 @Composable
 private fun DetailSection(
     label: String,
-    accent: Color = Color(0xFF94A3B8),
+    accent: Color = Slate400,
     trailing: (@Composable () -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
@@ -342,8 +351,8 @@ private fun DetailSection(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
-            .background(Color(0xFF1E293B))
-            .border(1.dp, Color(0xFF334155), RoundedCornerShape(10.dp))
+            .background(Slate800)
+            .border(1.dp, Slate700, RoundedCornerShape(10.dp))
             .padding(10.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
@@ -375,16 +384,16 @@ private fun SmallChip(label: String, color: Color = ElectricCyan, active: Boolea
 }
 
 @Composable
-private fun DetailText(text: String, color: Color = Color(0xFFE2E8F0)) {
+private fun DetailText(text: String, color: Color = Slate200) {
     Text(text, fontSize = 12.sp, color = color, lineHeight = 17.sp)
 }
 
 @Composable
 private fun DetailRow(label: String, value: String) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(label, fontSize = 11.sp, color = Color(0xFF94A3B8))
+        Text(label, fontSize = 11.sp, color = Slate400)
         Spacer(modifier = Modifier.width(12.dp))
-        Text(value, fontSize = 11.sp, color = Color(0xFFE2E8F0), fontFamily = FontFamily.Monospace)
+        Text(value, fontSize = 11.sp, color = Slate200, fontFamily = FontFamily.Monospace)
     }
 }
 

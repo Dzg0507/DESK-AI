@@ -50,6 +50,17 @@ import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldConnected
 import com.example.ui.theme.RoseError
 import kotlinx.coroutines.launch
+import com.example.ui.theme.AmberPending
+import com.example.ui.theme.ElectricCyanGlow
+import com.example.ui.theme.Sky300
+import com.example.ui.theme.Sky700
+import com.example.ui.theme.Slate100
+import com.example.ui.theme.Slate300
+import com.example.ui.theme.Slate400
+import com.example.ui.theme.Slate500
+import com.example.ui.theme.Slate700
+import com.example.ui.theme.Slate800
+import com.example.ui.theme.Slate900
 
 @Composable
 fun TasksSheet(
@@ -107,8 +118,8 @@ fun TasksSheet(
                 .fillMaxWidth()
                 .fillMaxHeight(0.85f)
                 .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFF0F172A))
-                .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(16.dp))
+                .background(Slate900)
+                .border(1.dp, Slate800, RoundedCornerShape(16.dp))
                 .padding(16.dp)
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -157,7 +168,7 @@ fun TasksSheet(
                         }
                         Spacer(modifier = Modifier.width(4.dp))
                         IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
-                            Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = Color(0xFF94A3B8))
+                            Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = Slate400)
                         }
                     }
                 }
@@ -169,12 +180,12 @@ fun TasksSheet(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(6.dp))
-                            .background(Color(0xFF0369A1).copy(alpha = 0.25f))
-                            .border(1.dp, Color(0xFF0284C7).copy(alpha = 0.4f), RoundedCornerShape(6.dp))
+                            .background(Sky700.copy(alpha = 0.25f))
+                            .border(1.dp, ElectricCyanGlow.copy(alpha = 0.4f), RoundedCornerShape(6.dp))
                             .padding(horizontal = 8.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("🔔 Opened from Notification: ", fontSize = 11.sp, color = Color(0xFF7DD3FC))
+                        Text("🔔 Opened from Notification: ", fontSize = 11.sp, color = Sky300)
                         Text(initialTaskId, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
                     Spacer(modifier = Modifier.height(8.dp))
@@ -187,8 +198,8 @@ fun TasksSheet(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(10.dp))
-                            .background(Color(0xFF1E293B))
-                            .border(1.dp, Color(0xFFF59E0B), RoundedCornerShape(10.dp))
+                            .background(Slate800)
+                            .border(1.dp, AmberPending, RoundedCornerShape(10.dp))
                             .padding(10.dp)
                     ) {
                         Column {
@@ -198,13 +209,13 @@ fun TasksSheet(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    CircularProgressIndicator(modifier = Modifier.size(14.dp), color = Color(0xFFF59E0B), strokeWidth = 2.dp)
+                                    CircularProgressIndicator(modifier = Modifier.size(14.dp), color = AmberPending, strokeWidth = 2.dp)
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text(
                                         text = "LIVE ACTIVE TASK",
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = Color(0xFFF59E0B),
+                                        color = AmberPending,
                                         fontFamily = FontFamily.Monospace
                                     )
                                 }
@@ -248,7 +259,7 @@ fun TasksSheet(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp))
-                        .background(if (isCreating) Color(0xFF1E293B) else Color(0xFF0284C7))
+                        .background(if (isCreating) Slate800 else ElectricCyanGlow)
                         .clickable { isCreating = !isCreating }
                         .padding(vertical = 8.dp),
                     contentAlignment = Alignment.Center
@@ -275,14 +286,14 @@ fun TasksSheet(
                     OutlinedTextField(
                         value = taskTitle,
                         onValueChange = { taskTitle = it },
-                        placeholder = { Text("Title (e.g. Audit auth middleware...)", color = Color(0xFF64748B), fontSize = 12.sp) },
+                        placeholder = { Text("Title (e.g. Audit auth middleware...)", color = Slate500, fontSize = 12.sp) },
                         textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 13.sp),
                         modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = Color(0xFF1E293B),
-                            unfocusedContainerColor = Color(0xFF1E293B),
+                            focusedContainerColor = Slate800,
+                            unfocusedContainerColor = Slate800,
                             focusedBorderColor = ElectricCyan,
-                            unfocusedBorderColor = Color(0xFF334155)
+                            unfocusedBorderColor = Slate700
                         ),
                         singleLine = true
                     )
@@ -290,15 +301,15 @@ fun TasksSheet(
                     OutlinedTextField(
                         value = taskPrompt,
                         onValueChange = { taskPrompt = it },
-                        placeholder = { Text("Mission instructions and context...", color = Color(0xFF64748B), fontSize = 12.sp) },
+                        placeholder = { Text("Mission instructions and context...", color = Slate500, fontSize = 12.sp) },
                         textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 13.sp),
                         modifier = Modifier.fillMaxWidth(),
                         maxLines = 3,
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = Color(0xFF1E293B),
-                            unfocusedContainerColor = Color(0xFF1E293B),
+                            focusedContainerColor = Slate800,
+                            unfocusedContainerColor = Slate800,
                             focusedBorderColor = ElectricCyan,
-                            unfocusedBorderColor = Color(0xFF334155)
+                            unfocusedBorderColor = Slate700
                         )
                     )
                     Spacer(modifier = Modifier.height(6.dp))
@@ -306,7 +317,7 @@ fun TasksSheet(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFF10B981))
+                            .background(EmeraldConnected)
                             .clickable {
                                 if (taskTitle.isNotBlank() && taskPrompt.isNotBlank()) {
                                     scope.launch {
@@ -342,7 +353,7 @@ fun TasksSheet(
                     text = "MISSION HISTORY & QUEUE (${tasks.size})",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF94A3B8),
+                    color = Slate400,
                     letterSpacing = 0.5.sp
                 )
                 Spacer(modifier = Modifier.height(6.dp))
@@ -397,9 +408,9 @@ fun TaskRowCard(
 ) {
     val isCancelled = task.cancelled || task.phase == "cancelled"
     val phaseColor = when {
-        isCancelled -> Color(0xFF94A3B8)
+        isCancelled -> Slate400
         task.phase == "completed" -> EmeraldConnected
-        task.phase == "in_progress" -> Color(0xFFF59E0B)
+        task.phase == "in_progress" -> AmberPending
         task.phase == "failed" -> RoseError
         else -> ElectricCyan
     }
@@ -408,8 +419,8 @@ fun TaskRowCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
-            .background(Color(0xFF1E293B))
-            .border(1.dp, Color(0xFF334155), RoundedCornerShape(10.dp))
+            .background(Slate800)
+            .border(1.dp, Slate700, RoundedCornerShape(10.dp))
             .clickable { onOpen() }
             .padding(10.dp)
     ) {
@@ -423,7 +434,7 @@ fun TaskRowCard(
                     text = task.title,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFFF1F5F9),
+                    color = Slate100,
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
@@ -450,7 +461,7 @@ fun TaskRowCard(
                 Text(
                     text = displayStatus,
                     fontSize = 11.sp,
-                    color = if (task.phase == "failed" && !isCancelled) RoseError else Color(0xFF94A3B8)
+                    color = if (task.phase == "failed" && !isCancelled) RoseError else Slate400
                 )
             }
             // What a finished task produced (the weekly numbers, an answer): the first lines, tap for all of it
@@ -461,7 +472,7 @@ fun TaskRowCard(
                 Text(
                     text = summary,
                     fontSize = 11.sp,
-                    color = Color(0xFFCBD5E1),
+                    color = Slate300,
                     lineHeight = 15.sp,
                     maxLines = if (expanded) Int.MAX_VALUE else 6,
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
@@ -483,14 +494,14 @@ fun TaskRowCard(
                             text = if (prog != null && prog.label.isNotBlank()) "⚡ ${prog.label.uppercase()}" else "⚡ EXECUTING LIVE ON HOST",
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFFF59E0B),
+                            color = AmberPending,
                             fontFamily = FontFamily.Monospace
                         )
                         Text(
                             text = if (prog != null) "${prog.percent}%" else "In Flight",
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFFF59E0B),
+                            color = AmberPending,
                             fontFamily = FontFamily.Monospace
                         )
                     }
@@ -498,7 +509,7 @@ fun TaskRowCard(
                         Text(
                             text = prog.detail,
                             fontSize = 9.sp,
-                            color = Color(0xFF94A3B8)
+                            color = Slate400
                         )
                     }
                     Spacer(modifier = Modifier.height(3.dp))
@@ -509,8 +520,8 @@ fun TaskRowCard(
                                 .fillMaxWidth()
                                 .height(4.dp)
                                 .clip(RoundedCornerShape(2.dp)),
-                            color = Color(0xFFF59E0B),
-                            trackColor = Color(0xFF0F172A)
+                            color = AmberPending,
+                            trackColor = Slate900
                         )
                     } else {
                         LinearProgressIndicator(
@@ -518,8 +529,8 @@ fun TaskRowCard(
                                 .fillMaxWidth()
                                 .height(3.dp)
                                 .clip(RoundedCornerShape(1.5.dp)),
-                            color = Color(0xFFF59E0B),
-                            trackColor = Color(0xFF0F172A)
+                            color = AmberPending,
+                            trackColor = Slate900
                         )
                     }
                 }
@@ -532,7 +543,7 @@ fun TaskRowCard(
                         .height(2.dp)
                         .clip(RoundedCornerShape(1.dp)),
                     color = EmeraldConnected.copy(alpha = 0.6f),
-                    trackColor = Color(0xFF0F172A)
+                    trackColor = Slate900
                 )
                 Spacer(modifier = Modifier.height(6.dp))
             }
@@ -545,7 +556,7 @@ fun TaskRowCard(
                 Text(
                     text = "#${task.id.take(12)} • ${task.engine}",
                     fontSize = 10.sp,
-                    color = Color(0xFF64748B),
+                    color = Slate500,
                     fontFamily = FontFamily.Monospace
                 )
 

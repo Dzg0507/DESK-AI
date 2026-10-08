@@ -72,6 +72,17 @@ import com.example.data.model.ChatAttachment
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.UserBubbleBackground
 import java.util.Locale
+import com.example.ui.theme.Amber300
+import com.example.ui.theme.AmberPending
+import com.example.ui.theme.Red300
+import com.example.ui.theme.Red500
+import com.example.ui.theme.Slate400
+import com.example.ui.theme.Slate50
+import com.example.ui.theme.Slate500
+import com.example.ui.theme.Slate600
+import com.example.ui.theme.Slate700
+import com.example.ui.theme.Slate800
+import com.example.ui.theme.Slate900
 
 @Composable
 fun ChatInputBar(
@@ -111,8 +122,8 @@ fun ChatInputBar(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(Color(0xFF0F172A))
-            .border(1.dp, Color(0xFF1E293B))
+            .background(Slate900)
+            .border(1.dp, Slate800)
             // Above the keyboard when it's open, above the navigation bar when it isn't
             .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime))
             .padding(vertical = 6.dp)
@@ -143,17 +154,17 @@ fun ChatInputBar(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(if (text.startsWith("/")) ElectricCyan.copy(alpha = 0.2f) else Color(0xFF1E293B))
+                    .background(if (text.startsWith("/")) ElectricCyan.copy(alpha = 0.2f) else Slate800)
                     .border(
                         1.dp,
-                        if (text.startsWith("/")) ElectricCyan else Color(0xFF334155),
+                        if (text.startsWith("/")) ElectricCyan else Slate700,
                         CircleShape
                     )
             ) {
                 Icon(
                     imageVector = Icons.Default.Apps,
                     contentDescription = "Actions",
-                    tint = if (text.startsWith("/")) ElectricCyan else Color(0xFF94A3B8),
+                    tint = if (text.startsWith("/")) ElectricCyan else Slate400,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -180,7 +191,7 @@ fun ChatInputBar(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFF1E293B))
+                    .background(Slate800)
             ) {
                 Icon(
                     imageVector = Icons.Default.Mic,
@@ -206,12 +217,12 @@ fun ChatInputBar(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(if (attachments.isNotEmpty()) ElectricCyan.copy(alpha = 0.2f) else Color(0xFF1E293B))
+                    .background(if (attachments.isNotEmpty()) ElectricCyan.copy(alpha = 0.2f) else Slate800)
             ) {
                 Icon(
                     imageVector = Icons.Default.AttachFile,
                     contentDescription = "Attach a file",
-                    tint = if (attachments.isNotEmpty()) ElectricCyan else Color(0xFF94A3B8),
+                    tint = if (attachments.isNotEmpty()) ElectricCyan else Slate400,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -223,14 +234,14 @@ fun ChatInputBar(
                 modifier = Modifier
                     .weight(1f)
                     .clip(RoundedCornerShape(20.dp))
-                    .background(Color(0xFF1E293B))
-                    .border(1.dp, Color(0xFF334155), RoundedCornerShape(20.dp))
+                    .background(Slate800)
+                    .border(1.dp, Slate700, RoundedCornerShape(20.dp))
                     .padding(horizontal = 14.dp, vertical = 10.dp)
             ) {
                 if (text.isEmpty()) {
                     Text(
                         text = if (attachments.isNotEmpty()) "Ask about the file…" else "Talk to AlwaysOnAgent or type /help...",
-                        color = Color(0xFF64748B),
+                        color = Slate500,
                         fontSize = 14.sp
                     )
                 }
@@ -238,7 +249,7 @@ fun ChatInputBar(
                     value = text,
                     onValueChange = onTextChange,
                     textStyle = TextStyle(
-                        color = Color(0xFFF8FAFC),
+                        color = Slate50,
                         fontSize = 14.sp
                     ),
                     cursorBrush = SolidColor(ElectricCyan),
@@ -256,7 +267,7 @@ fun ChatInputBar(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFEF4444))
+                        .background(Red500)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Stop,
@@ -275,13 +286,13 @@ fun ChatInputBar(
                         .size(40.dp)
                         .clip(CircleShape)
                         .background(
-                            if (canSend) UserBubbleBackground else Color(0xFF1E293B)
+                            if (canSend) UserBubbleBackground else Slate800
                         )
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Send,
                         contentDescription = "Send Message",
-                        tint = if (canSend) Color.White else Color(0xFF475569),
+                        tint = if (canSend) Color.White else Slate600,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -296,15 +307,15 @@ fun ChatInputBar(
 private fun AttachmentChip(a: ChatAttachment, onRemove: () -> Unit) {
     val warn = a.status == "ready" && a.warnings.isNotEmpty()
     val borderColor = when {
-        a.status == "error" -> Color(0xFFEF4444)
-        warn -> Color(0xFFF59E0B)
+        a.status == "error" -> Red500
+        warn -> AmberPending
         a.status == "ready" -> ElectricCyan.copy(alpha = 0.5f)
-        else -> Color(0xFF334155)
+        else -> Slate700
     }
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF1E293B))
+            .background(Slate800)
             .border(1.dp, borderColor, RoundedCornerShape(12.dp))
             .padding(start = 6.dp, end = 4.dp, top = 5.dp, bottom = 5.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -316,7 +327,7 @@ private fun AttachmentChip(a: ChatAttachment, onRemove: () -> Unit) {
                 modifier = Modifier
                     .size(28.dp)
                     .clip(RoundedCornerShape(6.dp))
-                    .background(Color(0xFF0F172A))
+                    .background(Slate900)
                     .border(1.dp, ElectricCyan.copy(alpha = 0.3f), RoundedCornerShape(6.dp)),
                 contentAlignment = Alignment.Center
             ) {
@@ -342,13 +353,13 @@ private fun AttachmentChip(a: ChatAttachment, onRemove: () -> Unit) {
         }
         Spacer(modifier = Modifier.width(6.dp))
         Column(modifier = Modifier.width(150.dp)) {
-            Text(a.name, color = Color(0xFFF8FAFC), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+            Text(a.name, color = Slate50, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
             Text(
                 a.statusLine(),
                 color = when {
-                    a.status == "error" -> Color(0xFFFCA5A5)
-                    warn -> Color(0xFFFCD34D)
-                    else -> Color(0xFF94A3B8)
+                    a.status == "error" -> Red300
+                    warn -> Amber300
+                    else -> Slate400
                 },
                 fontSize = 10.sp,
                 maxLines = 2
@@ -358,7 +369,7 @@ private fun AttachmentChip(a: ChatAttachment, onRemove: () -> Unit) {
             CircularProgressIndicator(color = ElectricCyan, strokeWidth = 2.dp, modifier = Modifier.size(14.dp))
         }
         IconButton(onClick = onRemove, modifier = Modifier.size(24.dp)) {
-            Icon(Icons.Default.Close, contentDescription = "Remove ${a.name}", tint = Color(0xFF94A3B8),
+            Icon(Icons.Default.Close, contentDescription = "Remove ${a.name}", tint = Slate400,
                 modifier = Modifier.size(14.dp))
         }
     }
