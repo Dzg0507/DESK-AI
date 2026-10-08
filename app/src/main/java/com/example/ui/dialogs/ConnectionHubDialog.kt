@@ -1,5 +1,8 @@
 package com.example.ui.dialogs
 
+import com.example.ui.components.SheetHeader
+import com.example.ui.theme.DeskShapes
+import androidx.compose.ui.graphics.Brush
 import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
@@ -122,34 +125,12 @@ fun ConnectionHubDialog(
                     .verticalScroll(rememberScrollState())
             ) {
                 // Header
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Lan,
-                            contentDescription = "Connection Hub",
-                            tint = ElectricCyan,
-                            modifier = Modifier.size(22.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Connection Hub",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
-                    IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Close",
-                            tint = Slate400
-                        )
-                    }
-                }
+                SheetHeader(
+                    title = "Connection Hub",
+                    icon = Icons.Default.Lan,
+                    subtitle = "Link DeskAI to your AlwaysOnAgent host",
+                    onClose = onDismiss
+                )
 
                 Spacer(modifier = Modifier.height(10.dp))
 
@@ -157,9 +138,9 @@ fun ConnectionHubDialog(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Slate800)
-                        .border(1.dp, ElectricCyan.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                        .clip(DeskShapes.control)
+                        .background(Brush.horizontalGradient(listOf(ElectricCyan.copy(alpha = 0.14f), Slate800)))
+                        .border(1.dp, ElectricCyan.copy(alpha = 0.5f), DeskShapes.control)
                         .clickable {
                             val clipMgr = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                             val clipText = clipMgr.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
@@ -290,9 +271,9 @@ fun ConnectionHubDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 8.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(DeskShapes.control)
                             .background(SlateDarkSurface)
-                            .border(1.dp, NeonIndigo.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                            .border(1.dp, NeonIndigo.copy(alpha = 0.3f), DeskShapes.control)
                             .padding(10.dp)
                     ) {
                         Column {
@@ -385,9 +366,9 @@ fun ConnectionHubDialog(
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .clip(RoundedCornerShape(8.dp))
+                                .clip(DeskShapes.control)
                                 .background(if (isSelected) ElectricCyan.copy(alpha = 0.2f) else Slate800)
-                                .border(1.dp, if (isSelected) ElectricCyan else Slate700, RoundedCornerShape(8.dp))
+                                .border(1.dp, if (isSelected) ElectricCyan else Slate700, DeskShapes.control)
                                 .clickable { engine = item }
                                 .padding(vertical = 6.dp),
                             contentAlignment = Alignment.Center
@@ -461,7 +442,7 @@ fun ConnectionHubDialog(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(DeskShapes.control)
                             .background(if (success) EmeraldConnected.copy(alpha = 0.12f) else RoseError.copy(alpha = 0.12f))
                             .padding(8.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -484,9 +465,9 @@ fun ConnectionHubDialog(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(DeskShapes.control)
                         .background(Slate800)
-                        .border(1.dp, ElectricCyan.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+                        .border(1.dp, ElectricCyan.copy(alpha = 0.4f), DeskShapes.control)
                         .clickable { showUpdaterFromHub = true }
                         .padding(horizontal = 12.dp, vertical = 10.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -514,7 +495,7 @@ fun ConnectionHubDialog(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(DeskShapes.control)
                         .background(ElectricCyanGlow)
                         .clickable {
                             val normalizedLocal = BridgeConfig.normalizeUrl(localUrl)

@@ -1,5 +1,8 @@
 package com.example.ui.dialogs
 
+import androidx.compose.ui.graphics.Brush
+import com.example.ui.theme.Gray900
+import com.example.ui.theme.DeskShapes
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
@@ -112,7 +115,7 @@ fun ImageViewerDialog(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFF030712))
+                .background(Brush.radialGradient(listOf(Gray900, Color(0xFF030712))))
         ) {
             // Interactive Zoomable Image Canvas
             Box(
@@ -220,7 +223,7 @@ fun ImageViewerDialog(
                     // Save to Gallery Button
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(DeskShapes.control)
                             .background(Slate800)
                             .clickable(enabled = !isSaving) {
                                 isSaving = true
@@ -345,7 +348,7 @@ fun ImageViewerDialog(
                 if (scale != 1f || offset != Offset.Zero) {
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
+                            .clip(DeskShapes.card)
                             .background(Slate900)
                             .clickable {
                                 scale = 1f

@@ -1,5 +1,6 @@
 package com.example.ui.dialogs
 
+import com.example.ui.theme.DeskShapes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -319,9 +320,9 @@ fun CommandPaletteDialog(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
+                                .clip(DeskShapes.control)
                                 .background(ElectricCyan.copy(alpha = 0.15f))
-                                .border(1.dp, ElectricCyan.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+                                .border(1.dp, ElectricCyan.copy(alpha = 0.4f), DeskShapes.control)
                                 .padding(horizontal = 8.dp, vertical = 4.dp)
                         ) {
                             Text(
@@ -417,7 +418,7 @@ fun CommandPaletteDialog(
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Slate200
                     ),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = DeskShapes.card,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp)
@@ -598,12 +599,12 @@ fun CommandPaletteDialog(
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .clip(RoundedCornerShape(12.dp))
+                                        .clip(DeskShapes.card)
                                         .background(DeepCardAlt)
                                         .border(
                                             1.dp,
                                             if (hasUpdateAvailable) ElectricCyan else Slate800,
-                                            RoundedCornerShape(12.dp)
+                                            DeskShapes.card
                                         )
                                         .clickable {
                                             onDismiss()
@@ -642,7 +643,7 @@ fun CommandPaletteDialog(
                                         if (hasUpdateAvailable) {
                                             Box(
                                                 modifier = Modifier
-                                                    .clip(RoundedCornerShape(6.dp))
+                                                    .clip(DeskShapes.chip)
                                                     .background(ElectricCyan)
                                                     .padding(horizontal = 6.dp, vertical = 2.dp)
                                             ) {
@@ -707,9 +708,9 @@ fun WorkstationCard(
 ) {
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
+            .clip(DeskShapes.card)
             .background(DeepCard)
-            .border(1.dp, accentColor.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
+            .border(1.dp, accentColor.copy(alpha = 0.35f), DeskShapes.card)
             .clickable { onClick() }
             .padding(12.dp)
     ) {
@@ -722,9 +723,9 @@ fun WorkstationCard(
                 Box(
                     modifier = Modifier
                         .size(32.dp)
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(DeskShapes.control)
                         .background(accentColor.copy(alpha = 0.15f))
-                        .border(1.dp, accentColor.copy(alpha = 0.4f), RoundedCornerShape(8.dp)),
+                        .border(1.dp, accentColor.copy(alpha = 0.4f), DeskShapes.control),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -771,9 +772,9 @@ fun CommandItemRow(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
+            .clip(DeskShapes.control)
             .background(Slate900)
-            .border(1.dp, Slate800, RoundedCornerShape(10.dp))
+            .border(1.dp, Slate800, DeskShapes.control)
             .clickable { onClick() }
             .padding(horizontal = 12.dp, vertical = 10.dp)
     ) {
@@ -788,9 +789,9 @@ fun CommandItemRow(
             ) {
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(6.dp))
+                        .clip(DeskShapes.chip)
                         .background(entry.color.copy(alpha = 0.12f))
-                        .border(1.dp, entry.color.copy(alpha = 0.35f), RoundedCornerShape(6.dp))
+                        .border(1.dp, entry.color.copy(alpha = 0.35f), DeskShapes.chip)
                         .padding(horizontal = 7.dp, vertical = 3.dp)
                 ) {
                     Text(
@@ -824,7 +825,7 @@ fun CommandItemRow(
 
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(6.dp))
+                    .clip(DeskShapes.chip)
                     .background(Slate800)
                     .padding(horizontal = 6.dp, vertical = 3.dp)
             ) {

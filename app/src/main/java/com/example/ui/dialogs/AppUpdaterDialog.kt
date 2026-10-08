@@ -1,5 +1,8 @@
 package com.example.ui.dialogs
 
+import com.example.ui.theme.DeskShapes
+import com.example.ui.components.SheetHeader
+import com.example.ui.components.deskCard
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -352,34 +355,12 @@ fun AppUpdaterDialog(
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 // Header
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.SystemUpdate,
-                            contentDescription = "App Updates",
-                            tint = ElectricCyan,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "In-App Updater",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
-                    IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Close",
-                            tint = Slate400
-                        )
-                    }
-                }
+                SheetHeader(
+                    title = "In-App Updater",
+                    icon = Icons.Default.SystemUpdate,
+                    subtitle = "New builds straight from your host",
+                    onClose = onDismiss
+                )
 
                 Spacer(modifier = Modifier.height(14.dp))
 
@@ -387,9 +368,8 @@ fun AppUpdaterDialog(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Slate800)
-                        .padding(12.dp)
+                        .deskCard()
+                        .padding(14.dp)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -412,7 +392,7 @@ fun AppUpdaterDialog(
                         }
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(6.dp))
+                                .clip(DeskShapes.chip)
                                 .background(
                                     when (updateState) {
                                         UpdateState.UP_TO_DATE -> EmeraldConnected.copy(alpha = 0.2f)
@@ -450,9 +430,9 @@ fun AppUpdaterDialog(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
+                            .clip(DeskShapes.control)
                             .background(ElectricCyan.copy(alpha = 0.12f))
-                            .border(1.dp, ElectricCyan.copy(alpha = 0.45f), RoundedCornerShape(10.dp))
+                            .border(1.dp, ElectricCyan.copy(alpha = 0.45f), DeskShapes.control)
                             .padding(12.dp)
                     ) {
                         Column {
@@ -497,9 +477,9 @@ fun AppUpdaterDialog(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
+                            .clip(DeskShapes.control)
                             .background(EmeraldConnected.copy(alpha = 0.12f))
-                            .border(1.dp, EmeraldConnected.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
+                            .border(1.dp, EmeraldConnected.copy(alpha = 0.4f), DeskShapes.control)
                             .padding(12.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -532,7 +512,7 @@ fun AppUpdaterDialog(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(DeskShapes.control)
                         .background(
                             when (updateState) {
                                 UpdateState.READY_TO_INSTALL -> EmeraldConnected.copy(alpha = 0.12f)
@@ -547,7 +527,7 @@ fun AppUpdaterDialog(
                                 UpdateState.ERROR -> RoseError.copy(alpha = 0.4f)
                                 else -> Gray800
                             },
-                            RoundedCornerShape(10.dp)
+                            DeskShapes.control
                         )
                         .padding(12.dp)
                 ) {

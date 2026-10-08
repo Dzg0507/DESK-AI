@@ -1,5 +1,8 @@
 package com.example.ui.components
 
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.border
+import com.example.ui.theme.DeskShapes
 import android.annotation.SuppressLint
 import android.webkit.WebSettings
 import android.webkit.WebView
@@ -51,8 +54,9 @@ fun CanvasCard(ref: CanvasRef, onOpen: (CanvasRef) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(Slate800)
+            .clip(DeskShapes.card)
+            .background(Brush.horizontalGradient(listOf(Violet600.copy(alpha = 0.18f), Slate800)))
+            .border(1.dp, Violet400.copy(alpha = 0.35f), DeskShapes.card)
             .clickable { onOpen(ref) }
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -67,7 +71,7 @@ fun CanvasCard(ref: CanvasRef, onOpen: (CanvasRef) -> Unit) {
                 color = Slate400, fontSize = 12.sp
             )
         }
-        Text("Open", color = Violet400, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+        TagChip(text = "Open ›", color = Violet400)
     }
 }
 
@@ -102,15 +106,16 @@ fun CanvasDialog(
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Column(Modifier.fillMaxSize().background(Slate900)) {
             Row(
-                Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
+                Modifier.fillMaxWidth()
+                    .background(Brush.verticalGradient(listOf(Slate800, Slate900)))
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("✕", color = Slate300, fontSize = 20.sp, modifier = Modifier.clickable { onDismiss() }.padding(6.dp))
+                Text("✕", color = Slate300, fontSize = 20.sp, modifier = Modifier.clip(DeskShapes.pill).clickable { onDismiss() }.padding(6.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(ref.title, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 16.sp,
                     maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                Text("💬 Discuss", color = Violet400, fontSize = 13.sp,
-                    modifier = Modifier.clickable { onDiscuss(ref); onDismiss() }.padding(6.dp))
+                TagChip(text = "💬 Discuss", color = Violet400, onClick = { onDiscuss(ref); onDismiss() })
             }
             if (versions.size > 1) {
                 Row(
