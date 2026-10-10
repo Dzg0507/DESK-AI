@@ -87,6 +87,8 @@ fun LiveTaskCard(
     onPlayVideo: ((url: String, filename: String) -> Unit)? = null,
     onActionClick: ((TaskAction) -> Unit)? = null,
     onWatch: ((String) -> Unit)? = null,
+    // Tapping the card (not its buttons) opens the task's details, the same sheet as tapping it in Missions
+    onOpenDetails: ((AgentTaskItem) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val scope = rememberCoroutineScope()
@@ -164,6 +166,7 @@ fun LiveTaskCard(
             .clip(DeskShapes.card)
             .background(Brush.verticalGradient(listOf(phaseColor.copy(alpha = 0.07f), Slate900)))
             .border(1.dp, phaseColor.copy(alpha = 0.5f), DeskShapes.card)
+            .then(if (onOpenDetails != null && item != null) Modifier.clickable { onOpenDetails(item) } else Modifier)
             .animateContentSize()
             .padding(12.dp)
     ) {

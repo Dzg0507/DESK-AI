@@ -114,6 +114,7 @@ fun MessageBubble(
     onRunProposal: (ChatMessage, TaskProposal) -> Unit = { _, _ -> },
     onRunAndWatchProposal: ((ChatMessage, TaskProposal) -> Unit)? = null,
     onWatchTask: ((String) -> Unit)? = null,
+    onOpenTaskDetails: ((com.example.data.model.AgentTaskItem) -> Unit)? = null,
     onDismissProposal: (ChatMessage, TaskProposal) -> Unit = { _, _ -> },
     onDeleteMessage: (ChatMessage) -> Unit = {},
     onRegenerate: (ChatMessage) -> Unit = {},
@@ -294,7 +295,8 @@ fun MessageBubble(
                             onRetryTask = onRetryTask,
                             onPlayVideo = onPlayVideo,
                             onActionClick = onActionClick,
-                            onWatch = onWatchTask
+                            onWatch = onWatchTask,
+                            onOpenDetails = onOpenTaskDetails
                         )
                     }
 

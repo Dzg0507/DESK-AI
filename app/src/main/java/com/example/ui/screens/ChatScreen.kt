@@ -155,6 +155,8 @@ fun ChatScreen(
     var showNeedsYou by remember { mutableStateOf(false) }
     var showTakeOver by remember { mutableStateOf(false) }
     var showRepos by remember { mutableStateOf(false) }
+    // A task card tapped in the chat: the same details sheet as tapping the task in Missions
+    var chatTaskDetails by remember { mutableStateOf<com.example.data.model.AgentTaskItem?>(null) }
     var takeOverFor by remember { mutableStateOf<String?>(null) }
     // Take over's "View only" box on its hub card, remembered on the phone. View only shows the screen without taking
     // control, so a running task carries on while the owner watches (2026-10-08: opening Take over to watch a task
@@ -398,6 +400,7 @@ fun ChatScreen(
                                         takeOverFor = null; takeOverWatching = true; showTakeOver = true
                                     },
                                     onWatchTask = { _ -> takeOverFor = null; takeOverWatching = true; showTakeOver = true },
+                                    onOpenTaskDetails = { t -> chatTaskDetails = t },
                                     onDismissProposal = { msg, prop -> viewModel.dismissProposal(msg, prop) },
                                     onDeleteMessage = { viewModel.deleteMessage(it) },
                                     onRegenerate = { viewModel.sendMessage("Please retry: ${it.content.take(60)}") },
@@ -691,6 +694,18 @@ fun ChatScreen(
             onScreenshot = { path -> viewModel.requestScreenshot(path) },
             // A request is answered by doing it yourself: always real control
             onTakeOver = { id -> showNeedsYou = false; takeOverFor = id; takeOverWatching = false; showTakeOver = true }
+        )
+    }
+
+    chatTaskDetails?.let { t ->
+        com.example.ui.dialogs.TaskDetailsSheet(
+            task = t,
+            serverBaseUrl = config.getResolvedUrl(),
+            authToken = config.apiKey,
+            onDismiss = { chatTaskDetails = null },
+            onRefreshTask = { tid -> viewModel.getTask(tid) },
+            onDownloadVideo = { url, file, onProg -> viewModel.downloadVideo(url, file, onProg) },
+            onPublishVideo = { filename -> viewModel.publishVideoToTikTok(filename) }
         )
     }
 
