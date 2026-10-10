@@ -1,5 +1,16 @@
 package com.example.ui.dialogs
 
+import com.example.ui.theme.RoseError
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.pm.ActivityInfo
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import androidx.compose.material.icons.filled.Close
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -203,7 +214,15 @@ fun TakeOverScreen(
     // Drawn in the app's own screen, not a pop-up window: a pop-up window never got the keyboard's size on the
     // owner's phone, so the keyboard covered the controls (builds 45-46). The back button hands back.
     androidx.activity.compose.BackHandler { handBack() }
-    run {
+    // View only: landscape and full screen, the Mini's screen as big as the phone allows (2026-10-10, the owner:
+    // "it doesn't look so small")
+    if (viewOnly) WatchFullScreen(
+        frame = frame,
+        doing = activity?.takeIf { it.optBoolean("running") }?.optString("doing")?.takeIf { it.isNotBlank() },
+        error = error,
+        machineLabel = if (machine == "laptop") "Laptop" else "Mini",
+        onClose = { handBack() }
+    ) else run {
         Surface(modifier = Modifier.fillMaxSize(), color = DeepNavy) {
             Column(modifier = Modifier.fillMaxSize().systemBarsPadding().imePadding()) {
                 // Top: which computer, who's in control (and the last action), and ✓ to hand back
@@ -427,4 +446,89 @@ private fun BarText(text: String, label: String, on: Boolean = false, onClick: (
 @Composable
 private fun KeyButton(label: String, onClick: () -> Unit) {
     OutlinedButton(onClick = onClick, shape = RoundedCornerShape(10.dp)) { Text(label, color = Slate200) }
+}
+
+/**
+ * View only, full screen: the phone turns to landscape and hides its status and navigation bars, so the Mini's
+ * 1920x1080 screen gets the whole display. Pinch to zoom, drag to move when zoomed; a tap shows the bar (what the
+ * run is doing, and Close) for a few seconds. Leaving puts the phone back as it was. Watching only: nothing is sent.
+ */
+@Composable
+private fun WatchFullScreen(
+    frame: ImageBitmap?,
+    doing: String?,
+    error: String?,
+    machineLabel: String,
+    onClose: () -> Unit
+) {
+    val activity = LocalContext.current.findActivity()
+    DisposableEffect(Unit) {
+        val a = activity ?: return@DisposableEffect onDispose {}
+        val before = a.requestedOrientation
+        a.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        val bars = WindowCompat.getInsetsController(a.window, a.window.decorView)
+        bars.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        bars.hide(WindowInsetsCompat.Type.systemBars())
+        onDispose {
+            bars.show(WindowInsetsCompat.Type.systemBars())
+            a.requestedOrientation = before
+        }
+    }
+    var showBar by remember { mutableStateOf(true) }
+    LaunchedEffect(showBar) {
+        if (showBar) {
+            delay(3500)
+            showBar = false
+        }
+    }
+    var scale by remember { mutableFloatStateOf(1f) }
+    var pan by remember { mutableStateOf(Offset.Zero) }
+    Box(
+        modifier = Modifier.fillMaxSize().background(Color.Black)
+            .pointerInput(Unit) { detectTapGestures(onTap = { showBar = !showBar }) }
+            .pointerInput(Unit) {
+                detectTransformGestures { _, panBy, zoom, _ ->
+                    scale = (scale * zoom).coerceIn(1f, 6f)
+                    pan = if (scale <= 1.01f) Offset.Zero else pan + panBy
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        if (frame == null) {
+            if (error == null) CircularProgressIndicator(color = AmberPending)
+        } else {
+            Image(
+                bitmap = frame, contentDescription = "The $machineLabel's screen", contentScale = ContentScale.Fit,
+                modifier = Modifier.fillMaxSize()
+                    .graphicsLayer(scaleX = scale, scaleY = scale, translationX = pan.x, translationY = pan.y)
+            )
+        }
+        if (showBar || frame == null || error != null) {
+            Row(
+                modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth()
+                    .background(Color.Black.copy(alpha = 0.6f)).padding(horizontal = 14.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Watching the $machineLabel (view only)", color = Color.White, fontWeight = FontWeight.SemiBold,
+                         fontSize = 14.sp)
+                    Text(error ?: doing ?: "Tasks keep running · pinch to zoom · tap to hide",
+                         color = if (error != null) RoseError else Slate300, fontSize = 12.sp, maxLines = 1)
+                }
+                IconButton(onClick = onClose,
+                           modifier = Modifier.size(40.dp).clip(CircleShape).background(Slate700)) {
+                    Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
+                }
+            }
+        }
+    }
+}
+
+private fun Context.findActivity(): Activity? {
+    var c: Context = this
+    while (c is ContextWrapper) {
+        if (c is Activity) return c
+        c = c.baseContext
+    }
+    return null
 }

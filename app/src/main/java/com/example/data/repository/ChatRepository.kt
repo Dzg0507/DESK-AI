@@ -436,6 +436,57 @@ class ChatRepository(
         added
     }
 
+    /**
+     * A card in the chat for every task started outside it (2026-10-10, the owner: "tasks started by you or anyone
+     * outside should show up as cards in my chat"): schedules, Repos, the AgentWork hub, Quick-dispatch, another AI.
+     * Tasks the app starts itself (a chat reply's task, a Run tap) already have their card: a task gets one here only
+     * if no message links to it after [TASK_CARD_GRACE_MS]. Ordered by task number; the first run starts from the
+     * newest task, so old ones never flood in. The message id comes from the task id, so a task never gets two.
+     */
+    suspend fun syncTaskCards(sessionId: String? = null): Int = withContext(Dispatchers.IO) {
+        val prefs = context?.getSharedPreferences("deskai_task_cards", Context.MODE_PRIVATE) ?: return@withContext 0
+        val tasks = try { agentClient.fetchTasks(getActiveConfig(), 15) } catch (_: Exception) { return@withContext 0 }
+        fun number(id: String) = id.substringAfterLast('-').toIntOrNull() ?: -1
+        val newest = tasks.maxOfOrNull { number(it.id) } ?: return@withContext 0
+        val seen = prefs.getInt("seen", -1)
+        if (seen < 0) {
+            prefs.edit().putInt("seen", newest).apply()
+            return@withContext 0
+        }
+        val now = System.currentTimeMillis()
+        var upTo = seen
+        var added = 0
+        var session: ChatSession? = null
+        for (t in tasks.sortedBy { number(it.id) }) {
+            val n = number(t.id)
+            if (n <= seen) continue
+            val firstSeen = taskFirstSeen.getOrPut(t.id) { now }
+            if (now - firstSeen < TASK_CARD_GRACE_MS) break      // give the app's own card a moment; keep the order
+            taskFirstSeen.remove(t.id)
+            upTo = n
+            // Started from the chat: its reply brings the card (a long reply can outlast the grace period)
+            if ((t.source ?: "").startsWith("DeskAI chat", ignoreCase = true)) continue
+            if (chatDao.countMessagesForTask(t.id) > 0) continue
+            session = session ?: (sessionId?.let { chatDao.getSessionById(it).firstOrNull() }
+                ?: chatDao.getLatestSession() ?: ensureDefaultSession())
+            val who = t.source?.takeIf { it.isNotBlank() && it != "unknown" } ?: "Someone"
+            val row = chatDao.insertMessageIfAbsent(
+                ChatMessage(
+                    id = "taskcard-${t.id}",
+                    sessionId = session.id,
+                    role = "assistant",
+                    content = "📋 **$who** started a task: ${t.title}",
+                    modelUsed = "AlwaysOnAgent",
+                    linkedTaskId = t.id
+                )
+            )
+            if (row != -1L) added++
+        }
+        if (upTo > seen) prefs.edit().putInt("seen", upTo).apply()
+        if (added > 0) session?.let { chatDao.updateSession(it.copy(updatedAt = System.currentTimeMillis())) }
+        added
+    }
+
     suspend fun ensureDefaultSession(): ChatSession = withContext(Dispatchers.IO) {
         val existing = chatDao.getAllSessions().firstOrNull()?.firstOrNull()
         val welcomeContent = """
@@ -645,5 +696,12 @@ class ChatRepository(
             chatDao.updateMessage(errorAssistantMessage)
             emit(Pair(errorAssistantMessage, errorAssistantMessage.content))
         }
+    }
+
+    companion object {
+        // How long a new task waits for the app's own card before getting one of these
+        const val TASK_CARD_GRACE_MS = 6_000L
+        // task id -> when this phone first saw it (for the grace period)
+        private val taskFirstSeen = java.util.concurrent.ConcurrentHashMap<String, Long>()
     }
 }

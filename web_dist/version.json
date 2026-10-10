@@ -1,7 +1,7 @@
 {
-  "versionCode": 58,
-  "versionName": "2.8.3",
-  "changelog": "Take over shows the running task and what it's doing",
+  "versionCode": 59,
+  "versionName": "2.9.0",
+  "changelog": "DeskAI v2.9.0 (Build 59): every task shows up as a card in your chat, whoever started it; computer tasks get Run & View only and a View only button; View only opens full screen in landscape.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24361715
+  "fileSizeBytes": 24730358
 }

@@ -149,6 +149,12 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 // The agent's own messages (brief, questions…): on opening, then once a minute, so a missed push
                 // loses nothing (a push also syncs right away). By the clock: task events make this loop run more often
+                // Cards for tasks started outside the chat (schedules, Repos, the hub, other AIs): every pass,
+                // so one shows up within seconds of starting
+                try {
+                    repository.syncTaskCards(_currentSession.value?.id)
+                } catch (_: Exception) {
+                }
                 if (fetchedAt - lastInboxSync >= 60_000L) {
                     lastInboxSync = fetchedAt
                     try {

@@ -1,5 +1,6 @@
 package com.example.ui.components
 
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.ui.graphics.Brush
 import com.example.ui.theme.CardGradient
 import com.example.ui.theme.DeepNavy
@@ -111,6 +112,8 @@ private val AssistantBubbleBrush = CardGradient
 fun MessageBubble(
     message: ChatMessage,
     onRunProposal: (ChatMessage, TaskProposal) -> Unit = { _, _ -> },
+    onRunAndWatchProposal: ((ChatMessage, TaskProposal) -> Unit)? = null,
+    onWatchTask: ((String) -> Unit)? = null,
     onDismissProposal: (ChatMessage, TaskProposal) -> Unit = { _, _ -> },
     onDeleteMessage: (ChatMessage) -> Unit = {},
     onRegenerate: (ChatMessage) -> Unit = {},
@@ -254,7 +257,10 @@ fun MessageBubble(
                                     state = proposal.state,
                                     kind = proposal.kind,
                                     onRun = { onRunProposal(message, proposal) },
-                                    onDismiss = { onDismissProposal(message, proposal) }
+                                    onDismiss = { onDismissProposal(message, proposal) },
+                                    onRunAndWatch = if (proposal.kind == "computer" && onRunAndWatchProposal != null) {
+                                        { onRunAndWatchProposal(message, proposal) }
+                                    } else null
                                 )
                             }
                         }
@@ -287,7 +293,8 @@ fun MessageBubble(
                             onCancelTask = onCancelTask,
                             onRetryTask = onRetryTask,
                             onPlayVideo = onPlayVideo,
-                            onActionClick = onActionClick
+                            onActionClick = onActionClick,
+                            onWatch = onWatchTask
                         )
                     }
 
@@ -398,7 +405,8 @@ fun ProposalCard(
     state: String,
     kind: String = "task",
     onRun: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onRunAndWatch: (() -> Unit)? = null      // computer tasks: run it and open Take over in View only
 ) {
     val isAddProject = kind == "add_project"
     Box(
@@ -526,6 +534,32 @@ fun ProposalCard(
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White
                                 )
+                            }
+                        }
+
+                        // Computer tasks: run it and watch it in View only (2026-10-10, the owner's ask)
+                        if (onRunAndWatch != null) {
+                            Box(
+                                modifier = Modifier
+                                    .weight(1.2f)
+                                    .clip(DeskShapes.chip)
+                                    .background(ElectricCyan.copy(alpha = 0.14f))
+                                    .border(1.dp, ElectricCyan.copy(alpha = 0.6f), DeskShapes.chip)
+                                    .clickable { onRunAndWatch() }
+                                    .padding(vertical = 8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.Visibility,
+                                        contentDescription = "Run and view only",
+                                        tint = ElectricCyan,
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(text = "Run & View only", fontSize = 11.sp, fontWeight = FontWeight.Bold,
+                                         color = ElectricCyan)
+                                }
                             }
                         }
 

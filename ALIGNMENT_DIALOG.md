@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-08 (DeskAI v2.8.3 / Build 58 shipped — Take over shows the running task and what it's doing)
+**Last Updated:** 2026-10-10 (DeskAI v2.9.0 / Build 59 shipped — task cards for every task, Run & View only, landscape View only)
 
 ---
 
@@ -14,6 +14,13 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-10: DeskAI v2.9.0 (build 59), task cards for every task; Run & View only; landscape View only (by the laptop Claude session, at the owner's request)
+
+- **Every task gets a card in the chat** (`ChatRepository.syncTaskCards`, called from the stats loop, so within seconds): a task no message links to yet gets an assistant message "📋 <source> started a task: <title>" with its live card. Message id `taskcard-<task id>` (never twice); a 6 s grace lets the app's own cards come first; tasks whose source starts with "DeskAI chat" are skipped (the reply brings their card); the first run starts from the newest task (no flood of old ones). New DAO query `countMessagesForTask`.
+- **Run & View only** on computer-task suggestion cards (`ProposalCard.onRunAndWatch`): runs it and opens Take over in View only. Running computer tasks' cards get a **View only** button (`LiveTaskCard.onWatch`).
+- **View only is landscape and full screen** (`TakeOverScreen.WatchFullScreen`): sensor-landscape, system bars hidden, the picture fills the display (pinch to zoom), a tap shows the bar (what the run is doing, Close) for a few seconds; leaving restores the orientation. `MainActivity` now handles orientation/screen-size changes itself (`android:configChanges`), so rotating doesn't recreate the activity and close Take over.
+- Not tried on the phone before shipping (it wasn't connected); compiled and signed with the usual key.
 
 ## Shipped 2026-10-08: DeskAI v2.8.3 (build 58), Take over shows running task & status (by Antigravity session, at owner's request)
 

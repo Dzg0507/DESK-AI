@@ -392,6 +392,12 @@ fun ChatScreen(
                                 MessageBubble(
                                     message = message,
                                     onRunProposal = { msg, prop -> viewModel.runProposal(msg, prop) },
+                                    // Computer tasks: run it and watch the Mini's screen in View only (no control)
+                                    onRunAndWatchProposal = { msg, prop ->
+                                        viewModel.runProposal(msg, prop)
+                                        takeOverFor = null; takeOverWatching = true; showTakeOver = true
+                                    },
+                                    onWatchTask = { _ -> takeOverFor = null; takeOverWatching = true; showTakeOver = true },
                                     onDismissProposal = { msg, prop -> viewModel.dismissProposal(msg, prop) },
                                     onDeleteMessage = { viewModel.deleteMessage(it) },
                                     onRegenerate = { viewModel.sendMessage("Please retry: ${it.content.take(60)}") },

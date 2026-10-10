@@ -30,6 +30,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.PlayArrow
@@ -85,6 +86,7 @@ fun LiveTaskCard(
     onRetryTask: (suspend (String) -> Result<String>)? = null,
     onPlayVideo: ((url: String, filename: String) -> Unit)? = null,
     onActionClick: ((TaskAction) -> Unit)? = null,
+    onWatch: ((String) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val scope = rememberCoroutineScope()
@@ -458,6 +460,30 @@ fun LiveTaskCard(
                 }
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    // View only: watch a computer task on the Mini's screen without taking control (2026-10-10,
+                    // the owner's ask). Opens Take over in View only, landscape; the task keeps running.
+                    if ((isInProgress || isBacklog) && item?.engine == "computer" && onWatch != null) {
+                        Box(
+                            modifier = Modifier
+                                .clip(DeskShapes.chip)
+                                .background(ElectricCyan.copy(alpha = 0.12f))
+                                .border(1.dp, ElectricCyan.copy(alpha = 0.6f), DeskShapes.chip)
+                                .clickable { onWatch(taskId) }
+                                .padding(horizontal = 10.dp, vertical = 5.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Visibility,
+                                    contentDescription = "View only",
+                                    tint = ElectricCyan,
+                                    modifier = Modifier.size(13.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(text = "View only", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = ElectricCyan)
+                            }
+                        }
+                    }
+
                     // Abort Button while in_progress or backlog
                     if ((isInProgress || isBacklog) && onCancelTask != null) {
                         Box(

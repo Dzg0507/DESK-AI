@@ -53,6 +53,10 @@ interface ChatDao {
     @Query("DELETE FROM chat_messages WHERE sessionId = :sessionId")
     suspend fun clearMessagesForSession(sessionId: String)
 
+    // Whether any message already shows this task's card (in any conversation)
+    @Query("SELECT COUNT(*) FROM chat_messages WHERE linkedTaskId = :taskId")
+    suspend fun countMessagesForTask(taskId: String): Int
+
     @Query("SELECT COUNT(*) FROM chat_messages WHERE sessionId = :sessionId")
     suspend fun getMessageCount(sessionId: String): Int
 }
