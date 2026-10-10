@@ -612,6 +612,9 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                        idempotencyKey: String? = null): Result<org.json.JSONObject> =
         repository.github(method, path, body, idempotencyKey)
 
+    /** A repo file or folder saved on the phone for the share menu (GET /api/github/download). */
+    suspend fun githubDownload(path: String, dir: java.io.File) = repository.githubDownload(path, dir)
+
     suspend fun fetchSystemLogs(limit: Int = 100): List<com.example.data.model.SystemLogEntry> {
         return repository.fetchSystemLogs(limit)
     }

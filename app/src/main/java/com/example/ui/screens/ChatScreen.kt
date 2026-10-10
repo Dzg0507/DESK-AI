@@ -729,7 +729,8 @@ fun ChatScreen(
     if (showRepos) {
         com.example.ui.dialogs.ReposScreen(
             onClose = { showRepos = false },
-            call = { method, path, body, key -> viewModel.github(method, path, body, key) }
+            call = { method, path, body, key -> viewModel.github(method, path, body, key) },
+            download = { path, dir -> viewModel.githubDownload(path, dir) }
         )
     }
 

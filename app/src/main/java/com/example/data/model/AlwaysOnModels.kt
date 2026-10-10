@@ -39,6 +39,10 @@ data class CanvasRef(
     val version: Int
 )
 
+/** A file or folder from the Repos screen, saved on the phone for the share menu: how many files went in, how many
+ *  were left out (too big; listed inside it). */
+data class SharedDownload(val file: java.io.File, val mime: String, val files: Int, val leftOut: Int)
+
 /** One line of what a computer task did, in plain words ("Opening Notepad", "Pressing Enter"): level is info, ok,
  *  warn or error. From the View only screen's activity (GET /api/computer/takeover/activity "log") and a finished
  *  task's "activity_log" (2026-10-10, the owner: see what the agent is doing, and a log with any errors). */

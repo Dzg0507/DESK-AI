@@ -90,9 +90,14 @@ import com.example.ui.theme.Slate500
 @Composable
 fun ReposScreen(
     onClose: () -> Unit,
-    call: suspend (method: String, path: String, body: JSONObject?, idempotencyKey: String?) -> Result<JSONObject>
+    call: suspend (method: String, path: String, body: JSONObject?, idempotencyKey: String?) -> Result<JSONObject>,
+    download: suspend (path: String, dir: java.io.File) -> Result<com.example.data.model.SharedDownload> =
+        { _, _ -> Result.failure(Exception("Sharing isn't available")) }
 ) {
     val scope = rememberCoroutineScope()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var preparing by remember { mutableStateOf<String?>(null) }      // a share being made ready ("Getting core.zip…")
+    var askFormat by remember { mutableStateOf(false) }               // a folder: zip or one text file?
     var repos by remember { mutableStateOf<List<JSONObject>>(emptyList()) }
     var filter by remember { mutableStateOf("") }
     var repo by remember { mutableStateOf<JSONObject?>(null) }       // the open repo (null: the repo list)
@@ -171,6 +176,62 @@ fun ReposScreen(
         }
     }
 
+    /**
+     * Share (2026-10-10, the owner: "share a file or a folder with another person or AI without copying a whole code
+     * and pasting it"): the agent gets it from GitHub (a file as itself, a folder as a zip or one text file), it's
+     * saved in the app's cache, and Android's share menu sends it as an attachment.
+     */
+    fun share(target: String, format: String) {
+        val name = repo?.optString("repo") ?: return
+        val label = target.substringAfterLast("/").ifEmpty { name.substringAfter("/") }
+        preparing = "Getting $label ready to share…"
+        error = null; sent = null
+        scope.launch {
+            val dir = java.io.File(context.cacheDir, "share_out").apply { listFiles()?.forEach { it.delete() } }
+            val r = download("/api/github/download?repo=${enc(name)}&path=${enc(target)}&format=$format", dir)
+            preparing = null
+            r.onSuccess { d ->
+                try {
+                    val uri = androidx.core.content.FileProvider.getUriForFile(context, context.packageName + ".fileprovider", d.file)
+                    val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                        type = d.mime
+                        putExtra(android.content.Intent.EXTRA_STREAM, uri)
+                        putExtra(android.content.Intent.EXTRA_SUBJECT, d.file.name)
+                        clipData = android.content.ClipData.newRawUri(d.file.name, uri)
+                        addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    context.startActivity(android.content.Intent.createChooser(send, "Share ${d.file.name}"))
+                    if (d.leftOut > 0) sent = "${d.file.name}: ${d.files} files. ${d.leftOut} left out (too big or not " +
+                        "text); the list is inside it."
+                } catch (e: Exception) {
+                    error = "Couldn't open the share menu: ${e.message}"
+                }
+            }.onFailure { error = "Couldn't get it ready: ${it.message}" }
+        }
+    }
+
+    if (askFormat) {
+        val folderName = path.substringAfterLast("/").ifEmpty { repo?.optString("repo")?.substringAfter("/") ?: "repo" }
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { askFormat = false },
+            title = { Text("Share $folderName") },
+            text = {
+                Text("One text file: every code file in it, one after another, each under its path. Best for AI " +
+                     "chats.\n\nZip: the folder as it is, for people (and AIs that open zips).")
+            },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = { askFormat = false; share(path, "text") }) {
+                    Text("One text file")
+                }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { askFormat = false; share(path, "zip") }) {
+                    Text("Zip")
+                }
+            }
+        )
+    }
+
     androidx.activity.compose.BackHandler { back() }
     Surface(modifier = Modifier.fillMaxSize(), color = DeepNavy) {
       Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Slate900, DeepNavy)))) {
@@ -220,6 +281,9 @@ fun ReposScreen(
             }
             sent?.let {
                 StatusNote(it, color = Green400, modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp))
+            }
+            preparing?.let {
+                StatusNote(it, color = Cyan400, modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp))
             }
 
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
@@ -319,9 +383,24 @@ fun ReposScreen(
                 if (repo == null) {
                     OutlinedButton(onClick = { refresh++ }, modifier = Modifier.fillMaxWidth()) { Text("Refresh") }
                 } else if (!working) {
-                    Button(onClick = { working = true; sent = null; error = null }, modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = Cyan400, contentColor = DeepNavy)) {
-                        Text("Work on this", fontWeight = FontWeight.Bold)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        // A file goes as itself; a folder asks: one text file or a zip
+                        OutlinedButton(
+                            onClick = { if (file != null) share(file!!.optString("path"), "raw") else askFormat = true },
+                            enabled = preparing == null,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(when {
+                                preparing != null -> "Preparing…"
+                                file != null -> "Share file"
+                                path.isEmpty() -> "Share repo"
+                                else -> "Share folder"
+                            })
+                        }
+                        Button(onClick = { working = true; sent = null; error = null }, modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = Cyan400, contentColor = DeepNavy)) {
+                            Text("Work on this", fontWeight = FontWeight.Bold)
+                        }
                     }
                 } else {
                     val where = file?.optString("path") ?: path

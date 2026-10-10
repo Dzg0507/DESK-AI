@@ -260,6 +260,9 @@ class ChatRepository(
                        idempotencyKey: String? = null): Result<org.json.JSONObject> =
         agentClient.githubCall(getActiveConfig(), method, path, body, idempotencyKey)
 
+    suspend fun githubDownload(path: String, dir: java.io.File): Result<com.example.data.model.SharedDownload> =
+        agentClient.githubDownload(getActiveConfig(), path, dir)
+
     suspend fun fetchSystemLogs(limit: Int = 100): List<SystemLogEntry> = withContext(Dispatchers.IO) {
         val config = getActiveConfig()
         agentClient.getSystemLogs(config, limit)

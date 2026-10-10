@@ -1140,6 +1140,45 @@ class AlwaysOnAgentClient {
                            idempotencyKey: String? = null): Result<JSONObject> =
         scheduleCall(config, method, path, body, idempotencyKey)
 
+    /** A file or folder from GET /api/github/download, saved in [dir] under its own name, ready for the share menu.
+     *  Code files come back as text/plain (share targets such as AI chat apps accept that; "text/x-python" or
+     *  "application/octet-stream" they often don't). */
+    suspend fun githubDownload(config: BridgeConfig, path: String, dir: java.io.File): Result<com.example.data.model.SharedDownload> =
+        withContext(Dispatchers.IO) {
+            try {
+                executeWithFailover(config) { baseUrl ->
+                    val req = addAuth(Request.Builder().url("$baseUrl$path"), config).build()
+                    httpClient.newBuilder().readTimeout(330, TimeUnit.SECONDS).build().newCall(req).execute().use { resp ->
+                        if (!resp.isSuccessful) {
+                            val detail = try { JSONObject(resp.body?.string() ?: "").optString("detail") } catch (_: Exception) { "" }
+                            return@executeWithFailover Result.failure<com.example.data.model.SharedDownload>(
+                                Exception(detail.ifBlank { "HTTP ${resp.code}" }))
+                        }
+                        val cd = resp.header("Content-Disposition") ?: ""
+                        val name = (Regex("filename\\*=utf-8''([^;]+)", RegexOption.IGNORE_CASE).find(cd)?.groupValues?.get(1)
+                            ?.let { java.net.URLDecoder.decode(it, "UTF-8") }
+                            ?: Regex("filename=\"?([^\";]+)\"?").find(cd)?.groupValues?.get(1)
+                            ?: "shared-file").replace(Regex("[\\\\/:*?\"<>|]"), "_")
+                        dir.mkdirs()
+                        val file = java.io.File(dir, name)
+                        resp.body?.byteStream()?.use { input -> file.outputStream().use { input.copyTo(it) } }
+                        val served = (resp.header("Content-Type") ?: "application/octet-stream").substringBefore(";").trim()
+                        val head = file.inputStream().use { s -> ByteArray(8000).let { b -> b.copyOf(maxOf(0, s.read(b))) } }
+                        val mime = when {
+                            served == "application/zip" -> served
+                            served.startsWith("text/") -> "text/plain"
+                            served == "application/octet-stream" && head.none { it == 0.toByte() } -> "text/plain"
+                            else -> served
+                        }
+                        Result.success(com.example.data.model.SharedDownload(file, mime,
+                            resp.header("X-Files")?.toIntOrNull() ?: 1, resp.header("X-Left-Out")?.toIntOrNull() ?: 0))
+                    }
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+
     /** Bytes of a file on the agent's API (e.g. a request's screenshot), with the app's token. */
     suspend fun fetchBytes(config: BridgeConfig, path: String): ByteArray? = withContext(Dispatchers.IO) {
         try {

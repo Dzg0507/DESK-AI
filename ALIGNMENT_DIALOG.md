@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-10 (DeskAI v2.12.0 / Build 63 shipped — computer tasks narrate)
+**Last Updated:** 2026-10-10 (DeskAI v2.13.0 / Build 64 shipped — share from Repos)
 
 ---
 
@@ -14,6 +14,12 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-10: DeskAI v2.13.0 (build 64), share from Repos (by the laptop Claude session, at the owner's request)
+
+- Agent side: `GET /api/github/download?repo&path&format=zip|text|raw` (docs/API.md synced), made by the Connectors tool.
+- `AlwaysOnAgentClient.githubDownload` saves the file under its own name (Content-Disposition) in `cacheDir/share_out/` (cleared before each share) and picks a share type: zip, or text/plain for anything textual (AI chat apps take text/plain). `ReposScreen` has Share file / folder / repo beside Work on this; a folder asks "One text file" or "Zip"; the FileProvider URI goes to ACTION_SEND with read permission.
+- Not tried on the phone before shipping.
 
 ## Shipped 2026-10-10: DeskAI v2.12.0 (build 63), computer tasks narrate in plain words (by the laptop Claude session, at the owner's request)
 
