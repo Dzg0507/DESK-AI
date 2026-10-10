@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-10 (DeskAI v2.9.0 / Build 59 shipped — task cards for every task, Run & View only, landscape View only)
+**Last Updated:** 2026-10-10 (DeskAI v2.9.1 / Build 60 shipped — tap a chat task card for its details)
 
 ---
 
@@ -14,6 +14,10 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-10: DeskAI v2.9.1 (build 60), task details from the chat (by the laptop Claude session, at the owner's request)
+
+- Tapping a task card in the chat (not its buttons) opens `TaskDetailsSheet`, the same sheet as tapping the task in Missions (`LiveTaskCard.onOpenDetails`, `ChatScreen.chatTaskDetails`). Not tried on the phone before shipping (it wasn't connected).
 
 ## Shipped 2026-10-10: DeskAI v2.9.0 (build 59), task cards for every task; Run & View only; landscape View only (by the laptop Claude session, at the owner's request)
 
