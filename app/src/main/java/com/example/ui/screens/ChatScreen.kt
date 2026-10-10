@@ -152,6 +152,7 @@ fun ChatScreen(
     }
     var showTasksSheet by remember { mutableStateOf(false) }
     var showMemorySheet by remember { mutableStateOf(false) }
+    var showMemoryCheck by remember { mutableStateOf(false) }
     var showMediaSheet by remember { mutableStateOf(false) }
     var showCommandPalette by remember { mutableStateOf(false) }
     var showAgentWorkSheet by remember { mutableStateOf(false) }
@@ -476,6 +477,7 @@ fun ChatScreen(
                                         }
                                     },
                                     onOpenCanvas = { ref -> openCanvas = ref },
+                                    onOpenMemoryCheck = { showMemoryCheck = true },
                                     serverBaseUrl = config.getResolvedUrl(),
                                     authToken = config.apiKey
                                 )
@@ -620,6 +622,15 @@ fun ChatScreen(
             onDeleteFact = { id -> viewModel.deleteMemoryFact(id) },
             onUpdateRecipe = { id, pinned, status -> viewModel.updateRecipe(id, pinned, status) },
             onDeleteRecipe = { id -> viewModel.deleteRecipe(id) }
+        )
+    }
+
+    // The agent's Saturday memory check (a card under its message opens it)
+    if (showMemoryCheck) {
+        com.example.ui.dialogs.MemoryCheckSheet(
+            onDismiss = { showMemoryCheck = false },
+            onLoad = { viewModel.fetchMemoryCheck() },
+            onSave = { keep -> viewModel.answerMemoryCheck(keep) }
         )
     }
 

@@ -9,6 +9,8 @@ import com.example.data.model.ChatAttachment
 import com.example.data.model.ChatMessage
 import com.example.data.model.ChatQuestion
 import com.example.data.model.DaemonStats
+import com.example.data.model.MemoryCheck
+import com.example.data.model.MemoryCheckItem
 import com.example.data.model.MemoryFactItem
 import com.example.data.model.MemoryOverview
 import com.example.data.model.RecipeItem
@@ -1572,6 +1574,56 @@ class AlwaysOnAgentClient {
                 Result.failure(e)
             }
         }
+
+    /** The weekly memory check waiting for an answer; success(null) when there's none. */
+    suspend fun fetchMemoryCheck(config: BridgeConfig): Result<MemoryCheck?> = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                val req = addAuth(Request.Builder().url("$baseUrl/api/memory/review"), config).build()
+                httpClient.newCall(req).execute().use { resp ->
+                    if (!resp.isSuccessful) return@executeWithFailover Result.failure<MemoryCheck?>(Exception("HTTP ${resp.code}"))
+                    val pending = JSONObject(resp.body?.string() ?: "{}").optJSONObject("pending")
+                        ?: return@executeWithFailover Result.success<MemoryCheck?>(null)
+                    val arr = pending.optJSONArray("items") ?: JSONArray()
+                    val items = (0 until arr.length()).mapNotNull { i ->
+                        val o = arr.optJSONObject(i) ?: return@mapNotNull null
+                        val op = o.optString("op")
+                        val note = (if (op == "add") o.optString("quote") else o.optString("reason"))
+                            .takeIf { it.isNotBlank() && it != "null" }
+                        MemoryCheckItem(o.optInt("n"), op, o.optString("content"), note)
+                    }
+                    Result.success<MemoryCheck?>(MemoryCheck(items))
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /** Answers the memory check with the kept item numbers; returns a one-line summary for the sheet. */
+    suspend fun answerMemoryCheck(config: BridgeConfig, keep: List<Int>): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                val payload = JSONObject().put("keep", JSONArray(keep))
+                val req = addAuth(
+                    Request.Builder().url("$baseUrl/api/memory/review")
+                        .post(payload.toString().toRequestBody(jsonMediaType)),
+                    config
+                ).build()
+                httpClient.newCall(req).execute().use { resp ->
+                    val body = try { JSONObject(resp.body?.string() ?: "{}") } catch (_: Exception) { JSONObject() }
+                    if (!resp.isSuccessful) {
+                        return@executeWithFailover Result.failure<String>(Exception(body.optString("detail", "HTTP ${resp.code}")))
+                    }
+                    val saved = body.optJSONArray("saved")?.length() ?: 0
+                    val retired = body.optJSONArray("retired")?.length() ?: 0
+                    Result.success("✅ Saved $saved new, retired $retired. Thanks!")
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 
     suspend fun deleteRecipe(config: BridgeConfig, id: Int): Result<Boolean> = withContext(Dispatchers.IO) {
         try {

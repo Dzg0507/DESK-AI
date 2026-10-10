@@ -127,6 +127,7 @@ fun MessageBubble(
     onPlayVideo: ((url: String, filename: String) -> Unit)? = null,
     onActionClick: ((TaskAction) -> Unit)? = null,
     onOpenCanvas: ((com.example.data.model.CanvasRef) -> Unit)? = null,
+    onOpenMemoryCheck: (() -> Unit)? = null,
     serverBaseUrl: String = "",
     authToken: String = "",
     modifier: Modifier = Modifier
@@ -283,6 +284,13 @@ fun MessageBubble(
                     if (canvasRef != null && onOpenCanvas != null) {
                         Spacer(modifier = Modifier.height(10.dp))
                         CanvasCard(ref = canvasRef, onOpen = onOpenCanvas)
+                    }
+
+                    // The agent's Saturday memory check: opens the checklist
+                    if (onOpenMemoryCheck != null &&
+                        message.modelUsed?.endsWith(com.example.data.repository.MEMORY_CHECK_LABEL) == true) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        com.example.ui.dialogs.MemoryCheckCard(onOpen = onOpenMemoryCheck)
                     }
 
                     // Section 7.7 Live Task Card (Progress, ETA, Abort, Video Result)

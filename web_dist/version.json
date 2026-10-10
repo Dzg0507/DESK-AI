@@ -1,7 +1,7 @@
 {
-  "versionCode": 61,
-  "versionName": "2.10.0",
-  "changelog": "DeskAI v2.10.0 (Build 61): Share to agent. DeskAI is in Android's share menu: share a link, text, photo, PDF or document from any app and it opens in the chat, ready for you to ask about it.",
+  "versionCode": 62,
+  "versionName": "2.11.0",
+  "changelog": "DeskAI v2.11.0 (Build 62): the weekly memory check. On Saturdays the agent suggests things to remember and facts that are out of date; tap Review, untick anything wrong, and Save.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24394867
+  "fileSizeBytes": 24427642
 }

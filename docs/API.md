@@ -227,6 +227,8 @@ data: {"type":"started","task_id":"task-052","status":"started","phase":"in_prog
 | `PATCH /api/memory/procedures/{id}` | any of `area`, `when`, `do`, `pinned`, `status` (`active`/`retired`) |
 | `DELETE /api/memory/procedures/{id}` | deletes a recipe |
 | `POST /api/memory/profile/rebuild` | rebuilds the owner profile now |
+| `GET /api/memory/review` | the weekly memory check waiting for the owner (Saturdays; `core/memory_review.py`), or `{"pending": null}`: `{"pending": {"created", "message_id", "items": [{"n", "op": "add"\|"retire", "content", "category" (add), "quote" (add: the owner's words or the event it came from), "fact_id" (retire), "reason" (retire)}]}}`. It arrives as an inbox message of kind `memory`; show it as a checklist, every item ticked to start with |
+| `POST /api/memory/review` | `{"keep": [1, 3]}`: saves the kept new facts, retires the kept out-of-date ones (they fade), drops the rest; `[]` keeps nothing. 400 when no check is waiting or a number isn't in it. Answering in chat ("keep 1 and 3") does the same |
 | `GET /api/memory/usage` | AI token usage by purpose over the last day |
 | `GET /api/memory/budget` | today's calls and tokens per model, with countdowns to Google (Pacific) and Cloudflare (UTC) daily resets; for each Gemini model, `since_reset` and `learned_daily_limit`; `chat_health`: the last 24 h of chat replies per model, the share answered by the best model, and failures per model and kind |
 
@@ -404,7 +406,7 @@ message, and the owner simply replies in the chat.
 
 | Method & path | Returns |
 |---|---|
-| `GET /api/inbox?after=<id>&limit=50` | `{"messages": [{"id": 12, "kind": "brief"\|"notice"\|"suggestion"\|"question"\|"review", "text", "created_at", "canvas"?}], "last_id": 12}`, oldest first, only ids greater than `after`. `canvas` (only when present) is a draft card, the same shape as a chat reply's `canvas` (`{"id", "title", "kind", "version"}`): show the card that opens it. The Sunday growth review comes as `kind: "review"` with one |
+| `GET /api/inbox?after=<id>&limit=50` | `{"messages": [{"id": 12, "kind": "brief"\|"notice"\|"suggestion"\|"question"\|"review"\|"memory", "text", "created_at", "canvas"?}], "last_id": 12}`, oldest first, only ids greater than `after`. `canvas` (only when present) is a draft card, the same shape as a chat reply's `canvas` (`{"id", "title", "kind", "version"}`): show the card that opens it. The Sunday growth review comes as `kind: "review"` with one. `kind: "memory"` is the Saturday memory check: show a Review button that opens `GET /api/memory/review` |
 
 The app keeps the highest id it has shown and asks for newer ones when a push arrives and whenever it opens, so a
 missed push loses nothing. Using `agent-<id>` as the message's id in the app's chat keeps a message from showing

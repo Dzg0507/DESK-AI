@@ -26,6 +26,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.util.UUID
 
+/** The label on the agent's Saturday memory check (inbox kind "memory"); its bubble gets a Review card. */
+const val MEMORY_CHECK_LABEL = "🧠 Memory check"
+
 class ChatRepository(
     private val context: Context? = null,
     private val database: AppDatabase,
@@ -331,6 +334,12 @@ class ChatRepository(
     suspend fun deleteRecipe(id: Int): Result<Boolean> =
         withContext(Dispatchers.IO) { agentClient.deleteRecipe(getActiveConfig(), id) }
 
+    suspend fun fetchMemoryCheck(): Result<com.example.data.model.MemoryCheck?> =
+        withContext(Dispatchers.IO) { agentClient.fetchMemoryCheck(getActiveConfig()) }
+
+    suspend fun answerMemoryCheck(keep: List<Int>): Result<String> =
+        withContext(Dispatchers.IO) { agentClient.answerMemoryCheck(getActiveConfig(), keep) }
+
     fun getMessages(sessionId: String): Flow<List<ChatMessage>> =
         chatDao.getMessagesForSession(sessionId)
 
@@ -407,6 +416,7 @@ class ChatRepository(
                 "question" -> "💬 Question"
                 "suggestion" -> "💡 Suggestion"
                 "review" -> "📊 Weekly review"
+                "memory" -> MEMORY_CHECK_LABEL          // MessageBubble shows the Review card by this label
                 else -> "🔔 Heads up"
             }
             // java.time needs Android 8; older phones just use the arrival time

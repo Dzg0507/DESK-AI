@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-10 (DeskAI v2.10.0 / Build 61 shipped — Share to agent)
+**Last Updated:** 2026-10-10 (DeskAI v2.11.0 / Build 62 shipped — weekly memory check)
 
 ---
 
@@ -14,6 +14,12 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-10: DeskAI v2.11.0 (build 62), the weekly memory check (by the laptop Claude session, at the owner's request)
+
+- Agent side: `core/memory_review.py`, inbox kind `memory` (Saturdays), `GET/POST /api/memory/review` (docs/API.md synced).
+- `ChatRepository.syncInbox` labels kind `memory` as `MEMORY_CHECK_LABEL`; `MessageBubble` shows `MemoryCheckCard` under a message with that label; it opens `ui/dialogs/MemoryCheckSheet.kt`, a checklist where every item starts ticked. Save posts the kept numbers. Answering in chat ("keep 1 and 3") works too.
+- Not tried on the phone before shipping (no check is waiting until one is sent).
 
 ## Shipped 2026-10-10: DeskAI v2.10.0 (build 61), Share to agent (by the laptop Claude session, at the owner's request)
 

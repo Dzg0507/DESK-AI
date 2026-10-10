@@ -39,7 +39,14 @@ data class CanvasRef(
     val version: Int
 )
 
-/** A message the agent started itself (GET /api/inbox): kind is brief, notice, suggestion, question or review.
+/** One item of the weekly memory check (GET /api/memory/review): op "add" (a new fact; note = the words it came
+ *  from) or "retire" (an out-of-date fact; note = why). n is what POST /api/memory/review {"keep": [...]} takes. */
+data class MemoryCheckItem(val n: Int, val op: String, val content: String, val note: String? = null)
+
+data class MemoryCheck(val items: List<MemoryCheckItem>)
+
+/** A message the agent started itself (GET /api/inbox): kind is brief, notice, suggestion, question, review or
+ *  memory (the Saturday memory check: the chat shows a Review card that opens MemoryCheckSheet).
  *  canvasJson: a draft card ({"id","title","kind","version"}), e.g. the Sunday growth review. */
 data class InboxMessage(
     val id: Long,

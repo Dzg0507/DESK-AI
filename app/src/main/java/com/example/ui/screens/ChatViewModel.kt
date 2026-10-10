@@ -688,6 +688,10 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     suspend fun deleteRecipe(id: Int): Result<Boolean> = repository.deleteRecipe(id)
 
+    suspend fun fetchMemoryCheck() = repository.fetchMemoryCheck()
+
+    suspend fun answerMemoryCheck(keep: List<Int>) = repository.answerMemoryCheck(keep)
+
     fun speak(text: String) {
         if (isTtsReady && tts != null) {
             val clean = text.replace(Regex("[#*`•\\[\\]]"), "")
