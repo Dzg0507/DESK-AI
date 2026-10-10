@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-10 (DeskAI v2.13.0 / Build 64 shipped — share from Repos)
+**Last Updated:** 2026-10-10 (DeskAI v2.13.1 / Build 65 shipped — save to Downloads)
 
 ---
 
@@ -14,6 +14,11 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-10: DeskAI v2.13.1 (build 65), Save to Downloads in Repos (by the laptop Claude session, at the owner's request)
+
+- The owner: Gemini isn't in the share menu. Repos' button is now Share / save: one dialog (a folder: one text file or zip), then Share… or Save to Downloads. `saveToDownloadsFolder` writes Downloads/DeskAI through MediaStore (Android 10+, no permission), with the type from the extension so MediaStore keeps the name; Android 9 and older: the app's own Download folder.
+- Not tried on the phone before shipping.
 
 ## Shipped 2026-10-10: DeskAI v2.13.0 (build 64), share from Repos (by the laptop Claude session, at the owner's request)
 

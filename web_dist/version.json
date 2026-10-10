@@ -1,7 +1,7 @@
 {
-  "versionCode": 64,
-  "versionName": "2.13.0",
-  "changelog": "DeskAI v2.13.0 (Build 64): Share from Repos. Send a file, a folder or a whole repo to a person or an AI from Android's share menu: a file goes as itself, a folder as a zip or as one text file (best for AI chats). No more copying and pasting code.",
+  "versionCode": 65,
+  "versionName": "2.13.1",
+  "changelog": "DeskAI v2.13.1 (Build 65): Save to Downloads in Repos. A file, folder or repo can now be saved to Downloads/DeskAI, so you can attach it in apps that aren't in the share menu, like Gemini.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24460402
+  "fileSizeBytes": 24460406
 }

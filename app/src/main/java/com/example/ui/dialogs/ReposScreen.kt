@@ -177,14 +177,16 @@ fun ReposScreen(
     }
 
     /**
-     * Share (2026-10-10, the owner: "share a file or a folder with another person or AI without copying a whole code
-     * and pasting it"): the agent gets it from GitHub (a file as itself, a folder as a zip or one text file), it's
-     * saved in the app's cache, and Android's share menu sends it as an attachment.
+     * Share or save (2026-10-10, the owner: "share a file or a folder with another person or AI without copying a
+     * whole code and pasting it"; then "Gemini doesn't allow to be shared to, so I need a way to download the file so
+     * I can attach it"): the agent gets it from GitHub (a file as itself, a folder as a zip or one text file), it's
+     * saved in the app's cache, then either Android's share menu sends it, or it's copied to Downloads/DeskAI for any
+     * app's file picker.
      */
-    fun share(target: String, format: String) {
+    fun prepare(target: String, format: String, then: (com.example.data.model.SharedDownload) -> Unit) {
         val name = repo?.optString("repo") ?: return
         val label = target.substringAfterLast("/").ifEmpty { name.substringAfter("/") }
-        preparing = "Getting $label ready to share…"
+        preparing = "Getting $label ready…"
         error = null; sent = null
         scope.launch {
             val dir = java.io.File(context.cacheDir, "share_out").apply { listFiles()?.forEach { it.delete() } }
@@ -192,41 +194,68 @@ fun ReposScreen(
             preparing = null
             r.onSuccess { d ->
                 try {
-                    val uri = androidx.core.content.FileProvider.getUriForFile(context, context.packageName + ".fileprovider", d.file)
-                    val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                        type = d.mime
-                        putExtra(android.content.Intent.EXTRA_STREAM, uri)
-                        putExtra(android.content.Intent.EXTRA_SUBJECT, d.file.name)
-                        clipData = android.content.ClipData.newRawUri(d.file.name, uri)
-                        addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    }
-                    context.startActivity(android.content.Intent.createChooser(send, "Share ${d.file.name}"))
-                    if (d.leftOut > 0) sent = "${d.file.name}: ${d.files} files. ${d.leftOut} left out (too big or not " +
-                        "text); the list is inside it."
+                    then(d)
                 } catch (e: Exception) {
-                    error = "Couldn't open the share menu: ${e.message}"
+                    error = "Couldn't finish: ${e.message}"
                 }
             }.onFailure { error = "Couldn't get it ready: ${it.message}" }
         }
     }
 
+    fun leftOutNote(d: com.example.data.model.SharedDownload) =
+        if (d.leftOut > 0) " ${d.files} files; ${d.leftOut} left out (too big or not text), listed inside it." else ""
+
+    fun sendTo(d: com.example.data.model.SharedDownload) {
+        val uri = androidx.core.content.FileProvider.getUriForFile(context, context.packageName + ".fileprovider", d.file)
+        val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+            type = d.mime
+            putExtra(android.content.Intent.EXTRA_STREAM, uri)
+            putExtra(android.content.Intent.EXTRA_SUBJECT, d.file.name)
+            clipData = android.content.ClipData.newRawUri(d.file.name, uri)
+            addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        context.startActivity(android.content.Intent.createChooser(send, "Share ${d.file.name}"))
+        if (d.leftOut > 0) sent = d.file.name + ":" + leftOutNote(d)
+    }
+
+    fun saveToDownloads(d: com.example.data.model.SharedDownload) {
+        val where = saveToDownloadsFolder(context, d.file)
+        sent = "Saved to $where. Attach it from there (in Gemini: + then Files)." + leftOutNote(d)
+    }
+
     if (askFormat) {
-        val folderName = path.substringAfterLast("/").ifEmpty { repo?.optString("repo")?.substringAfter("/") ?: "repo" }
+        val isFile = file != null
+        val target = file?.optString("path") ?: path
+        val shownName = target.substringAfterLast("/").ifEmpty { repo?.optString("repo")?.substringAfter("/") ?: "repo" }
+        var asText by remember { mutableStateOf(true) }
+        val format = if (isFile) "raw" else if (asText) "text" else "zip"
         androidx.compose.material3.AlertDialog(
             onDismissRequest = { askFormat = false },
-            title = { Text("Share $folderName") },
+            title = { Text(shownName) },
             text = {
-                Text("One text file: every code file in it, one after another, each under its path. Best for AI " +
-                     "chats.\n\nZip: the folder as it is, for people (and AIs that open zips).")
+                Column {
+                    if (isFile) {
+                        Text("Send it with an app, or save it to Downloads to attach it anywhere (Gemini, email…).")
+                    } else {
+                        listOf(true to "One text file: every code file, each under its path. Best for AI chats.",
+                               false to "Zip: the folder as it is, for people (and AIs that open zips).").forEach { (t, label) ->
+                            Row(Modifier.fillMaxWidth().clickable { asText = t }.padding(vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically) {
+                                androidx.compose.material3.RadioButton(selected = asText == t, onClick = { asText = t })
+                                Text(label, fontSize = 13.sp)
+                            }
+                        }
+                    }
+                }
             },
             confirmButton = {
-                androidx.compose.material3.TextButton(onClick = { askFormat = false; share(path, "text") }) {
-                    Text("One text file")
+                androidx.compose.material3.TextButton(onClick = { askFormat = false; prepare(target, format) { sendTo(it) } }) {
+                    Text("Share…")
                 }
             },
             dismissButton = {
-                androidx.compose.material3.TextButton(onClick = { askFormat = false; share(path, "zip") }) {
-                    Text("Zip")
+                androidx.compose.material3.TextButton(onClick = { askFormat = false; prepare(target, format) { saveToDownloads(it) } }) {
+                    Text("Save to Downloads")
                 }
             }
         )
@@ -386,15 +415,15 @@ fun ReposScreen(
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         // A file goes as itself; a folder asks: one text file or a zip
                         OutlinedButton(
-                            onClick = { if (file != null) share(file!!.optString("path"), "raw") else askFormat = true },
+                            onClick = { askFormat = true },
                             enabled = preparing == null,
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(when {
                                 preparing != null -> "Preparing…"
-                                file != null -> "Share file"
-                                path.isEmpty() -> "Share repo"
-                                else -> "Share folder"
+                                file != null -> "Share / save file"
+                                path.isEmpty() -> "Share / save repo"
+                                else -> "Share / save folder"
                             })
                         }
                         Button(onClick = { working = true; sent = null; error = null }, modifier = Modifier.weight(1f),
@@ -422,6 +451,35 @@ fun ReposScreen(
         }
       }
     }
+}
+
+/**
+ * Copies a ready file into the phone's Downloads/DeskAI folder (Android 10 and later: no permission needed) and says
+ * where. Android 9 and earlier would need a storage permission, so there it goes to the app's own Download folder.
+ * The type is the file's own (from its extension): MediaStore renames a file whose type doesn't match its name
+ * ("a.py" saved as text/plain would become "a.py.txt").
+ */
+private fun saveToDownloadsFolder(context: android.content.Context, file: java.io.File): String {
+    val ext = file.extension.lowercase()
+    val mime = android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext) ?: "application/octet-stream"
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+        val values = android.content.ContentValues().apply {
+            put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, file.name)
+            put(android.provider.MediaStore.MediaColumns.MIME_TYPE, mime)
+            put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, android.os.Environment.DIRECTORY_DOWNLOADS + "/DeskAI")
+        }
+        val resolver = context.contentResolver
+        val uri = resolver.insert(android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+            ?: throw java.io.IOException("Android wouldn't create the file in Downloads")
+        resolver.openOutputStream(uri)?.use { out -> file.inputStream().use { it.copyTo(out) } }
+            ?: throw java.io.IOException("couldn't write to Downloads")
+        val saved = resolver.query(uri, arrayOf(android.provider.MediaStore.MediaColumns.DISPLAY_NAME), null, null, null)
+            ?.use { c -> if (c.moveToFirst()) c.getString(0) else null } ?: file.name
+        return "Downloads/DeskAI/$saved"
+    }
+    val dir = context.getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS) ?: context.filesDir
+    file.copyTo(java.io.File(dir, file.name), overwrite = true)
+    return "${dir.absolutePath}/${file.name}"
 }
 
 private fun size(bytes: Long): String = when {
