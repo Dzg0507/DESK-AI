@@ -45,6 +45,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -219,6 +221,9 @@ fun TakeOverScreen(
     if (viewOnly) WatchFullScreen(
         frame = frame,
         doing = activity?.takeIf { it.optBoolean("running") }?.optString("doing")?.takeIf { it.isNotBlank() },
+        goal = activity?.optString("goal")?.takeIf { it.isNotBlank() && it != "null" },
+        running = activity?.optBoolean("running") == true,
+        log = com.example.data.model.parseActivityLog(activity?.optJSONArray("log")),
         error = error,
         machineLabel = if (machine == "laptop") "Laptop" else "Mini",
         onClose = { handBack() }
@@ -457,6 +462,9 @@ private fun KeyButton(label: String, onClick: () -> Unit) {
 private fun WatchFullScreen(
     frame: ImageBitmap?,
     doing: String?,
+    goal: String?,
+    running: Boolean,
+    log: List<com.example.data.model.ActivityLine>,
     error: String?,
     machineLabel: String,
     onClose: () -> Unit
@@ -503,6 +511,11 @@ private fun WatchFullScreen(
                     .graphicsLayer(scaleX = scale, scaleY = scale, translationX = pan.x, translationY = pan.y)
             )
         }
+        // What the run is doing, in plain words, as it goes (2026-10-10, the owner: "a spot that shows what the agent
+        // is actually doing... like if anyone else was controlling it they would understand"). Stays up while a run
+        // goes (and briefly after); tap it for the whole log.
+        if (log.isNotEmpty()) NarrationPanel(goal = goal, running = running, log = log,
+                                             modifier = Modifier.align(Alignment.BottomStart))
         if (showBar || frame == null || error != null) {
             Row(
                 modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth()
@@ -519,6 +532,47 @@ private fun WatchFullScreen(
                            modifier = Modifier.size(40.dp).clip(CircleShape).background(Slate700)) {
                     Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
                 }
+            }
+        }
+    }
+}
+
+/** The narration on View only: the goal, then the newest lines (3 folded, all when opened, kept scrolled to the
+ *  newest). Its own taps don't reach the picture under it. */
+@Composable
+private fun NarrationPanel(
+    goal: String?,
+    running: Boolean,
+    log: List<com.example.data.model.ActivityLine>,
+    modifier: Modifier = Modifier
+) {
+    var open by remember { mutableStateOf(false) }
+    val list = androidx.compose.foundation.lazy.rememberLazyListState()
+    val shown = if (open) log else log.takeLast(3)
+    LaunchedEffect(log.size, open) { if (shown.isNotEmpty()) list.scrollToItem(shown.size - 1) }
+    Column(
+        modifier = modifier
+            .padding(10.dp)
+            .fillMaxWidth(0.46f)
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color.Black.copy(alpha = 0.68f))
+            .clickable { open = !open }
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text((if (running) "🤖 " else "✓ ") + (goal ?: "Computer task"), color = Color.White, fontSize = 12.sp,
+                 fontWeight = FontWeight.SemiBold, maxLines = 1,
+                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+            Text(if (open) "  ▾ less" else "  ▸ all ${log.size}", color = Slate300, fontSize = 11.sp)
+        }
+        Spacer(Modifier.height(4.dp))
+        androidx.compose.foundation.lazy.LazyColumn(
+            state = list,
+            modifier = Modifier.fillMaxWidth().heightIn(max = if (open) 260.dp else 66.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            items(shown.size) { i ->
+                com.example.ui.components.ActivityLogLine(shown[i], fontSize = 12, showTime = open)
             }
         }
     }

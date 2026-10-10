@@ -608,7 +608,8 @@ class AlwaysOnAgentClient {
             thumbUrl = resolveLink(optNullableString("thumb_url")),
             videoUrl = resolveLink(optNullableString("video_url")),
             videoFilename = optNullableString("video_filename"),
-            videoKept = if (item.has("video_kept") && !item.isNull("video_kept")) item.optBoolean("video_kept") else null
+            videoKept = if (item.has("video_kept") && !item.isNull("video_kept")) item.optBoolean("video_kept") else null,
+            activityLog = com.example.data.model.parseActivityLog(item.optJSONArray("activity_log"))
         )
     }
 

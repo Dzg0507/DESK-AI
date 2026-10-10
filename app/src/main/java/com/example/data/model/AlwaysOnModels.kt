@@ -39,6 +39,19 @@ data class CanvasRef(
     val version: Int
 )
 
+/** One line of what a computer task did, in plain words ("Opening Notepad", "Pressing Enter"): level is info, ok,
+ *  warn or error. From the View only screen's activity (GET /api/computer/takeover/activity "log") and a finished
+ *  task's "activity_log" (2026-10-10, the owner: see what the agent is doing, and a log with any errors). */
+data class ActivityLine(val time: String, val step: String?, val text: String, val level: String)
+
+fun parseActivityLog(arr: org.json.JSONArray?): List<ActivityLine> =
+    if (arr == null) emptyList() else (0 until arr.length()).mapNotNull { i ->
+        val o = arr.optJSONObject(i) ?: return@mapNotNull null
+        val text = o.optString("text").takeIf { it.isNotBlank() } ?: return@mapNotNull null
+        ActivityLine(o.optString("t"), o.opt("step")?.takeIf { it != org.json.JSONObject.NULL }?.toString(), text,
+                     o.optString("level", "info"))
+    }
+
 /** One item of the weekly memory check (GET /api/memory/review): op "add" (a new fact; note = the words it came
  *  from) or "retire" (an out-of-date fact; note = why). n is what POST /api/memory/review {"keep": [...]} takes. */
 data class MemoryCheckItem(val n: Int, val op: String, val content: String, val note: String? = null)
@@ -92,7 +105,8 @@ data class AgentTaskItem(
     val thumbUrl: String? = null,         // the task's video thumbnail; kept after the video is pruned
     val videoUrl: String? = null,         // the Video Hub's stream (/videos/…), null once the video is pruned
     val videoFilename: String? = null,
-    val videoKept: Boolean? = null        // null: the task has no video
+    val videoKept: Boolean? = null,       // null: the task has no video
+    val activityLog: List<ActivityLine> = emptyList()   // a computer task: what it did, in plain words
 )
 
 data class MemoryFactItem(

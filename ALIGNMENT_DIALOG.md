@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-10 (DeskAI v2.11.0 / Build 62 shipped — weekly memory check)
+**Last Updated:** 2026-10-10 (DeskAI v2.12.0 / Build 63 shipped — computer tasks narrate)
 
 ---
 
@@ -14,6 +14,12 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-10: DeskAI v2.12.0 (build 63), computer tasks narrate in plain words (by the laptop Claude session, at the owner's request)
+
+- Agent/tool side: AgentComputerUse `activity.say()`; `GET /api/computer/takeover/activity` has `log`; tasks have `activity_log` (docs/API.md synced).
+- `ActivityLine` + `parseActivityLog` (AlwaysOnModels.kt); `ui/components/ActivityLog.kt` (one line, the list, Copy text). `TakeOverScreen.WatchFullScreen` shows `NarrationPanel` bottom left (goal + newest 3 lines, tap for all, kept scrolled to the newest). `TaskDetailsSheet` has "WHAT IT DID" with Copy.
+- Not tried on the phone before shipping.
 
 ## Shipped 2026-10-10: DeskAI v2.11.0 (build 62), the weekly memory check (by the laptop Claude session, at the owner's request)
 

@@ -1,7 +1,7 @@
 {
-  "versionCode": 62,
-  "versionName": "2.11.0",
-  "changelog": "DeskAI v2.11.0 (Build 62): the weekly memory check. On Saturdays the agent suggests things to remember and facts that are out of date; tap Review, untick anything wrong, and Save.",
+  "versionCode": 63,
+  "versionName": "2.12.0",
+  "changelog": "DeskAI v2.12.0 (Build 63): see what a computer task is doing. View only now narrates each step in plain words (Opening Notepad, Pressing Enter...), tap it for the whole log; a task's details show What it did, with any problems in amber and errors in red.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24427642
+  "fileSizeBytes": 24444027
 }

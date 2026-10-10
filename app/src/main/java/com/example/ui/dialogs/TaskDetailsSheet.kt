@@ -237,6 +237,21 @@ fun TaskDetailsSheet(
                             }
                         }
                     }
+                    // A computer task: every step in plain words, warnings and errors marked (2026-10-10)
+                    if (t.activityLog.isNotEmpty()) {
+                        DetailSection(
+                            "WHAT IT DID",
+                            accent = ElectricCyan,
+                            trailing = {
+                                SmallChip("Copy") {
+                                    clipboard.setText(AnnotatedString(com.example.ui.components.activityLogText(t.activityLog)))
+                                    note = "📋 Log copied"
+                                }
+                            }
+                        ) {
+                            SelectionContainer { com.example.ui.components.ActivityLogList(t.activityLog, fontSize = 12) }
+                        }
+                    }
                     val error = t.lastError?.trim()
                     if (!error.isNullOrBlank() && error != summary) {
                         Column(
