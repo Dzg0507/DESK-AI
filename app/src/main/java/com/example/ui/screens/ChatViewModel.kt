@@ -172,6 +172,16 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         _inputText.value = text
     }
 
+    /** What was shared to DeskAI from another app: the text joins the message box, the files are attached
+     *  (copies ShareReceiverActivity made). Nothing is sent until the owner taps Send. */
+    fun acceptShared(p: com.example.SharedInbox.Payload) {
+        p.files.forEach { attachFile(Uri.fromFile(it)) }
+        val text = p.text?.trim().orEmpty()
+        if (text.isNotEmpty()) {
+            _inputText.value = listOf(_inputText.value.trim(), text).filter { it.isNotEmpty() }.joinToString("\n")
+        }
+    }
+
     /** Reads a picked file and uploads it; its chip shows "Reading…" until the agent has its text. */
     fun attachFile(uri: Uri) {
         if (_attachments.value.size >= MAX_ATTACHMENTS) return

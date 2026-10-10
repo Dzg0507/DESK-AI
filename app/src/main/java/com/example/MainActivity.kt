@@ -31,11 +31,14 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
   private var openTaskIdState by mutableStateOf<String?>(null)
   private var openNeedsYouState by mutableStateOf<String?>(null)
+  // Bumped when something is shared to DeskAI (ShareReceiverActivity): the chat picks it up from SharedInbox
+  private var sharedTick by mutableStateOf(0)
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     openTaskIdState = intent?.getStringExtra("OPEN_TASK_ID")
     openNeedsYouState = intent?.getStringExtra(com.example.service.NeedsYou.EXTRA_OPEN)
+    if (intent?.getBooleanExtra(SharedInbox.EXTRA_SHARED, false) == true) sharedTick++
     enableEdgeToEdge()
     setContent {
       MyApplicationTheme(darkTheme = true) {
@@ -85,7 +88,8 @@ class MainActivity : ComponentActivity() {
           openTaskId = openTaskIdState,
           onClearOpenTaskId = { openTaskIdState = null },
           openNeedsYou = openNeedsYouState,
-          onClearOpenNeedsYou = { openNeedsYouState = null }
+          onClearOpenNeedsYou = { openNeedsYouState = null },
+          sharedTick = sharedTick
         )
       }
     }
@@ -110,6 +114,7 @@ class MainActivity : ComponentActivity() {
       openTaskIdState = taskId
     }
     intent.getStringExtra(com.example.service.NeedsYou.EXTRA_OPEN)?.let { openNeedsYouState = it }
+    if (intent.getBooleanExtra(SharedInbox.EXTRA_SHARED, false)) sharedTick++
   }
 }
 

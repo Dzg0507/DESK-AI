@@ -1,7 +1,7 @@
 {
-  "versionCode": 60,
-  "versionName": "2.9.1",
-  "changelog": "DeskAI v2.9.1 (Build 60): tap a task card in the chat to open its details, the same view as in Missions.",
+  "versionCode": 61,
+  "versionName": "2.10.0",
+  "changelog": "DeskAI v2.10.0 (Build 61): Share to agent. DeskAI is in Android's share menu: share a link, text, photo, PDF or document from any app and it opens in the chat, ready for you to ask about it.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24394510
+  "fileSizeBytes": 24394867
 }

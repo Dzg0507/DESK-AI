@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-10 (DeskAI v2.9.1 / Build 60 shipped — tap a chat task card for its details)
+**Last Updated:** 2026-10-10 (DeskAI v2.10.0 / Build 61 shipped — Share to agent)
 
 ---
 
@@ -14,6 +14,11 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-10: DeskAI v2.10.0 (build 61), Share to agent (by the laptop Claude session, at the owner's request)
+
+- New `ShareReceiverActivity` (no UI, translucent, excluded from recents) receives ACTION_SEND (text, images, video, PDF, Word) and ACTION_SEND_MULTIPLE (images, PDFs). It copies each shared file into `cacheDir/shared/` at once (the read permission is only its own, and short-lived), hands the text and copies to `SharedInbox`, and brings `MainActivity` forward (NEW_TASK|CLEAR_TOP|SINGLE_TOP, extra SHARED_TO_AGENT). `ChatScreen` (`sharedTick`) passes it to `ChatViewModel.acceptShared`: the text joins the message box, the files go through the usual `attachFile` upload. Nothing is sent until the owner taps Send. Up to 5 files.
+- Not tried on the phone before shipping (it wasn't connected).
 
 ## Shipped 2026-10-10: DeskAI v2.9.1 (build 60), task details from the chat (by the laptop Claude session, at the owner's request)
 

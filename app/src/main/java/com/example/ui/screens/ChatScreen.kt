@@ -103,8 +103,13 @@ fun ChatScreen(
     onClearOpenTaskId: () -> Unit = {},
     openNeedsYou: String? = null,
     onClearOpenNeedsYou: () -> Unit = {},
+    sharedTick: Int = 0,
     modifier: Modifier = Modifier
 ) {
+    // Something shared to DeskAI from another app: its text goes in the message box, its files are attached
+    LaunchedEffect(sharedTick) {
+        if (sharedTick > 0) com.example.SharedInbox.take()?.let { viewModel.acceptShared(it) }
+    }
     val currentSession by viewModel.currentSession.collectAsStateWithLifecycle()
     val allSessions by viewModel.allSessions.collectAsStateWithLifecycle()
     val messages by viewModel.messages.collectAsStateWithLifecycle()
