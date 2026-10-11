@@ -108,10 +108,25 @@ fun CommandPaletteDialog(
     onTakeOverViewOnlyChange: (Boolean) -> Unit = {},
     onOpenRepos: () -> Unit = {},
     onOpenCommands: () -> Unit = {},
+    stats: com.example.data.model.DaemonStats? = null,
+    onFetchRetasks: (suspend () -> Result<List<com.example.data.model.Retask>>)? = null,
+    onFetchSchedules: (suspend () -> Result<com.example.data.model.ScheduleList>)? = null,
     onSelectCommandTemplate: (String) -> Unit,
     onExecuteCommand: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
+    // Live details for the tiles: how many retasks are saved, and the next scheduled run
+    var retaskCount by remember { mutableStateOf<Int?>(null) }
+    var nextSchedule by remember { mutableStateOf<String?>(null) }
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        onFetchRetasks?.invoke()?.onSuccess { retaskCount = it.size }
+        onFetchSchedules?.invoke()?.onSuccess { list ->
+            nextSchedule = list.schedules.filter { it.enabled && !it.nextRunAt.isNullOrBlank() }
+                .minByOrNull { it.nextRunAt!! }
+                ?.let { "Next ${it.nextRunAt!!.substring(11, 16)} · ${it.name.take(16)}" }
+        }
+    }
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -210,161 +225,43 @@ fun CommandPaletteDialog(
                     run {
                         item {
                             Column(modifier = Modifier.fillMaxWidth()) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = "WORKSTATION PANELS & HUBS",
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        letterSpacing = 1.sp,
-                                        color = ElectricCyan
-                                    )
-                                    Text(
-                                        text = "4 VIEWS BUNDLED",
-                                        fontSize = 9.sp,
-                                        fontFamily = FontFamily.Monospace,
-                                        color = Slate500
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.height(8.dp))
-
-                                // 2x2 Grid of Workstation Hubs
+                                // Grouped by what they're for, with live details instead of "OPEN" (the Circuit
+                                // redesign, 2026-10-11)
+                                fun go(open: () -> Unit): () -> Unit = { onDismiss(); open() }
                                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        // 1. Connection & Settings Hub
-                                        WorkstationCard(
-                                            title = "Connection Hub",
-                                            subtitle = "LAN, Remote & Auth Token",
-                                            icon = Icons.Default.Settings,
-                                            accentColor = ElectricCyan,
-                                            modifier = Modifier.weight(1f),
-                                            onClick = {
-                                                onDismiss()
-                                                onOpenSettings()
-                                            }
-                                        )
-
-                                        // 2. 3D Video Studio
-                                        WorkstationCard(
-                                            title = "Video Gallery",
-                                            subtitle = "Stream 3D Renders & TikToks",
-                                            icon = Icons.Default.Videocam,
-                                            accentColor = Purple400,
-                                            modifier = Modifier.weight(1f),
-                                            onClick = {
-                                                onDismiss()
-                                                onOpenMedia()
-                                            }
-                                        )
+                                    HubGroup("Your agent")
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        WorkstationCard("Tasks", "Running, waiting & done", Icons.Default.Task, AmberPending,
+                                            Modifier.weight(1f), detail = stats?.let { "${it.tasksInProgress} running · ${it.tasksBacklog} waiting" },
+                                            onClick = go(onOpenTasks))
+                                        WorkstationCard("Memory", "Facts, recipes & the weekly check", Icons.Default.Memory, EmeraldConnected,
+                                            Modifier.weight(1f), onClick = go(onOpenMemory))
+                                    }
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        WorkstationCard("Retasks", "Repeated without the AI", Icons.Default.Autorenew,
+                                            com.example.ui.theme.Violet300, Modifier.weight(1f),
+                                            detail = retaskCount?.let { "$it saved" }, onClick = go(onOpenRetasks))
+                                        WorkstationCard("Schedules", "Runs on a timer", Icons.Default.Schedule, Cyan400,
+                                            Modifier.weight(1f), detail = nextSchedule, onClick = go(onOpenSchedules))
                                     }
 
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        // 3. Memory Vault
-                                        WorkstationCard(
-                                            title = "Memory Vault",
-                                            subtitle = "SQLite Facts & Long-term Knowledge",
-                                            icon = Icons.Default.Memory,
-                                            accentColor = EmeraldConnected,
-                                            modifier = Modifier.weight(1f),
-                                            onClick = {
-                                                onDismiss()
-                                                onOpenMemory()
-                                            }
-                                        )
-
-                                        // 4. Mission Tasks
-                                        WorkstationCard(
-                                            title = "Mission Tasks",
-                                            subtitle = "Active Queue & Worker Pool",
-                                            icon = Icons.Default.Task,
-                                            accentColor = AmberPending,
-                                            modifier = Modifier.weight(1f),
-                                            onClick = {
-                                                onDismiss()
-                                                onOpenTasks()
-                                            }
-                                        )
+                                    HubGroup("Make")
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        WorkstationCard("Videos", "Treasure-chest renders & TikToks", Icons.Default.Videocam, Purple400,
+                                            Modifier.weight(1f), onClick = go(onOpenMedia))
+                                        WorkstationCard("Repos", "Browse your repos, work on one", Icons.Default.FolderOpen, Green400,
+                                            Modifier.weight(1f), onClick = go(onOpenRepos))
                                     }
+                                    WorkstationCard("AgentWork", "Code jobs on your projects", Icons.Default.Build, ElectricCyan,
+                                        Modifier.fillMaxWidth(), onClick = go(onOpenAgentWork))
 
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        // 5. AgentWork Projects
-                                        WorkstationCard(
-                                            title = "AgentWork",
-                                            subtitle = "Autonomous Code & Git Repos",
-                                            icon = Icons.Default.Build,
-                                            accentColor = ElectricCyan,
-                                            modifier = Modifier.weight(1f),
-                                            onClick = {
-                                                onDismiss()
-                                                onOpenAgentWork()
-                                            }
-                                        )
-
-                                        // 6. Maintenance & Logs
-                                        WorkstationCard(
-                                            title = "Maintenance",
-                                            subtitle = "Backup, Restart & System Logs",
-                                            icon = Icons.Default.CleaningServices,
-                                            accentColor = NeonPurple,
-                                            modifier = Modifier.weight(1f),
-                                            onClick = {
-                                                onDismiss()
-                                                onOpenMaintenance()
-                                            }
-                                        )
-                                    }
-
-                                    // 7. Schedules: videos, reminders and tasks that run by themselves
+                                    HubGroup("The Mini")
                                     WorkstationCard(
-                                        title = "Schedules",
-                                        subtitle = "Videos, reminders & tasks on a timer",
-                                        icon = Icons.Default.Schedule,
-                                        accentColor = Cyan400,
-                                        modifier = Modifier.fillMaxWidth(),
-                                        onClick = {
-                                            onDismiss()
-                                            onOpenSchedules()
-                                        }
-                                    )
-
-                                    // 7b. Retasks: clean computer runs, repeated without the AI for the same task
-                                    WorkstationCard(
-                                        title = "Retasks",
-                                        subtitle = "Clean runs, repeated without the AI",
-                                        icon = Icons.Default.Autorenew,
-                                        accentColor = com.example.ui.theme.Violet300,
-                                        modifier = Modifier.fillMaxWidth(),
-                                        onClick = {
-                                            onDismiss()
-                                            onOpenRetasks()
-                                        }
-                                    )
-
-                                    // 8. Take over: the Mini's screen on the phone, taps replayed there
-                                    WorkstationCard(
-                                        title = "Take over",
-                                        subtitle = if (takeOverViewOnly) "Watch the Mini's screen (view only)"
-                                                   else "Use the Mini's screen from your phone",
-                                        icon = if (takeOverViewOnly) Icons.Default.Visibility else Icons.Default.TouchApp,
-                                        accentColor = AmberPending,
-                                        modifier = Modifier.fillMaxWidth(),
-                                        onClick = {
-                                            onDismiss()
-                                            onOpenTakeOver()
-                                        }
+                                        "Take over",
+                                        if (takeOverViewOnly) "Watch the Mini's screen (view only)" else "Use the Mini's screen from your phone",
+                                        if (takeOverViewOnly) Icons.Default.Visibility else Icons.Default.TouchApp, AmberPending,
+                                        Modifier.fillMaxWidth(), detail = if (takeOverViewOnly) "VIEW ONLY" else null,
+                                        onClick = go(onOpenTakeOver)
                                     )
                                     // View only: the picture without taking control, so a running task keeps going
                                     Row(
@@ -379,19 +276,12 @@ fun CommandPaletteDialog(
                                         )
                                         Text("View only (watch without taking control)", color = Slate300, fontSize = 13.sp)
                                     }
-
-                                    // 9. Repos: GitHub repos like a file explorer; "Work on this" starts a job
-                                    WorkstationCard(
-                                        title = "Repos",
-                                        subtitle = "Browse your GitHub repos and work on one",
-                                        icon = Icons.Default.FolderOpen,
-                                        accentColor = Green400,
-                                        modifier = Modifier.fillMaxWidth(),
-                                        onClick = {
-                                            onDismiss()
-                                            onOpenRepos()
-                                        }
-                                    )
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        WorkstationCard("Connection", "Address & access token", Icons.Default.Settings, ElectricCyan,
+                                            Modifier.weight(1f), onClick = go(onOpenSettings))
+                                        WorkstationCard("Maintenance", "Backup, restart & logs", Icons.Default.CleaningServices, NeonPurple,
+                                            Modifier.weight(1f), onClick = go(onOpenMaintenance))
+                                    }
                                 }
 
                                 Spacer(modifier = Modifier.height(8.dp))
@@ -401,10 +291,11 @@ fun CommandPaletteDialog(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(DeskShapes.card)
-                                        .background(DeepCardAlt)
+                                        .circuitTexture(glow = 0.45f)
                                         .border(
                                             1.dp,
-                                            if (hasUpdateAvailable) ElectricCyan else Slate800,
+                                            if (hasUpdateAvailable) Brush.linearGradient(listOf(ElectricCyan, com.example.ui.theme.Cerulean))
+                                            else Brush.linearGradient(listOf(com.example.ui.theme.Cerulean.copy(alpha = 0.6f), com.example.ui.theme.TaskIndigo.copy(alpha = 0.6f))),
                                             DeskShapes.card
                                         )
                                         .clickable {
@@ -475,8 +366,8 @@ fun CommandPaletteDialog(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(DeskShapes.control)
-                                .background(Slate900)
-                                .border(1.dp, Slate800, DeskShapes.control)
+                                .circuitTexture(glow = 0.45f)
+                                .border(1.dp, Brush.linearGradient(listOf(ElectricCyan.copy(alpha = 0.6f), com.example.ui.theme.Cerulean.copy(alpha = 0.8f))), DeskShapes.control)
                                 .clickable { onDismiss(); onOpenCommands() }
                                 .padding(horizontal = 12.dp, vertical = 10.dp),
                             verticalAlignment = Alignment.CenterVertically
@@ -510,6 +401,7 @@ fun WorkstationCard(
     icon: ImageVector,
     accentColor: Color,
     modifier: Modifier = Modifier,
+    detail: String? = null,          // a live detail ("1 running · 0 waiting"); otherwise a small arrow
     onClick: () -> Unit
 ) {
     Box(
@@ -550,8 +442,11 @@ fun WorkstationCard(
                 }
 
                 Text(
-                    text = "OPEN ↗",
-                    fontSize = 9.sp,
+                    text = detail ?: "↗",
+                    fontSize = if (detail != null) 10.sp else 12.sp,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(start = 6.dp).weight(1f, fill = false),
                     fontFamily = FontFamily.Monospace,
                     fontWeight = FontWeight.Bold,
                     color = accentColor
@@ -575,4 +470,18 @@ fun WorkstationCard(
             )
         }
     }
+}
+
+
+/** A group's label in the hub ("YOUR AGENT", "MAKE", "THE MINI"). */
+@Composable
+private fun HubGroup(text: String) {
+    Text(
+        text = text.uppercase(),
+        fontSize = 11.sp,
+        fontWeight = FontWeight.Bold,
+        letterSpacing = 1.2.sp,
+        color = ElectricCyan,
+        modifier = Modifier.padding(top = 6.dp, start = 2.dp)
+    )
 }

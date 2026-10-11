@@ -172,35 +172,7 @@ fun AgentStatusBar(
 
                 // Action Buttons Bar
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Daemon Wake / Standby Toggle Button
-                    Box(
-                        modifier = Modifier
-                            .clip(DeskShapes.control)
-                            .background(if (isPaused) ElectricCyan.copy(alpha = 0.15f) else Slate800)
-                            .border(1.dp, if (isPaused) ElectricCyan else Slate700, DeskShapes.control)
-                            .clickable { onToggleDaemon() }
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = if (isPaused) Icons.Default.PlayArrow else Icons.Default.PowerSettingsNew,
-                                contentDescription = if (isPaused) "Wake Daemon" else "Standby",
-                                tint = if (isPaused) ElectricCyan else Slate300,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = if (isPaused) "Wake" else "Standby",
-                                color = if (isPaused) ElectricCyan else Slate300,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.width(6.dp))
-
+                    // No Standby button here (the owner, 2026-10-11: overkill); /standby and /wake still work
                     // Tasks Sheet Trigger
                     IconButton(
                         onClick = onOpenTasks,
@@ -240,18 +212,7 @@ fun AgentStatusBar(
                         )
                     }
 
-                    // Settings Hub Trigger
-                    IconButton(
-                        onClick = onOpenSettings,
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Connection Hub",
-                            tint = Slate400,
-                            modifier = Modifier.size(17.dp)
-                        )
-                    }
+                    // No settings gear here either: the Connection Hub is in the menu (The Mini)
                 }
             }
 

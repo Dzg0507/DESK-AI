@@ -34,7 +34,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddComment
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.Badge
@@ -348,16 +347,7 @@ fun ChatScreen(
                             }
                         }
 
-                        IconButton(
-                            onClick = { showConnectionDialog = true },
-                            modifier = Modifier.testTag("settings_button")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.MoreVert,
-                                contentDescription = "Bridge Settings",
-                                tint = Slate400
-                            )
-                        }
+                        // (The three-dot button only opened the Connection Hub; it's in the menu now)
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = SlateDarkBackground.copy(alpha = 0.72f),
@@ -626,6 +616,9 @@ fun ChatScreen(
             },
             onOpenRepos = { showRepos = true },
             onOpenCommands = { showCommandsSheet = true },
+            stats = daemonStats,
+            onFetchRetasks = { viewModel.fetchRetasks() },
+            onFetchSchedules = { viewModel.fetchSchedules() },
             onSelectCommandTemplate = { template ->
                 viewModel.onInputTextChange(template)
             },

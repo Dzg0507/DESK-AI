@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-11 (DeskAI v2.17.0 / Build 71 shipped — tasks folded in chat)
+**Last Updated:** 2026-10-11 (DeskAI v2.18.0 / Build 72 shipped — the menu regrouped, fewer buttons)
 
 ---
 
@@ -14,6 +14,12 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-11: DeskAI v2.18.0 (build 72), the menu regrouped, fewer buttons (by the laptop Claude session, the owner's asks)
+
+- `CommandPaletteDialog`: tiles grouped under Your agent (Tasks, Memory, Retasks, Schedules), Make (Videos, Repos, AgentWork) and The Mini (Take over + View only, Connection, Maintenance), labels via `HubGroup`. `WorkstationCard(detail = ...)` shows a live detail instead of OPEN: tasks running/waiting (new `stats` param), retasks saved and the next schedule (fetched on open via `onFetchRetasks`/`onFetchSchedules`). The updater bar and the commands footer use the circuit texture with gradient edges.
+- Removed at the owner's ask ("a bit overkill"): the Standby/Wake button and the settings gear in `AgentStatusBar`, and the top bar's three-dot button (both only opened the Connection Hub, which is in the menu). /standby and /wake still work.
+- Checked on the owner's phone over adb.
 
 ## Shipped 2026-10-11: DeskAI v2.17.0 (build 71), tasks folded in chat (by the laptop Claude session, the owner's ask: "the chat is basically nothing but tasks")
 
