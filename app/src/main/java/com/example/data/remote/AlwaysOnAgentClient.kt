@@ -2235,6 +2235,7 @@ class AlwaysOnAgentClient {
                                     val propReason = propObj.optString("reason", "")
                                     val propProj = if (propObj.has("project") && !propObj.isNull("project")) propObj.optString("project") else null
                                     val propKind = propObj.optString("kind", "task")
+                                    val propPhone = propObj.optJSONObject("phone")?.toString()
                                     if (propInstr.isNotBlank()) {
                                         parsedProposals.add(
                                             TaskProposal(
@@ -2245,7 +2246,7 @@ class AlwaysOnAgentClient {
                                                 project = propProj,
                                                 isLocal = false,
                                                 state = "pending",
-                                                kind = propKind
+                                                kind = propKind, phone = propPhone
                                             )
                                         )
                                     }

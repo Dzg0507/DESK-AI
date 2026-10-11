@@ -55,6 +55,14 @@ DeskAI repo at `docs/API.md`, updated whenever this one changes.
     `{"status": "success", "message": "Sent: 'Late' to sam@example.com."}` with no `task_id`; `502` with the reason
     if Google refused (nothing was sent). Suggested headers: **✉️ Send email** and **📅 Add event** (apps that don't
     know them show "Suggested Mission", which works the same).
+  - `text` ("Text Jake Griffin (+1 870-555-0199)
+
+<the message>") and `call` ("Call Dentist (870-555-0123)"):
+    the phone does these, not the agent. The proposal carries `"phone": {"name", "number", "body"}` (`body` for a
+    text only). On tap, open Messages (`smsto:<number>` with the message filled in) or the dialer (`tel:<number>`);
+    the owner sends or calls. Then `POST /api/proposals/{id}/run`, which only records that it was opened and returns
+    `{"status": "success", "message": "Opened a text to Jake Griffin."}`. Suggested headers: **💬 Text** and
+    **📞 Call**.
   - **Run:** `POST /api/proposals/{id}/run` returns `{"status": "success", "task_id": "..."}`. For
     `add_project` it returns `{"status": "success", "project": "...", "message": "..."}` with no `task_id`,
     or 400 with the reason.

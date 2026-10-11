@@ -258,6 +258,7 @@ fun MessageBubble(
                                     project = proposal.project,
                                     state = proposal.state,
                                     kind = proposal.kind,
+                                    phone = proposal.phone,
                                     onRun = { onRunProposal(message, proposal) },
                                     onDismiss = { onDismissProposal(message, proposal) },
                                     onRunAndWatch = if (proposal.kind == "computer" && onRunAndWatchProposal != null) {
@@ -414,11 +415,33 @@ fun ProposalCard(
     project: String?,
     state: String,
     kind: String = "task",
+    phone: String? = null,                   // text/call: {"name","number","body"}: this phone opens Messages or the dialer
     onRun: () -> Unit,
     onDismiss: () -> Unit,
     onRunAndWatch: (() -> Unit)? = null      // computer tasks: run it and open Take over in View only
 ) {
     val isAddProject = kind == "add_project"
+    // Texts and calls (2026-10-11): the agent drafts, this phone does it. The tap opens Messages filled in (or the
+    // dialer with the number); the owner sends or calls; then the agent is told it was opened.
+    val isPhone = kind == "text" || kind == "call"
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val openOnPhone: () -> Unit = {
+        try {
+            val o = org.json.JSONObject(phone ?: "{}")
+            val number = o.optString("number")
+            val intent = if (kind == "text") {
+                android.content.Intent(android.content.Intent.ACTION_SENDTO, android.net.Uri.parse("smsto:" + android.net.Uri.encode(number)))
+                    .putExtra("sms_body", o.optString("body"))
+            } else {
+                android.content.Intent(android.content.Intent.ACTION_DIAL, android.net.Uri.parse("tel:" + android.net.Uri.encode(number)))
+            }
+            context.startActivity(intent)
+            onRun()
+        } catch (e: Exception) {
+            android.widget.Toast.makeText(context, "Couldn't open ${if (kind == "text") "Messages" else "the dialer"}: ${e.message}",
+                android.widget.Toast.LENGTH_LONG).show()
+        }
+    }
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -434,10 +457,10 @@ fun ProposalCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = if (isAddProject) "📁" else "🧩", fontSize = 14.sp)
+                    Text(text = when { isAddProject -> "📁"; kind == "text" -> "💬"; kind == "call" -> "📞"; else -> "🧩" }, fontSize = 14.sp)
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = if (isAddProject) "Add AgentWork Project" else "Suggested Mission",
+                        text = when { isAddProject -> "Add AgentWork Project"; kind == "text" -> "Text"; kind == "call" -> "Call"; else -> "Suggested Mission" },
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = ElectricCyan
@@ -492,7 +515,12 @@ fun ProposalCard(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = if (isAddProject) "Project registered in AgentWork ✓" else "Dispatched to worker pool 🚀",
+                            text = when {
+                                isAddProject -> "Project registered in AgentWork ✓"
+                                kind == "text" -> "Opened in Messages ✓"
+                                kind == "call" -> "Opened the dialer ✓"
+                                else -> "Dispatched to worker pool 🚀"
+                            },
                             fontSize = 11.sp,
                             color = EmeraldConnected,
                             fontWeight = FontWeight.SemiBold
@@ -526,7 +554,7 @@ fun ProposalCard(
                                 .weight(1f)
                                 .clip(DeskShapes.chip)
                                 .background(Brush.horizontalGradient(listOf(ElectricCyanGlow, NeonIndigo)))
-                                .clickable { onRun() }
+                                .clickable { if (isPhone) openOnPhone() else onRun() }
                                 .padding(vertical = 8.dp),
                             contentAlignment = Alignment.Center
                         ) {
@@ -539,7 +567,7 @@ fun ProposalCard(
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = if (isAddProject) "Add project" else "Run it",
+                                    text = when { isAddProject -> "Add project"; kind == "text" -> "Open in Messages"; kind == "call" -> "Call"; else -> "Run it" },
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White

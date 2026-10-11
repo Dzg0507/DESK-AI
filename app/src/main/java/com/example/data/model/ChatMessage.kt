@@ -61,7 +61,8 @@ data class ChatMessage(
                             project = if (obj.has("project") && !obj.isNull("project")) obj.optString("project") else null,
                             isLocal = obj.optBoolean("isLocal", false),
                             state = obj.optString("state", "pending"),
-                            kind = obj.optString("kind", "task")
+                            kind = obj.optString("kind", "task"),
+                            phone = obj.optString("phone").takeIf { it.isNotBlank() }
                         )
                     )
                 }
@@ -145,6 +146,7 @@ data class ChatMessage(
                 obj.put("isLocal", p.isLocal)
                 obj.put("state", p.state)
                 obj.put("kind", p.kind)
+                if (p.phone != null) obj.put("phone", p.phone)
                 array.put(obj)
             }
             return array.toString()

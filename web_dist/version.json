@@ -1,7 +1,7 @@
 {
-  "versionCode": 74,
-  "versionName": "2.19.0",
-  "changelog": "DeskAI v2.19.0 (Build 74): task details, redone. Big stat tiles at the top (how long it took, steps, AI requests), and What it did in color by kind of step: opening in cerulean, typing in lime, saving in teal, retask lines in violet, warnings in amber, housekeeping dimmed, with a small legend. (Tasks from before today stay mostly plain.)",
+  "versionCode": 75,
+  "versionName": "2.20.0",
+  "changelog": "DeskAI v2.20.0 (Build 75): texts and calls. Ask the agent to text or call someone (\"text Jake I'll be late\"); a Text or Call card shows who, the number and the message; Open in Messages fills in your Messages app (or Call opens the dialer), and you send it yourself.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24558708
+  "fileSizeBytes": 24558690
 }

@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-11 (DeskAI v2.19.0 / Build 74 shipped — task details: stats, colored log)
+**Last Updated:** 2026-10-11 (DeskAI v2.20.0 / Build 75 shipped — texts and calls)
 
 ---
 
@@ -14,6 +14,13 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-11: DeskAI v2.20.0 (build 75), texts and calls (by the laptop Claude session, the owner's ask)
+
+- API (docs/API.md, synced): proposal kinds `text` and `call` carry `phone: {name, number, body}`. The agent drafts (contact looked up via Connectors); the phone does it.
+- `TaskProposal.phone` (JSON string), parsed in `AlwaysOnAgentClient`, kept in `ChatMessage` (get/serializeProposals).
+- `ProposalCard`: kind text shows "💬 Text" and **Open in Messages** (`ACTION_SENDTO smsto:` + `sms_body`); kind call shows "📞 Call" and **Call** (`ACTION_DIAL tel:`); then `onRun()` posts the run (the agent only records it was opened). Done state: "Opened in Messages ✓" / "Opened the dialer ✓". Nothing is sent by the app or the agent: the owner sends.
+- Not tried end to end on the phone before shipping (would need a chat message as the owner).
 
 ## Shipped 2026-10-11: DeskAI v2.19.0 (build 74), task details: stat tiles and a colored log (by the laptop Claude session, the owner's ask: "basically all white text")
 

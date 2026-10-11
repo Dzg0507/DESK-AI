@@ -234,7 +234,8 @@ data class TaskProposal(
     val expired: Boolean = false,
     val isLocal: Boolean = false,
     val state: String = "pending",
-    val kind: String = "task" // "task" or "add_project"
+    val kind: String = "task", // task, add_project, computer, email, calendar_event, text, call ...
+    val phone: String? = null  // text/call: {"name","number","body"} as JSON; the phone opens Messages or the dialer
 )
 
 data class ChatQuestion(
