@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-11 (DeskAI v2.13.2 / Build 66 shipped — View only fixes)
+**Last Updated:** 2026-10-11 (DeskAI v2.14.0 / Build 67 shipped — Retasks)
 
 ---
 
@@ -14,6 +14,13 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-11: DeskAI v2.14.0 (build 67), Retasks (by the laptop Claude session, at the owner's request)
+
+- Retasks: a clean computer run the agent saved, so the SAME task asked again (same wording) is repeated without the AI. Answers are read fresh (a question repeats up to the reading point), writing is written fresh. API: `GET /api/computer/retasks`, `DELETE /api/computer/retasks/{id}` (docs/API.md, synced).
+- `RetasksSheet.kt` (new, styled like SchedulesSheet): a card per retask (wording, whole task or up to the reading point, steps, uses, times off course, saved/last used), two-tap delete. Opened from the menu's new Retasks card (after Schedules). Model `Retask`; client `getRetasks`/`deleteRetask` (via scheduleCall).
+- `ActivityLog.kt`: a new level `retask` (Violet300, mark ↻) for the tool's retask lines: saved as a retask, repeating one, each repeated step. A replay going off course stays `warn`. Used by the task card's "What it did" and View only's narration.
+- Not tried on the phone before shipping.
 
 ## Shipped 2026-10-11: DeskAI v2.13.2 (build 66), View only fixes (by the laptop Claude session, at the owner's request)
 

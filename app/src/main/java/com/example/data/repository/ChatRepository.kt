@@ -205,6 +205,13 @@ class ChatRepository(
     suspend fun runScheduleNow(id: Int): Result<String> =
         withContext(Dispatchers.IO) { agentClient.runScheduleNow(getActiveConfig(), id) }
 
+    // Retasks: clean computer runs the agent repeats without the AI for the same task
+    suspend fun fetchRetasks(): Result<List<com.example.data.model.Retask>> =
+        withContext(Dispatchers.IO) { agentClient.getRetasks(getActiveConfig()) }
+
+    suspend fun deleteRetask(id: String): Result<Unit> =
+        withContext(Dispatchers.IO) { agentClient.deleteRetask(getActiveConfig(), id) }
+
     suspend fun fetchAgentWorkProjects(): List<AgentWorkProject> = withContext(Dispatchers.IO) {
         val config = getActiveConfig()
         agentClient.getAgentWorkProjects(config)

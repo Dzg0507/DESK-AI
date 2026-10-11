@@ -44,9 +44,15 @@ data class CanvasRef(
 data class SharedDownload(val file: java.io.File, val mime: String, val files: Int, val leftOut: Int)
 
 /** One line of what a computer task did, in plain words ("Opening Notepad", "Pressing Enter"): level is info, ok,
- *  warn or error. From the View only screen's activity (GET /api/computer/takeover/activity "log") and a finished
+ *  warn, error or retask. From the View only screen's activity (GET /api/computer/takeover/activity "log") and a finished
  *  task's "activity_log" (2026-10-10, the owner: see what the agent is doing, and a log with any errors). */
 data class ActivityLine(val time: String, val step: String?, val text: String, val level: String)
+
+/** A retask: a clean computer run the agent saved, so the SAME task asked again is repeated without the AI. kind is
+ *  "task" (repeated whole) or "info" (repeated up to the reading point; the answer is always read fresh). Written
+ *  text is never repeated, it's written fresh. (GET /api/computer/retasks, 2026-10-11.) */
+data class Retask(val id: String, val goal: String, val kind: String, val steps: Int, val uses: Int, val fails: Int,
+                  val created: String?, val lastUsed: String?)
 
 fun parseActivityLog(arr: org.json.JSONArray?): List<ActivityLine> =
     if (arr == null) emptyList() else (0 until arr.length()).mapNotNull { i ->

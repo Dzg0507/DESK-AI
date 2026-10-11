@@ -157,6 +157,7 @@ fun ChatScreen(
     var showCommandPalette by remember { mutableStateOf(false) }
     var showAgentWorkSheet by remember { mutableStateOf(false) }
     var showSchedulesSheet by remember { mutableStateOf(false) }
+    var showRetasksSheet by remember { mutableStateOf(false) }
     var showMaintenanceSheet by remember { mutableStateOf(false) }
     var showNeedsYou by remember { mutableStateOf(false) }
     var showTakeOver by remember { mutableStateOf(false) }
@@ -554,6 +555,7 @@ fun ChatScreen(
             onOpenAgentWork = { showAgentWorkSheet = true },
             onOpenMaintenance = { showMaintenanceSheet = true },
             onOpenSchedules = { showSchedulesSheet = true },
+            onOpenRetasks = { showRetasksSheet = true },
             onOpenTakeOver = { takeOverFor = null; takeOverWatching = takeOverViewOnly; showTakeOver = true },
             takeOverViewOnly = takeOverViewOnly,
             onTakeOverViewOnlyChange = { on ->
@@ -662,6 +664,15 @@ fun ChatScreen(
             onUpdate = { id, fields -> viewModel.updateSchedule(id, fields) },
             onDelete = { id -> viewModel.deleteSchedule(id) },
             onRunNow = { id -> viewModel.runScheduleNow(id) }
+        )
+    }
+
+    // Retasks: clean computer runs the agent repeats without the AI when the same task is asked again
+    if (showRetasksSheet) {
+        com.example.ui.dialogs.RetasksSheet(
+            onDismiss = { showRetasksSheet = false },
+            onFetch = { viewModel.fetchRetasks() },
+            onDelete = { id -> viewModel.deleteRetask(id) }
         )
     }
 

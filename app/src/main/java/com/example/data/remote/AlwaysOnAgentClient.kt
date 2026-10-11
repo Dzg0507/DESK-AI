@@ -998,6 +998,24 @@ class AlwaysOnAgentClient {
     suspend fun runScheduleNow(config: BridgeConfig, id: Int): Result<String> =
         scheduleCall(config, "POST", "/api/schedules/$id/run").map { it.optString("result", "done") }
 
+    /** Retasks: clean computer runs repeated without the AI when the same task is asked again (newest first). */
+    suspend fun getRetasks(config: BridgeConfig): Result<List<com.example.data.model.Retask>> =
+        scheduleCall(config, "GET", "/api/computer/retasks").map { json ->
+            val arr = json.optJSONArray("retasks") ?: JSONArray()
+            (0 until arr.length()).map { i ->
+                val r = arr.getJSONObject(i)
+                fun opt(k: String) = r.optString(k).takeIf { it.isNotBlank() && it != "null" }
+                com.example.data.model.Retask(
+                    id = r.optString("id"), goal = r.optString("goal"), kind = r.optString("kind", "task"),
+                    steps = r.optInt("steps"), uses = r.optInt("uses"), fails = r.optInt("fails"),
+                    created = opt("created"), lastUsed = opt("last_used")
+                )
+            }
+        }
+
+    suspend fun deleteRetask(config: BridgeConfig, id: String): Result<Unit> =
+        scheduleCall(config, "DELETE", "/api/computer/retasks/$id").map { }
+
     suspend fun runBackup(config: BridgeConfig): Result<String> = withContext(Dispatchers.IO) {
         try {
             executeWithFailover(config) { baseUrl ->

@@ -1,7 +1,7 @@
 {
-  "versionCode": 66,
-  "versionName": "2.13.2",
-  "changelog": "DeskAI v2.13.2 (Build 66): View only fixes. The keyboard no longer pops up in View only, and a Needs you request opened there fits the sideways screen: a smaller screenshot, the Send arrow inside the answer box (and on the keyboard), and room above the keyboard.",
+  "versionCode": 67,
+  "versionName": "2.14.0",
+  "changelog": "DeskAI v2.14.0 (Build 67): Retasks. A computer task that ran clean is saved, and the same task asked again is repeated without the AI (answers and anything it writes are always fresh). See and delete them from the menu's new Retasks card. In a task's log and View only, retask lines (saved as a retask, repeating one, each repeated step) are violet with a ↻.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24460404
+  "fileSizeBytes": 24493204
 }

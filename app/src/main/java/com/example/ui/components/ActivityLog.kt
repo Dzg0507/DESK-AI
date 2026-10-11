@@ -21,12 +21,15 @@ import com.example.ui.theme.EmeraldConnected
 import com.example.ui.theme.RoseError
 import com.example.ui.theme.Slate200
 import com.example.ui.theme.Slate500
+import com.example.ui.theme.Violet300
 
-/** The color and mark for a line's level: errors red ✖, warnings amber ⚠, the finish green ✓. */
+/** The color and mark for a line's level: errors red ✖, warnings amber ⚠, the finish green ✓, and a retask's own
+ *  lines violet ↻ (saved as a retask, repeating one, each repeated step; the owner's ask, 2026-10-11). */
 fun activityColor(level: String): Color = when (level) {
     "error" -> RoseError
     "warn" -> AmberPending
     "ok" -> EmeraldConnected
+    "retask" -> Violet300
     else -> Slate200
 }
 
@@ -34,6 +37,7 @@ private fun mark(level: String): String = when (level) {
     "error" -> "✖ "
     "warn" -> "⚠ "
     "ok" -> "✓ "
+    "retask" -> "↻ "
     else -> ""
 }
 

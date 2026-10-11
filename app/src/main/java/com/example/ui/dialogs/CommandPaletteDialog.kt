@@ -23,6 +23,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Autorenew
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Dashboard
@@ -110,6 +111,7 @@ fun CommandPaletteDialog(
     onOpenAgentWork: () -> Unit = {},
     onOpenMaintenance: () -> Unit = {},
     onOpenSchedules: () -> Unit = {},
+    onOpenRetasks: () -> Unit = {},
     onOpenTakeOver: () -> Unit = {},
     takeOverViewOnly: Boolean = false,
     onTakeOverViewOnlyChange: (Boolean) -> Unit = {},
@@ -566,6 +568,19 @@ fun CommandPaletteDialog(
                                         onClick = {
                                             onDismiss()
                                             onOpenSchedules()
+                                        }
+                                    )
+
+                                    // 7b. Retasks: clean computer runs, repeated without the AI for the same task
+                                    WorkstationCard(
+                                        title = "Retasks",
+                                        subtitle = "Clean runs, repeated without the AI",
+                                        icon = Icons.Default.Autorenew,
+                                        accentColor = com.example.ui.theme.Violet300,
+                                        modifier = Modifier.fillMaxWidth(),
+                                        onClick = {
+                                            onDismiss()
+                                            onOpenRetasks()
                                         }
                                     )
 

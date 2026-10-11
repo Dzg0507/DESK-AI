@@ -534,6 +534,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     suspend fun createSchedule(fields: org.json.JSONObject) = repository.createSchedule(fields)
     suspend fun updateSchedule(id: Int, fields: org.json.JSONObject) = repository.updateSchedule(id, fields)
     suspend fun deleteSchedule(id: Int) = repository.deleteSchedule(id)
+    suspend fun fetchRetasks() = repository.fetchRetasks()
+    suspend fun deleteRetask(id: String) = repository.deleteRetask(id)
     suspend fun runScheduleNow(id: Int) = repository.runScheduleNow(id)
 
     suspend fun fetchAgentWorkProjects(): List<com.example.data.model.AgentWorkProject> {
