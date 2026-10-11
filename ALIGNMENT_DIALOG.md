@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-11 (DeskAI v2.16.0 / Build 69 shipped — the Circuit look, part 1)
+**Last Updated:** 2026-10-11 (DeskAI v2.16.1 / Build 70 shipped — hex pattern in the menu tiles)
 
 ---
 
@@ -14,6 +14,10 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-11: DeskAI v2.16.1 (build 70), hex pattern in the menu tiles (by the laptop Claude session, the owner's ask)
+
+- `WorkstationCard`: `circuitTexture(glow = 0.45f)` is the tile's base (the same hex circuit as the background; solid, so the glow only shows outside), with the tile's own color washed over it.
 
 ## Shipped 2026-10-11: DeskAI v2.16.0 (build 69), the Circuit look part 1 (by the laptop Claude session, the owner's design pick)
 

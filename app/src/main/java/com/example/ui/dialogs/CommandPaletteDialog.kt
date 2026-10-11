@@ -517,8 +517,10 @@ fun WorkstationCard(
             // each tile glows in its own color, running into deep cerulean (the Circuit look, 2026-10-11)
             .shadow(10.dp, DeskShapes.card, ambientColor = accentColor, spotColor = accentColor)
             .clip(DeskShapes.card)
-            .background(DeepCard)          // solid, so the glow underneath only shows outside the tile
-            .background(Brush.linearGradient(listOf(accentColor.copy(alpha = 0.16f), DeepCard.copy(alpha = 0.85f),
+            // the same hex circuit as the app's background (the owner's ask), solid so the glow only shows outside,
+            // with the tile's own color washed over it
+            .circuitTexture(glow = 0.45f)
+            .background(Brush.linearGradient(listOf(accentColor.copy(alpha = 0.20f), Color.Transparent,
                                                     com.example.ui.theme.Cerulean.copy(alpha = 0.22f))))
             .border(1.dp, Brush.linearGradient(listOf(accentColor.copy(alpha = 0.85f), com.example.ui.theme.Cerulean.copy(alpha = 0.8f))),
                     DeskShapes.card)
