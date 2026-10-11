@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-11 (DeskAI v2.18.1 / Build 73 shipped — bigger status buttons)
+**Last Updated:** 2026-10-11 (DeskAI v2.19.0 / Build 74 shipped — task details: stats, colored log)
 
 ---
 
@@ -14,6 +14,13 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-11: DeskAI v2.19.0 (build 74), task details: stat tiles and a colored log (by the laptop Claude session, the owner's ask: "basically all white text")
+
+- API: a computer task's `activity_log` lines now carry `kind`: open, type, click, save, plan, or "" (docs/API.md, synced). The tool sets it (AgentComputerUse activity.kind_of); the agent keeps it.
+- `ActivityLine.kind`; `ActivityLog.kt`: an `info` line is colored by its kind (`kindColor`: open CeruleanText, type lime #9DFF3A, save teal #2EE6B8, plan dimmed Slate500, click/other Slate200) with a mark (↗ ⌨ ⤓); other levels keep their colors (warn, error, ok, retask). `ActivityLogList` adds a legend of the colors present.
+- `TaskDetailsSheet`: stat tiles at the top: took, steps (distinct steps in the log), AI requests (when the result says so).
+- Checked on the owner's phone with a fresh task (task-168).
 
 ## Shipped 2026-10-11: DeskAI v2.18.1 (build 73), bigger status buttons (by the laptop Claude session, the owner's ask)
 

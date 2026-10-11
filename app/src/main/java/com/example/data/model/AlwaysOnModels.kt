@@ -46,7 +46,8 @@ data class SharedDownload(val file: java.io.File, val mime: String, val files: I
 /** One line of what a computer task did, in plain words ("Opening Notepad", "Pressing Enter"): level is info, ok,
  *  warn, error or retask. From the View only screen's activity (GET /api/computer/takeover/activity "log") and a finished
  *  task's "activity_log" (2026-10-10, the owner: see what the agent is doing, and a log with any errors). */
-data class ActivityLine(val time: String, val step: String?, val text: String, val level: String)
+data class ActivityLine(val time: String, val step: String?, val text: String, val level: String,
+                        val kind: String = "")   // open, type, click, save, plan ("" on older tasks)
 
 /** A retask: a clean computer run the agent saved, so the SAME task asked again is repeated without the AI. kind is
  *  "task" (repeated whole) or "info" (repeated up to the reading point; the answer is always read fresh). Written
@@ -72,7 +73,7 @@ fun parseActivityLog(arr: org.json.JSONArray?): List<ActivityLine> =
         val o = arr.optJSONObject(i) ?: return@mapNotNull null
         val text = o.optString("text").takeIf { it.isNotBlank() } ?: return@mapNotNull null
         ActivityLine(o.optString("t"), o.opt("step")?.takeIf { it != org.json.JSONObject.NULL }?.toString(), text,
-                     o.optString("level", "info"))
+                     o.optString("level", "info"), o.optString("kind", ""))
     }
 
 /** One item of the weekly memory check (GET /api/memory/review): op "add" (a new fact; note = the words it came

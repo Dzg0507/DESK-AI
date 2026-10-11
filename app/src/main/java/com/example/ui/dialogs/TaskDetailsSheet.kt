@@ -192,6 +192,33 @@ fun TaskDetailsSheet(
                         )
                     }
 
+                    // The numbers at a glance (the Circuit redesign, 2026-10-11): how long, how many steps, AI requests
+                    val stats = listOfNotNull(
+                        durationOf(t.startedAt, t.completedAt)?.let { it to "took" },
+                        t.activityLog.mapNotNull { it.step }.distinct().size.takeIf { it > 0 }?.let { "$it" to if (it == 1) "step" else "steps" },
+                        Regex("(\\d+) AI requests?").find(t.outputSummary ?: "")?.groupValues?.get(1)?.let { it to "AI requests" }
+                    )
+                    if (stats.isNotEmpty()) {
+                        androidx.compose.foundation.layout.Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+                            stats.forEachIndexed { i, (value, label) ->
+                                val c = if (i % 2 == 0) com.example.ui.theme.TerminalGreen else com.example.ui.theme.CeruleanText
+                                Column(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(com.example.ui.theme.DeskShapes.card)
+                                        .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(c.copy(alpha = 0.14f), com.example.ui.theme.TaskIndigo.copy(alpha = 0.14f))))
+                                        .border(1.dp, c.copy(alpha = 0.55f), com.example.ui.theme.DeskShapes.card)
+                                        .padding(horizontal = 10.dp, vertical = 8.dp)
+                                ) {
+                                    Text(value, color = com.example.ui.theme.PhosphorMint, fontSize = 18.sp,
+                                         fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                                         style = androidx.compose.ui.text.TextStyle(shadow = androidx.compose.ui.graphics.Shadow(c.copy(alpha = 0.7f), blurRadius = 12f)))
+                                    Text(label, color = Slate400, fontSize = 11.sp)
+                                }
+                            }
+                        }
+                    }
+
                     DetailSection("WHO STARTED IT", accent = NeonPurple) {
                         DetailText(friendlySource(t.source))
                     }

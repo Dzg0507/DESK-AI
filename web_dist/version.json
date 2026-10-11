@@ -1,7 +1,7 @@
 {
-  "versionCode": 73,
-  "versionName": "2.18.1",
-  "changelog": "DeskAI v2.18.1 (Build 73): bigger Tasks, Memory and Videos buttons on the home screen, each lit in its menu color.",
+  "versionCode": 74,
+  "versionName": "2.19.0",
+  "changelog": "DeskAI v2.19.0 (Build 74): task details, redone. Big stat tiles at the top (how long it took, steps, AI requests), and What it did in color by kind of step: opening in cerulean, typing in lime, saving in teal, retask lines in violet, warnings in amber, housekeeping dimmed, with a small legend. (Tasks from before today stay mostly plain.)",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24558697
+  "fileSizeBytes": 24558708
 }
