@@ -243,14 +243,20 @@ fun ChatInputBar(
             ) {
                 if (text.isEmpty()) {
                     Text(
-                        text = if (attachments.isNotEmpty()) "Ask about the file…" else "Talk to AlwaysOnAgent or type /help...",
+                        text = if (attachments.isNotEmpty()) "Ask about the file…" else "Talk to AlwaysOnAgent, or type / for commands",
                         color = Slate500,
                         fontSize = 14.sp
                     )
                 }
+                // The cursor goes to the end when the text is set from outside (a slash command picked from the
+                // pop-up: "/" becomes "/remember ", and typing carries on after it)
+                var field by remember { mutableStateOf(androidx.compose.ui.text.input.TextFieldValue(text)) }
+                if (field.text != text) {
+                    field = androidx.compose.ui.text.input.TextFieldValue(text, androidx.compose.ui.text.TextRange(text.length))
+                }
                 BasicTextField(
-                    value = text,
-                    onValueChange = onTextChange,
+                    value = field,
+                    onValueChange = { field = it; if (it.text != text) onTextChange(it.text) },
                     textStyle = TextStyle(
                         color = Slate50,
                         fontSize = 14.sp

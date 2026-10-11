@@ -86,17 +86,6 @@ import com.example.ui.theme.Slate500
 import com.example.ui.theme.Slate800
 import com.example.ui.theme.Slate900
 
-data class CommandEntry(
-    val command: String,
-    val template: String,
-    val title: String,
-    val description: String,
-    val category: String,
-    val icon: ImageVector,
-    val color: Color,
-    val isDirectAction: Boolean = false
-)
-
 @Composable
 fun CommandPaletteDialog(
     serverUrl: String,
@@ -116,178 +105,11 @@ fun CommandPaletteDialog(
     takeOverViewOnly: Boolean = false,
     onTakeOverViewOnlyChange: (Boolean) -> Unit = {},
     onOpenRepos: () -> Unit = {},
+    onOpenCommands: () -> Unit = {},
     onSelectCommandTemplate: (String) -> Unit,
     onExecuteCommand: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var searchQuery by remember { mutableStateOf("") }
-
-    val allCommands = remember {
-        listOf(
-            // Daemon controls
-            CommandEntry(
-                command = "/status",
-                template = "/status",
-                title = "System Telemetry & Status",
-                description = "Inspect daemon state, CPU/RAM, and task counts",
-                category = "Daemon Controls",
-                icon = Icons.Default.Terminal,
-                color = ElectricCyan,
-                isDirectAction = true
-            ),
-            CommandEntry(
-                command = "/wake",
-                template = "/wake",
-                title = "Awaken Daemon",
-                description = "Ignite AlwaysOnAgent background worker pool",
-                category = "Daemon Controls",
-                icon = Icons.Default.PlayArrow,
-                color = EmeraldConnected,
-                isDirectAction = true
-            ),
-            CommandEntry(
-                command = "/standby",
-                template = "/standby",
-                title = "Daemon Standby",
-                description = "Sleep background daemon (0% host CPU/GPU)",
-                category = "Daemon Controls",
-                icon = Icons.Default.PowerSettingsNew,
-                color = Slate400,
-                isDirectAction = true
-            ),
-            CommandEntry(
-                command = "/engine",
-                template = "/engine auto",
-                title = "Switch Engine Pipeline",
-                description = "Configure auto, antigravity, cloud, or ollama",
-                category = "Daemon Controls",
-                icon = Icons.Default.Settings,
-                color = NeonIndigo,
-                isDirectAction = false
-            ),
-
-            // Creative & Media
-            CommandEntry(
-                command = "/video",
-                template = "/video \"Daily Affirmation\"",
-                title = "Render 3D Card-Flip Video",
-                description = "Dispatches local 3D motion video rendering pipeline",
-                category = "Media & Automation",
-                icon = Icons.Default.Videocam,
-                color = Purple400,
-                isDirectAction = false
-            ),
-            CommandEntry(
-                command = "/tiktok",
-                template = "/tiktok \"Daily Affirmation\"",
-                title = "Render & Auto-Post to TikTok",
-                description = "Renders 3D video and uploads to @Thevibecheckproject",
-                category = "Media & Automation",
-                icon = Icons.Default.Videocam,
-                color = RoseError,
-                isDirectAction = false
-            ),
-            CommandEntry(
-                command = "/image",
-                template = "/image cyberpunk desk setup with glowing cyan neon, 8k",
-                title = "Synthesize AI Image",
-                description = "Generate visual concept or graphic assets",
-                category = "Media & Automation",
-                icon = Icons.Default.Terminal,
-                color = ElectricCyan,
-                isDirectAction = false
-            ),
-
-            // Memory & Knowledge
-            CommandEntry(
-                command = "/memory",
-                template = "/memory",
-                title = "Query Memory Vault",
-                description = "Fetch long-term associative memory & profile",
-                category = "Memory & Knowledge",
-                icon = Icons.Default.Memory,
-                color = EmeraldConnected,
-                isDirectAction = true
-            ),
-            CommandEntry(
-                command = "/remember",
-                template = "/remember ",
-                title = "Store Permanent Fact",
-                description = "Commit a persistent fact to the host SQLite database",
-                category = "Memory & Knowledge",
-                icon = Icons.Default.Memory,
-                color = EmeraldConnected,
-                isDirectAction = false
-            ),
-            CommandEntry(
-                command = "/forget",
-                template = "/forget #",
-                title = "Erase Fact by ID",
-                description = "Permanently remove a memory fact by its #ID",
-                category = "Memory & Knowledge",
-                icon = Icons.Default.Memory,
-                color = RoseError,
-                isDirectAction = false
-            ),
-
-            // Task Orchestration
-            CommandEntry(
-                command = "/tasks",
-                template = "/status",
-                title = "List Background Tasks",
-                description = "Inspect active missions in the worker pool",
-                category = "Task Orchestration",
-                icon = Icons.Default.Task,
-                color = AmberPending,
-                isDirectAction = true
-            ),
-            CommandEntry(
-                command = "/cancel",
-                template = "/cancel ",
-                title = "Abort Mission / Task",
-                description = "Cancel an in-progress background mission by task ID",
-                category = "Task Orchestration",
-                icon = Icons.Default.Close,
-                color = RoseError,
-                isDirectAction = false
-            ),
-            CommandEntry(
-                command = "/retry",
-                template = "/retry ",
-                title = "Retry Failed Mission",
-                description = "Re-enqueue a failed task back to the worker pool",
-                category = "Task Orchestration",
-                icon = Icons.Default.PlayArrow,
-                color = AmberPending,
-                isDirectAction = false
-            ),
-            CommandEntry(
-                command = "/help",
-                template = "/help",
-                title = "Full Mission Manual",
-                description = "Display complete guide & instructions",
-                category = "System & Support",
-                icon = Icons.Default.Terminal,
-                color = ElectricCyan,
-                isDirectAction = true
-            )
-        )
-    }
-
-    val filteredCommands = remember(searchQuery) {
-        if (searchQuery.isBlank()) {
-            allCommands
-        } else {
-            val q = searchQuery.trim().lowercase()
-            allCommands.filter {
-                it.command.lowercase().contains(q) ||
-                it.title.lowercase().contains(q) ||
-                it.description.lowercase().contains(q) ||
-                it.category.lowercase().contains(q)
-            }
-        }
-    }
-
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -383,54 +205,6 @@ fun CommandPaletteDialog(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // Search Filter Bar
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    placeholder = {
-                        Text(
-                            "Search commands, actions, or views...",
-                            color = Slate500,
-                            fontSize = 13.sp
-                        )
-                    },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = null,
-                            tint = ElectricCyan,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    },
-                    trailingIcon = {
-                        if (searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { searchQuery = "" }) {
-                                Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = "Clear search",
-                                    tint = Slate400,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                        }
-                    },
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = DeepCard,
-                        unfocusedContainerColor = DeepPanel,
-                        focusedBorderColor = ElectricCyan,
-                        unfocusedBorderColor = Slate800,
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Slate200
-                    ),
-                    shape = DeskShapes.card,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp)
-                )
-
-                Spacer(modifier = Modifier.height(14.dp))
-
                 LazyColumn(
                     modifier = Modifier
                         .weight(1f)
@@ -438,7 +212,7 @@ fun CommandPaletteDialog(
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     // SECTION 1: BUNDLED WORKSTATION HUBS (Show when search is empty or matches)
-                    if (searchQuery.isBlank() || "settings views memory tasks video updater connection".contains(searchQuery.lowercase())) {
+                    run {
                         item {
                             Column(modifier = Modifier.fillMaxWidth()) {
                                 Row(
@@ -699,29 +473,34 @@ fun CommandPaletteDialog(
                         }
                     }
 
-                    // SECTION 2: COMMANDS LIST
+                    // Slash commands live in their own pop-up now (the owner, 2026-10-11): typing / in chat shows
+                    // them, and /? or /help (or this button) opens the full list
                     item {
-                        Text(
-                            text = "INTERACTIVE SLASH COMMANDS (${filteredCommands.size})",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.sp,
-                            color = Slate400
-                        )
-                    }
-
-                    items(filteredCommands) { cmd ->
-                        CommandItemRow(
-                            entry = cmd,
-                            onClick = {
-                                onDismiss()
-                                if (cmd.isDirectAction) {
-                                    onExecuteCommand(cmd.command)
-                                } else {
-                                    onSelectCommandTemplate(cmd.template)
-                                }
-                            }
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(DeskShapes.control)
+                                .background(Slate900)
+                                .border(1.dp, Slate800, DeskShapes.control)
+                                .clickable { onDismiss(); onOpenCommands() }
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Type / in chat for commands, or /? and /help for the full list",
+                                fontSize = 12.sp,
+                                color = Slate400,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "COMMANDS ↗",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily.Monospace,
+                                color = ElectricCyan
+                            )
+                        }
                     }
                 }
             }
@@ -792,83 +571,6 @@ fun WorkstationCard(
                 color = Slate400,
                 maxLines = 1
             )
-        }
-    }
-}
-
-@Composable
-fun CommandItemRow(
-    entry: CommandEntry,
-    onClick: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(DeskShapes.control)
-            .background(Slate900)
-            .border(1.dp, Slate800, DeskShapes.control)
-            .clickable { onClick() }
-            .padding(horizontal = 12.dp, vertical = 10.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .clip(DeskShapes.chip)
-                        .background(entry.color.copy(alpha = 0.12f))
-                        .border(1.dp, entry.color.copy(alpha = 0.35f), DeskShapes.chip)
-                        .padding(horizontal = 7.dp, vertical = 3.dp)
-                ) {
-                    Text(
-                        text = entry.command,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.Monospace,
-                        color = entry.color
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(10.dp))
-
-                Column {
-                    Text(
-                        text = entry.title,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.White
-                    )
-                    Text(
-                        text = entry.description,
-                        fontSize = 10.sp,
-                        color = Slate400,
-                        maxLines = 1
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Box(
-                modifier = Modifier
-                    .clip(DeskShapes.chip)
-                    .background(Slate800)
-                    .padding(horizontal = 6.dp, vertical = 3.dp)
-            ) {
-                Text(
-                    text = if (entry.isDirectAction) "EXECUTE ▶" else "INSERT ✎",
-                    fontSize = 9.sp,
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.Bold,
-                    color = if (entry.isDirectAction) EmeraldConnected else Slate300
-                )
-            }
         }
     }
 }

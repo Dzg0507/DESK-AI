@@ -54,6 +54,19 @@ data class ActivityLine(val time: String, val step: String?, val text: String, v
 data class Retask(val id: String, val goal: String, val kind: String, val steps: Int, val uses: Int, val fails: Int,
                   val created: String?, val lastUsed: String?)
 
+/** The retasks that fit what was typed after /retask: its whole wording (spacing and capitals aside), or else the
+ *  ones sharing the most words with it ("arkansas", "w-9 page"). Empty text: none. */
+fun matchRetasks(all: List<Retask>, typed: String): List<Retask> {
+    fun norm(s: String) = s.lowercase().split(Regex("\\s+")).filter { it.isNotBlank() }.joinToString(" ").trimEnd('.', '!', '?', ' ')
+    val q = norm(typed)
+    if (q.isBlank()) return emptyList()
+    all.firstOrNull { norm(it.goal) == q }?.let { return listOf(it) }
+    val words = q.split(" ").filter { it.length >= 2 }
+    val scored = all.map { r -> r to words.count { norm(r.goal).contains(it) } }.filter { it.second > 0 }
+    val best = scored.maxOfOrNull { it.second } ?: return emptyList()
+    return scored.filter { it.second == best }.map { it.first }
+}
+
 fun parseActivityLog(arr: org.json.JSONArray?): List<ActivityLine> =
     if (arr == null) emptyList() else (0 until arr.length()).mapNotNull { i ->
         val o = arr.optJSONObject(i) ?: return@mapNotNull null

@@ -1016,6 +1016,10 @@ class AlwaysOnAgentClient {
     suspend fun deleteRetask(config: BridgeConfig, id: String): Result<Unit> =
         scheduleCall(config, "DELETE", "/api/computer/retasks/$id").map { }
 
+    /** Runs a retask now (/retask): the agent queues it as a computer task with its exact wording. The task's id. */
+    suspend fun runRetask(config: BridgeConfig, id: String): Result<String> =
+        scheduleCall(config, "POST", "/api/computer/retasks/$id/run").map { it.optString("task_id") }
+
     suspend fun runBackup(config: BridgeConfig): Result<String> = withContext(Dispatchers.IO) {
         try {
             executeWithFailover(config) { baseUrl ->
@@ -2044,35 +2048,39 @@ class AlwaysOnAgentClient {
                 """.trimIndent())
             }
 
-            "/help", "/start", "/briefing" -> {
-                onChunk("""
-                    # 🛰️ DeskAI × AlwaysOnAgent (v2.1)
-                    ### Autonomous Computer Companion & Mobile Mission Control
-                    
-                    • **Tap `[/]` on the input bar** to open the **Command Deck** with all workstation hubs:
-                      - ⚙️ **Connection Hub** (Network routing & credentials)
-                      - 🎬 **3D Video Studio** (Watch 3D card-flip TikToks)
-                      - 🧠 **Memory Vault** (SQLite associative knowledge)
-                      - 📋 **Mission Tasks** (Active tasks & worker backlog)
-                      - 🔄 **In-App Updater** (Direct GitHub OTA updates)
-                    
-                    ### ⚡ Interactive Slash Directives:
-                    • `/status` - Current daemon state, pulse & tasks
-                    • `/wake` - Wake daemon from standby (0% -> Active)
-                    • `/standby` - Standby mode (0% CPU/GPU)
-                    • `/video [quote]` - Render 3D Card Flip Video
-                    • `/tiktok [quote]` - Render & Auto-post to TikTok
-                    • `/image [prompt]` - AI Image generation
-                    • `/engine <auto|antigravity|cloud|ollama>` - Select execution engine
-                    • `/memory` - Inspect stored facts & profile
-                    • `/remember <fact>` - Save permanent memory
-                    • `/forget <#id>` - Erase memory fact
-                    • `/cancel <id>` - Abort running task
-                    • `/retry <id>` - Retry failed task
-                    • `/hud` - the server's address
-                    
-                    💡 Or just type any question or instruction to chat directly!
-                """.trimIndent())
+            "/retask", "/retasks" -> {
+                // Runs a saved retask: its wording, or words from it ("/retask arkansas"). In chat, typing
+                // "/retask " shows the list above the chat box to tap (2026-10-11, the owner's ask)
+                val list = getRetasks(config).getOrElse { onChunk("⚠️ Couldn't get your retasks: ${it.message}"); return }
+                if (list.isEmpty()) {
+                    onChunk("No retasks yet. When a computer task runs clean, it's saved as one and shows up here.")
+                    return
+                }
+                val picks = com.example.data.model.matchRetasks(list, arg)
+                if (arg.isBlank() || picks.size != 1) {
+                    val shown = if (arg.isBlank() || picks.isEmpty()) list else picks
+                    val head = when {
+                        arg.isBlank() -> "↻ **Your retasks.** Type `/retask` and tap one, or `/retask <a few words from it>`:"
+                        picks.isEmpty() -> "↻ No retask matches \"$arg\". Here they all are:"
+                        else -> "↻ A few retasks match \"$arg\". Which one?"
+                    }
+                    onChunk(head + "\n" + shown.take(10).joinToString("\n") { "• ${it.goal}" })
+                    return
+                }
+                val r = picks[0]
+                val res = runRetask(config, r.id)
+                if (res.isSuccess) {
+                    lastReceivedTaskId = res.getOrNull()
+                    onChunk("↻ **Running the retask:** ${r.goal}\n\nIts steps are repeated without the AI" +
+                            if (r.kind == "info") "; the answer is read fresh." else ".")
+                } else {
+                    onChunk("⚠️ Couldn't run it: ${res.exceptionOrNull()?.message}")
+                }
+            }
+
+            "/help", "/?", "/commands", "/start", "/briefing" -> {
+                // The same list as the Commands pop-up (SlashCommands); in chat, /? and /help open the pop-up
+                onChunk(com.example.data.model.SlashCommands.helpText())
             }
 
             else -> {

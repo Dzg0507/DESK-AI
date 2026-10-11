@@ -1,7 +1,7 @@
 {
-  "versionCode": 67,
-  "versionName": "2.14.0",
-  "changelog": "DeskAI v2.14.0 (Build 67): Retasks. A computer task that ran clean is saved, and the same task asked again is repeated without the AI (answers and anything it writes are always fresh). See and delete them from the menu's new Retasks card. In a task's log and View only, retask lines (saved as a retask, repeating one, each repeated step) are violet with a ↻.",
+  "versionCode": 68,
+  "versionName": "2.15.0",
+  "changelog": "DeskAI v2.15.0 (Build 68): Commands. Type / in the chat box and the commands pop up right above it, narrowing as you type; tap one to run it or start it. /? or /help opens the full list, grouped (Tasks, Videos & images, Memory, The agent), with clearer wording. The menu no longer lists slash commands; it has a Commands button instead. New: /retask lists your saved retasks right above the chat box; tap one (or type a few words from it) to run it again.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24493204
+  "fileSizeBytes": 24651406
 }

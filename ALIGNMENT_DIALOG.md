@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-11 (DeskAI v2.14.0 / Build 67 shipped — Retasks)
+**Last Updated:** 2026-10-11 (DeskAI v2.15.0 / Build 68 shipped — Commands, /retask)
 
 ---
 
@@ -14,6 +14,15 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-11: DeskAI v2.15.0 (build 68), slash commands off the hub, /retask (by the laptop Claude session, at the owner's request)
+
+- `data/model/SlashCommands.kt` (new): every slash command in ONE list (category, usage, description, template, run). The pop-up, the Commands list and /help's text are built from it. Added /task and /restart (the agent handles them; they were in neither list) and /retask.
+- `SlashCommandsSheet.kt` (new): `SlashCommandsSheet` (grouped, searchable; RUN sends, USE fills the chat box) and `SlashSuggestions` (the pop-up above the chat box while a command is typed: "/" shows all, narrows by prefix). /?, /help and /commands open the sheet instead of being sent.
+- `/retask`: typing "/retask " shows the saved retasks above the chat box (fetched then), narrowing by words (`matchRetasks`); a tap sends `/retask <its wording>`, which the client runs via the agent's new `POST /api/computer/retasks/{id}/run` (the task card follows). `/retask <words>` sent directly runs the one best match, or lists the matches.
+- `CommandPaletteDialog`: the slash command list and its search bar (it only searched commands) are gone; a line plus a Commands button opens the sheet. `CommandEntry`/`CommandItemRow` removed.
+- `ChatInputBar`: the cursor goes to the end when the text is set from outside (a picked command); placeholder "type / for commands".
+- Not tried on the phone before shipping.
 
 ## Shipped 2026-10-11: DeskAI v2.14.0 (build 67), Retasks (by the laptop Claude session, at the owner's request)
 

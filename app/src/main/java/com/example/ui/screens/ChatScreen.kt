@@ -158,6 +158,15 @@ fun ChatScreen(
     var showAgentWorkSheet by remember { mutableStateOf(false) }
     var showSchedulesSheet by remember { mutableStateOf(false) }
     var showRetasksSheet by remember { mutableStateOf(false) }
+    var showCommandsSheet by remember { mutableStateOf(false) }
+    // A slash command picked (the / pop-up or the Commands list): run it, start it in the chat box, or open the list
+    val pickCommand: (com.example.data.model.SlashCommand) -> Unit = { c ->
+        when {
+            c.command in com.example.data.model.SlashCommands.helpWords -> { viewModel.onInputTextChange(""); showCommandsSheet = true }
+            c.run -> { viewModel.onInputTextChange(""); viewModel.sendMessage(c.template) }
+            else -> viewModel.onInputTextChange(c.template)
+        }
+    }
     var showMaintenanceSheet by remember { mutableStateOf(false) }
     var showNeedsYou by remember { mutableStateOf(false) }
     var showTakeOver by remember { mutableStateOf(false) }
@@ -523,11 +532,30 @@ fun ChatScreen(
                         }
                     }
 
+                    // Typing "/" shows the commands right here, narrowing as you type
+                    // "/retask " lists the saved retasks to tap; fetched when that's typed
+                    val wantsRetasks = inputText.lowercase().startsWith("/retask")
+                    var retaskList by remember { mutableStateOf<List<com.example.data.model.Retask>>(emptyList()) }
+                    LaunchedEffect(wantsRetasks) {
+                        if (wantsRetasks) viewModel.fetchRetasks().onSuccess { retaskList = it }
+                    }
+                    com.example.ui.dialogs.SlashSuggestions(
+                        typed = inputText, onPick = pickCommand, retasks = retaskList,
+                        onPickRetask = { r -> viewModel.onInputTextChange(""); viewModel.sendMessage("/retask " + r.goal) }
+                    )
+
                     // Chat Input Bar with Quick Commands, Voice Dictation & Command Deck
                     ChatInputBar(
                         text = inputText,
                         onTextChange = { viewModel.onInputTextChange(it) },
-                        onSend = { viewModel.sendMessage() },
+                        onSend = {
+                            if (inputText.trim().lowercase() in com.example.data.model.SlashCommands.helpWords) {
+                                viewModel.onInputTextChange("")
+                                showCommandsSheet = true          // /? and /help open the full list
+                            } else {
+                                viewModel.sendMessage()
+                            }
+                        },
                         isStreaming = isStreaming,
                         onStopStreaming = { viewModel.stopStreaming() },
                         onOpenCommandPalette = { showCommandPalette = true },
@@ -563,6 +591,7 @@ fun ChatScreen(
                 uiPrefs.edit().putBoolean("takeover_view_only", on).apply()
             },
             onOpenRepos = { showRepos = true },
+            onOpenCommands = { showCommandsSheet = true },
             onSelectCommandTemplate = { template ->
                 viewModel.onInputTextChange(template)
             },
@@ -664,6 +693,14 @@ fun ChatScreen(
             onUpdate = { id, fields -> viewModel.updateSchedule(id, fields) },
             onDelete = { id -> viewModel.deleteSchedule(id) },
             onRunNow = { id -> viewModel.runScheduleNow(id) }
+        )
+    }
+
+    // Commands: every slash command by group (/? or /help in chat, or the hub's Commands button)
+    if (showCommandsSheet) {
+        com.example.ui.dialogs.SlashCommandsSheet(
+            onDismiss = { showCommandsSheet = false },
+            onPick = { c -> showCommandsSheet = false; pickCommand(c) }
         )
     }
 
