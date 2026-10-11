@@ -12,19 +12,25 @@ the AlwaysOnAgent repo.
 
 | Screen / piece | Code | What it does |
 |---|---|---|
-| **Chat** | `ui/screens/ChatScreen.kt`, `ChatViewModel.kt`, `ui/components/MessageBubble.kt` | Talks to `POST /api/chat`. It renders suggestion cards (Run / Dismiss / Add project), tap-to-answer question buttons and markdown, and speaks replies aloud (text-to-speech). |
-| **Live task cards** | `ui/components/LiveTaskCard.kt` | Any chat message that started a task gets a card: the stage, a progress bar, a time-left countdown, Abort, Retry, and ▶ Play Video when done. It polls `GET /api/tasks/{id}` every 2 s. |
-| **Input** | `ui/components/ChatInputBar.kt` | Text, voice through Android's speech recognizer, and command chips |
-| **Command palette** | `ui/dialogs/CommandPaletteDialog.kt` | Quick commands, plus the hubs: Connection, Video Gallery, Memory, Tasks, AgentWork, Maintenance, and **Web Dashboard** (opens the server's HUD signed in) |
-| **Tasks** | `ui/dialogs/TasksSheet.kt` | The real task queue with progress, Abort and Retry |
+| **The look** | `ui/theme/Color.kt`, `ui/components/CircuitBackground.kt` | "Circuit" (the owner's pick, 2026-10-11): glowing terminal green with deep cerulean, a hex circuit texture behind the chat and every sheet, and black lightning behind the chat (only while the app is open, off when the phone's animations are off) |
+| **Chat** | `ui/screens/ChatScreen.kt`, `ChatViewModel.kt`, `ui/components/MessageBubble.kt` | Talks to `POST /api/chat`. It renders suggestion cards (Run / Dismiss / Add project), tap-to-answer question buttons and markdown, and speaks replies aloud (text-to-speech) |
+| **Tasks in chat** | `ui/components/TaskFolding.kt`, `ui/components/LiveTaskCard.kt` | A running task shows its live card (cerulean into indigo: stage, progress, Abort, Retry); a finished one folds to one row (tap for details); 2+ finished in a row fold into a "N tasks finished" strip; the Tasks switch in the top bar hides them |
+| **Input** | `ui/components/ChatInputBar.kt` | Text, voice through Android's speech recognizer, attachments (📎). Typing `/` shows the slash commands above the box, narrowing as you type; `/retask ` lists the saved retasks to tap |
+| **Commands** | `data/model/SlashCommands.kt`, `ui/dialogs/SlashCommandsSheet.kt` | Every slash command in one list, grouped (Tasks, Videos & images, Memory, The agent); `/?`, `/help` or the menu's Commands button opens it |
+| **Menu (Command Deck)** | `ui/dialogs/CommandPaletteDialog.kt` | Tiles grouped under Your agent (Tasks, Memory, Retasks, Schedules), Make (Videos, Repos, AgentWork) and The Mini (Take over + View only, Connection, Maintenance), with live details (tasks running, retasks saved, the next scheduled run) |
+| **Status bar** | `ui/components/AgentStatusBar.kt` | Live state from `/api/stream`, and big Tasks, Memory and Videos buttons |
+| **Tasks** | `ui/dialogs/TasksSheet.kt`, `ui/dialogs/TaskDetailsSheet.kt` | The task queue with progress, Abort and Retry; a task's details: stat tiles (took, steps, AI requests), who started it, the result, and "What it did" colored by kind of step (opening, typing, clicking, saving, retask, warnings) |
+| **Retasks** | `ui/dialogs/RetasksSheet.kt` | Clean computer runs the agent repeats without the AI for the same task; delete one here |
+| **Schedules** | `ui/dialogs/SchedulesSheet.kt` | Videos, reminders and tasks on a timer |
+| **Take over** | `ui/dialogs/TakeOverScreen.kt`, `ui/dialogs/NeedsYouSheet.kt` | The Mini's (or laptop's) screen on the phone, to use or just watch (View only, with the live narration); Needs you requests |
+| **Repos** | `ui/dialogs/ReposScreen.kt` | GitHub repos as a file explorer: share or save a file, folder or repo; Work on this |
 | **Video Gallery** | `ui/dialogs/MediaGallerySheet.kt` | Render or post-to-TikTok buttons with a live card; every video with Watch and Post to TikTok |
-| **Memory** | `ui/dialogs/MemorySheet.kt` | Browse, add and forget the assistant's long-term memories |
+| **Memory** | `ui/dialogs/MemorySheet.kt` | Browse, add and forget long-term memories; recipes; the weekly memory check |
 | **AgentWork** | `ui/dialogs/AgentWorkSheet.kt` | Start a code change on a project, or register a new repo |
 | **Maintenance** | `ui/dialogs/MaintenanceSheet.kt` | Backup, cleanup, restart, logs |
-| **Connection Hub** | `ui/dialogs/ConnectionHubDialog.kt` | Server addresses and the token |
-| **Status bar** | `ui/components/AgentStatusBar.kt` | Live daemon state from `/api/stream` |
+| **Connection Hub** | `ui/dialogs/ConnectionHubDialog.kt` | Server addresses and the token (from the menu, The Mini) |
 | **Updater** | `ui/dialogs/AppUpdaterDialog.kt` | Updates in place from GitHub (below) |
-| **Push** | `service/DeskAIMessagingService.kt` | Firebase messages from the agent. Tapping one opens its task (`OPEN_TASK_ID`). |
+| **Push** | `service/DeskAIMessagingService.kt` | Firebase messages from the agent. Tapping one opens its task (`OPEN_TASK_ID`) |
 | **Network client** | `data/remote/AlwaysOnAgentClient.kt`, `data/repository/ChatRepository.kt` | All calls to the agent, with LAN → Tailscale failover and an `Idempotency-Key` on everything that starts a task |
 | **Local data** | `data/local/` (Room) | Chat sessions and messages, and the connection settings |
 
