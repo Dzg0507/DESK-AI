@@ -173,42 +173,60 @@ fun AgentStatusBar(
                 // Action Buttons Bar
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     // No Standby button here (the owner, 2026-10-11: overkill); /standby and /wake still work
-                    // Tasks Sheet Trigger
-                    IconButton(
-                        onClick = onOpenTasks,
-                        modifier = Modifier.size(32.dp)
+                    // Tasks Sheet Trigger: bigger and lit in its menu color (the owner, 2026-10-11)
+                    Box(
+                        modifier = Modifier
+                            .padding(start = 6.dp)
+                            .size(44.dp)
+                            .clip(DeskShapes.control)
+                            .background(com.example.ui.theme.AmberPending.copy(alpha = 0.16f))
+                            .border(1.dp, com.example.ui.theme.AmberPending.copy(alpha = 0.6f), DeskShapes.control)
+                            .clickable { onOpenTasks() },
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Task,
                             contentDescription = "Tasks",
-                            tint = Slate400,
-                            modifier = Modifier.size(17.dp)
+                            tint = com.example.ui.theme.AmberPending,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
 
-                    // Memory Sheet Trigger
-                    IconButton(
-                        onClick = onOpenMemory,
-                        modifier = Modifier.size(32.dp)
+                    // Memory Sheet Trigger: bigger and lit in its menu color (the owner, 2026-10-11)
+                    Box(
+                        modifier = Modifier
+                            .padding(start = 6.dp)
+                            .size(44.dp)
+                            .clip(DeskShapes.control)
+                            .background(com.example.ui.theme.EmeraldConnected.copy(alpha = 0.16f))
+                            .border(1.dp, com.example.ui.theme.EmeraldConnected.copy(alpha = 0.6f), DeskShapes.control)
+                            .clickable { onOpenMemory() },
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Memory,
                             contentDescription = "Memory",
-                            tint = Slate400,
-                            modifier = Modifier.size(17.dp)
+                            tint = com.example.ui.theme.EmeraldConnected,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
 
-                    // Media Videos Trigger
-                    IconButton(
-                        onClick = onOpenMedia,
-                        modifier = Modifier.size(32.dp)
+                    // Media Videos Trigger: bigger and lit in its menu color (the owner, 2026-10-11)
+                    Box(
+                        modifier = Modifier
+                            .padding(start = 6.dp)
+                            .size(44.dp)
+                            .clip(DeskShapes.control)
+                            .background(com.example.ui.theme.Purple400.copy(alpha = 0.16f))
+                            .border(1.dp, com.example.ui.theme.Purple400.copy(alpha = 0.6f), DeskShapes.control)
+                            .clickable { onOpenMedia() },
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Videocam,
                             contentDescription = "3D Videos",
-                            tint = Slate400,
-                            modifier = Modifier.size(17.dp)
+                            tint = com.example.ui.theme.Purple400,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
 
