@@ -1,7 +1,7 @@
 {
   "versionCode": 69,
   "versionName": "2.16.0",
-  "changelog": "DeskAI v2.16.0 (Build 69): the Circuit look, part 1. Glowing terminal green with deep cerulean, a hex circuit texture behind the chat and every sheet, and black lightning: every few seconds the sky flashes deep cerulean and a black bolt cuts through it (only while the app is open; off when the phone's animations are off). Next: tasks folded in chat, the menu, task details.",
+  "changelog": "DeskAI v2.16.0 (Build 69): the Circuit look, part 1. Glowing terminal green with deep cerulean, a hex circuit texture behind the chat and every sheet, and black lightning: every few seconds the sky flashes deep cerulean and a black bolt cuts through it (only while the app is open; off when the phone's animations are off). Task cards glow deep cerulean into indigo so they stand apart from chat, and the menu has the texture and glowing gradient tiles. Next: tasks folded in chat, the menu's layout, task details.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
   "fileSizeBytes": 25214482
 }

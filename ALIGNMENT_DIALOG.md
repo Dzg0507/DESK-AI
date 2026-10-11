@@ -21,6 +21,8 @@
 - `Color.kt`: the existing names keep working, their values moved: ElectricCyan is terminal green, the slate scale is green-tinted (light slates are mint text), Cyan400/Sky300/Blue500 are the cerulean text tint, Blue600 (the user's bubble) is deep cerulean. New: TerminalGreen, Cerulean, CeruleanText, PhosphorMint, CircuitBlack. CardGradient is see-through so the texture shows. `Theme.kt` dark scheme follows.
 - `components/CircuitBackground.kt` (new): `Modifier.circuitTexture()` (hex pattern, cerulean nodes, corner glows, scanlines) and `CircuitBackground()` (texture + black lightning: a cerulean flash and a thick black bolt with a thin cerulean rim every 2.6-6.8 s; only while RESUMED; off when ANIMATOR_DURATION_SCALE is 0). Behind the chat screen (Scaffold and top bar see-through).
 - `DeskUi.kt`: `deskSheet()` draws the texture (no lightning) with a green-to-cerulean edge; `deskCard()` glows in its border color; `SheetHeader` titles are mint with a green glow.
+- Task cards (`LiveTaskCard`): running/finished cards use deep cerulean into TaskIndigo (#4D5BFF) for the edge, fill and progress bars, so tasks stand apart from the green chat (the owner's ask). Failed stays red.
+- The menu (`CommandPaletteDialog`): circuit texture, green-to-cerulean frame; `WorkstationCard` tiles glow in their own color into cerulean (a solid base under the glow: a see-through tile showed the shadow as a box). `deskCard()` has no glow for the same reason (its fill is see-through to show the texture).
 - Checked on the owner's phone over adb before shipping (texture, glow and a lightning strike captured).
 
 ## Shipped 2026-10-11: DeskAI v2.15.0 (build 68), slash commands off the hub, /retask (by the laptop Claude session, at the owner's request)
