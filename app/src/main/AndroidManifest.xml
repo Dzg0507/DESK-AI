@@ -6,6 +6,8 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <!-- Text/Call cards: find a person the agent named in the phone's own contacts (asked for on first use) -->
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
 
     <queries>
         <intent>

@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-11 (DeskAI v2.20.0 / Build 75 shipped — texts and calls)
+**Last Updated:** 2026-10-11 (DeskAI v2.20.1 / Build 76 shipped — phone contacts for texts and calls)
 
 ---
 
@@ -14,6 +14,11 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-11: DeskAI v2.20.1 (build 76), phone contacts for texts and calls (by the laptop Claude session)
+
+- The owner's contacts live on the phone, not in Google Contacts ("Tyler Griffin (New Number)" was never found). The agent now sends a Text/Call card with `number: ""` when Google doesn't have the person.
+- `READ_CONTACTS` (asked on first use). `util/PhoneContacts.numbersFor(name)` (display name LIKE %name%, else the first word; each number once, with its type label). `ProposalCard`: one number opens straight away; several show a picker (label · number); none, or the permission refused, opens Messages/the dialer with no recipient.
 
 ## Shipped 2026-10-11: DeskAI v2.20.0 (build 75), texts and calls (by the laptop Claude session, the owner's ask)
 

@@ -59,7 +59,9 @@ DeskAI repo at `docs/API.md`, updated whenever this one changes.
 
 <the message>") and `call` ("Call Dentist (870-555-0123)"):
     the phone does these, not the agent. The proposal carries `"phone": {"name", "number", "body"}` (`body` for a
-    text only). On tap, open Messages (`smsto:<number>` with the message filled in) or the dialer (`tel:<number>`);
+    text only). `number` is `""` when the person isn't in Google Contacts: look `name` up in the phone's own
+    contacts (ask which number when there are several; without the permission, open Messages with no recipient).
+    On tap, open Messages (`smsto:<number>` with the message filled in) or the dialer (`tel:<number>`);
     the owner sends or calls. Then `POST /api/proposals/{id}/run`, which only records that it was opened and returns
     `{"status": "success", "message": "Opened a text to Jake Griffin."}`. Suggested headers: **💬 Text** and
     **📞 Call**.

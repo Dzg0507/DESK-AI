@@ -425,13 +425,14 @@ fun ProposalCard(
     // dialer with the number); the owner sends or calls; then the agent is told it was opened.
     val isPhone = kind == "text" || kind == "call"
     val context = androidx.compose.ui.platform.LocalContext.current
-    val openOnPhone: () -> Unit = {
+    val info = remember(phone) { try { org.json.JSONObject(phone ?: "{}") } catch (_: Exception) { org.json.JSONObject() } }
+    // Several numbers for the person in the phone's contacts: the owner picks (label + number)
+    var pickFrom by remember { mutableStateOf<List<Pair<String, String>>?>(null) }
+    fun openWith(number: String) {
         try {
-            val o = org.json.JSONObject(phone ?: "{}")
-            val number = o.optString("number")
             val intent = if (kind == "text") {
                 android.content.Intent(android.content.Intent.ACTION_SENDTO, android.net.Uri.parse("smsto:" + android.net.Uri.encode(number)))
-                    .putExtra("sms_body", o.optString("body"))
+                    .putExtra("sms_body", info.optString("body"))
             } else {
                 android.content.Intent(android.content.Intent.ACTION_DIAL, android.net.Uri.parse("tel:" + android.net.Uri.encode(number)))
             }
@@ -441,6 +442,52 @@ fun ProposalCard(
             android.widget.Toast.makeText(context, "Couldn't open ${if (kind == "text") "Messages" else "the dialer"}: ${e.message}",
                 android.widget.Toast.LENGTH_LONG).show()
         }
+    }
+    // Not in Google Contacts (number ""): look the name up in the phone's own contacts (2026-10-11: the owner's
+    // contacts live on the phone). One number: straight in; several: pick; none: Messages/dialer with no recipient.
+    fun lookUpAndOpen() {
+        val found = com.example.util.PhoneContacts.numbersFor(context, info.optString("name"))
+        when {
+            found.size == 1 -> openWith(found[0].second)
+            found.size > 1 -> pickFrom = found
+            else -> {
+                android.widget.Toast.makeText(context, "${info.optString("name")} isn't in your contacts: pick who in Messages",
+                    android.widget.Toast.LENGTH_LONG).show()
+                openWith("")
+            }
+        }
+    }
+    val askContacts = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { granted -> if (granted) lookUpAndOpen() else openWith("") }
+    val openOnPhone: () -> Unit = {
+        val number = info.optString("number")
+        when {
+            number.isNotBlank() -> openWith(number)
+            androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_CONTACTS) ==
+                android.content.pm.PackageManager.PERMISSION_GRANTED -> lookUpAndOpen()
+            else -> askContacts.launch(android.Manifest.permission.READ_CONTACTS)
+        }
+    }
+    pickFrom?.let { options ->
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { pickFrom = null },
+            title = { Text("Which number for ${info.optString("name")}?") },
+            text = {
+                Column {
+                    options.forEach { (label, number) ->
+                        Text(
+                            "$label · $number",
+                            color = Slate200,
+                            fontSize = 14.sp,
+                            modifier = Modifier.fillMaxWidth().clickable { pickFrom = null; openWith(number) }.padding(vertical = 10.dp)
+                        )
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = { androidx.compose.material3.TextButton(onClick = { pickFrom = null }) { Text("Cancel") } }
+        )
     }
     Box(
         modifier = Modifier
