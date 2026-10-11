@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-11 (DeskAI v2.20.1 / Build 76 shipped — phone contacts for texts and calls)
+**Last Updated:** 2026-10-11 (DeskAI v2.20.2 / Build 77 shipped — Repos jobs get their chat card)
 
 ---
 
@@ -14,6 +14,11 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-11: DeskAI v2.20.2 (build 77), Repos jobs get their chat card (by the laptop Claude session)
+
+- The Repos screen's banner said "Its card shows the progress", but starting a job there (`POST /api/github/work`) never added a chat message, so the job only showed in the Tasks list (the owner noticed while recording the demo).
+- `ReposScreen(onStarted = ...)` is called with the task id, repo and instruction; `ChatViewModel.repoWorkStarted()` inserts an assistant message with `linkedTaskId`, so the job gets the same live card (and folding) as every other task.
 
 ## Shipped 2026-10-11: DeskAI v2.20.1 (build 76), phone contacts for texts and calls (by the laptop Claude session)
 

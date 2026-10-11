@@ -1,7 +1,7 @@
 {
-  "versionCode": 76,
-  "versionName": "2.20.1",
-  "changelog": "DeskAI v2.20.1 (Build 76): texting people from your phone's contacts. When someone isn't in your Google Contacts, the Text or Call card finds them in your phone's own contacts (it asks your permission once); with several numbers, you pick one.",
+  "versionCode": 77,
+  "versionName": "2.20.2",
+  "changelog": "DeskAI v2.20.2 (Build 77): a job started from Repos now puts its live card in the chat, so you can follow its progress there (before, it only showed in the Tasks list).",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24575117
+  "fileSizeBytes": 24575112
 }

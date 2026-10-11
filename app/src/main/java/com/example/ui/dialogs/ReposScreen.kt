@@ -92,7 +92,10 @@ fun ReposScreen(
     onClose: () -> Unit,
     call: suspend (method: String, path: String, body: JSONObject?, idempotencyKey: String?) -> Result<JSONObject>,
     download: suspend (path: String, dir: java.io.File) -> Result<com.example.data.model.SharedDownload> =
-        { _, _ -> Result.failure(Exception("Sharing isn't available")) }
+        { _, _ -> Result.failure(Exception("Sharing isn't available")) },
+    // A job was started: its live card goes in the chat (2026-10-11, the owner: the banner said "Its card shows
+    // the progress" but no card ever appeared, only the task in the Tasks list)
+    onStarted: (taskId: String, repo: String, instruction: String) -> Unit = { _, _, _ -> }
 ) {
     val scope = rememberCoroutineScope()
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -160,13 +163,15 @@ fun ReposScreen(
     fun startWork() {
         val name = repo?.optString("repo") ?: return
         val where = file?.optString("path") ?: path
+        val asked = instruction.trim()
         sending = true
         scope.launch {
-            val body = JSONObject().put("repo", name).put("instruction", instruction.trim())
+            val body = JSONObject().put("repo", name).put("instruction", asked)
             if (where.isNotEmpty()) body.put("path", where)
             val r = call("POST", "/api/github/work", body, UUID.randomUUID().toString())
             sending = false
             r.onSuccess { o ->
+                o.optString("task_id").takeIf { it.isNotBlank() }?.let { onStarted(it, name, asked) }
                 sent = "Started ${o.optString("task_id")}" +
                     (if (o.optBoolean("registered")) " (set up as project '${o.optString("project")}')" else "") +
                     ". Its card shows the progress; nothing goes live without your tap."

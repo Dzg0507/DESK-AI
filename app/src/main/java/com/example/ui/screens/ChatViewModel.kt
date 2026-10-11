@@ -637,6 +637,21 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         return repository.fetchTasks(limit)
     }
 
+    /** A job started from Repos: its live card in the chat, like any other task (2026-10-11). */
+    fun repoWorkStarted(taskId: String, repo: String, instruction: String) {
+        val session = _currentSession.value ?: return
+        viewModelScope.launch {
+            repository.insertMessage(ChatMessage(
+                sessionId = session.id,
+                role = "assistant",
+                content = "🛠️ Working on **${repo.substringAfter("/")}**: \"$instruction\"",
+                status = "sent",
+                modelUsed = "AlwaysOnAgent Bridge",
+                linkedTaskId = taskId
+            ))
+        }
+    }
+
     suspend fun triggerMedia(action: String, quote: String?): Result<String> {
         val res = repository.triggerMedia(action, quote)
         if (res.isSuccess) {
