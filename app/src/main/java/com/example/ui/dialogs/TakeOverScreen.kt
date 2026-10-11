@@ -470,17 +470,35 @@ private fun WatchFullScreen(
     onClose: () -> Unit
 ) {
     val activity = LocalContext.current.findActivity()
+    // View only has nothing to type into: the keyboard never shows here (2026-10-11, the owner: "I can't stand it
+    // when it pops up and I have no way to make it go away"). It came along from the chat box: focus is cleared and
+    // the keyboard hidden on the way in, again whenever the screen is tapped, and Android is told not to show it.
+    val focus = androidx.compose.ui.platform.LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
+    fun noKeyboard() {
+        focus.clearFocus(force = true)
+        keyboard?.hide()
+        activity?.let { WindowCompat.getInsetsController(it.window, it.window.decorView).hide(WindowInsetsCompat.Type.ime()) }
+    }
     DisposableEffect(Unit) {
         val a = activity ?: return@DisposableEffect onDispose {}
         val before = a.requestedOrientation
+        val softInput = a.window.attributes.softInputMode
+        noKeyboard()
+        a.window.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
         a.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
         val bars = WindowCompat.getInsetsController(a.window, a.window.decorView)
         bars.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         bars.hide(WindowInsetsCompat.Type.systemBars())
         onDispose {
             bars.show(WindowInsetsCompat.Type.systemBars())
+            a.window.setSoftInputMode(softInput)
             a.requestedOrientation = before
         }
+    }
+    LaunchedEffect(Unit) {
+        // The keyboard can come up a moment after the screen opens (the chat box losing focus late): check again
+        repeat(4) { delay(400); noKeyboard() }
     }
     var showBar by remember { mutableStateOf(true) }
     LaunchedEffect(showBar) {
@@ -493,7 +511,7 @@ private fun WatchFullScreen(
     var pan by remember { mutableStateOf(Offset.Zero) }
     Box(
         modifier = Modifier.fillMaxSize().background(Color.Black)
-            .pointerInput(Unit) { detectTapGestures(onTap = { showBar = !showBar }) }
+            .pointerInput(Unit) { detectTapGestures(onTap = { noKeyboard(); showBar = !showBar }) }
             .pointerInput(Unit) {
                 detectTransformGestures { _, panBy, zoom, _ ->
                     scale = (scale * zoom).coerceIn(1f, 6f)

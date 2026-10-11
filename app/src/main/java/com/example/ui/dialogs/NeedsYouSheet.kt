@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -86,7 +88,10 @@ fun NeedsYouSheet(
                      properties = androidx.compose.material3.ModalBottomSheetProperties(
                          securePolicy = if (secure) androidx.compose.ui.window.SecureFlagPolicy.SecureOn
                                         else androidx.compose.ui.window.SecureFlagPolicy.Inherit)) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 24.dp)) {
+        // Sideways (only View only turns the phone): above the keyboard. Upright, unchanged.
+        val landscape = isLandscape()
+        Column(modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 24.dp)
+            .then(if (landscape) Modifier.imePadding() else Modifier)) {
             SheetHeader(
                 title = "Needs you",
                 icon = Icons.Default.Warning,
@@ -125,6 +130,12 @@ private fun RequestCard(
     var sending by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var reply by remember { mutableStateOf("") }
+    // Sideways (View only): a short screenshot, and Send inside the answer box and on the keyboard, so what's
+    // typed and Send stay in view (2026-10-11, the owner: in View only "I can barely scroll and see what I'm typing,
+    // and sometimes I can't hit send"). Upright, the card is as before.
+    val landscape = isLandscape()
+    val shotMax = if (landscape) (androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp * 0.34f).dp
+                  else 360.dp
     val bitmap by produceState<android.graphics.Bitmap?>(null, req.screenshotPath) {
         value = req.screenshotPath?.let { path ->
             onScreenshot(path)?.let { BitmapFactory.decodeByteArray(it, 0, it.size) }
@@ -154,7 +165,7 @@ private fun RequestCard(
         if (bitmap != null) {
             Image(bitmap = bitmap!!.asImageBitmap(), contentDescription = "What the task sees",
                   contentScale = ContentScale.FillWidth,
-                  modifier = Modifier.fillMaxWidth().heightIn(max = 360.dp).clip(RoundedCornerShape(8.dp)))
+                  modifier = Modifier.fillMaxWidth().heightIn(max = shotMax).clip(RoundedCornerShape(8.dp)))
             Spacer(Modifier.height(8.dp))
         } else if (req.screenshotPath != null) {
             CircularProgressIndicator(modifier = Modifier.padding(8.dp))
@@ -175,18 +186,27 @@ private fun RequestCard(
                     visualTransformation = if (shown) androidx.compose.ui.text.input.VisualTransformation.None
                                            else androidx.compose.ui.text.input.PasswordVisualTransformation(),
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Password),
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Password,
+                        imeAction = if (landscape) androidx.compose.ui.text.input.ImeAction.Send
+                                    else androidx.compose.ui.text.input.ImeAction.Default),
+                    keyboardActions = androidx.compose.foundation.text.KeyboardActions(
+                        onSend = { if (reply.isNotEmpty()) { val v = reply; reply = ""; send(v) } }),
                     trailingIcon = {
-                        androidx.compose.material3.TextButton(onClick = { shown = !shown }) {
-                            Text(if (shown) "Hide" else "Show", color = Slate400, fontSize = 12.sp)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            androidx.compose.material3.TextButton(onClick = { shown = !shown }) {
+                                Text(if (shown) "Hide" else "Show", color = Slate400, fontSize = 12.sp)
+                            }
+                            if (landscape) SendArrow(!sending && reply.isNotEmpty()) { val v = reply; reply = ""; send(v) }
                         }
                     }
                 )
                 Text("🔒 Typed straight into the outlined box on the Mini. The AI never sees it, and it isn't saved.",
                      color = Slate400, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
-                Spacer(Modifier.height(6.dp))
-                Button(onClick = { val v = reply; reply = ""; send(v) }, enabled = !sending && reply.isNotEmpty(),
-                       modifier = Modifier.align(Alignment.End)) { Text("Send") }
+                if (!landscape) {
+                    Spacer(Modifier.height(6.dp))
+                    Button(onClick = { val v = reply; reply = ""; send(v) }, enabled = !sending && reply.isNotEmpty(),
+                           modifier = Modifier.align(Alignment.End)) { Text("Send") }
+                }
             }
             "choice" -> Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 req.choices.forEach { c ->
@@ -196,11 +216,21 @@ private fun RequestCard(
                 }
             }
             else -> Column {
-                OutlinedTextField(value = reply, onValueChange = { reply = it }, modifier = Modifier.fillMaxWidth(),
-                                  placeholder = { Text("Your answer") }, enabled = !sending)
-                Spacer(Modifier.height(6.dp))
-                Button(onClick = { send(reply.trim()) }, enabled = !sending && reply.isNotBlank(),
-                       modifier = Modifier.align(Alignment.End)) { Text("Send") }
+                if (landscape) {
+                    OutlinedTextField(value = reply, onValueChange = { reply = it }, modifier = Modifier.fillMaxWidth(),
+                                      placeholder = { Text("Your answer") }, enabled = !sending, maxLines = 3,
+                                      keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                                          imeAction = androidx.compose.ui.text.input.ImeAction.Send),
+                                      keyboardActions = androidx.compose.foundation.text.KeyboardActions(
+                                          onSend = { if (reply.isNotBlank()) send(reply.trim()) }),
+                                      trailingIcon = { SendArrow(!sending && reply.isNotBlank()) { send(reply.trim()) } })
+                } else {
+                    OutlinedTextField(value = reply, onValueChange = { reply = it }, modifier = Modifier.fillMaxWidth(),
+                                      placeholder = { Text("Your answer") }, enabled = !sending)
+                    Spacer(Modifier.height(6.dp))
+                    Button(onClick = { send(reply.trim()) }, enabled = !sending && reply.isNotBlank(),
+                           modifier = Modifier.align(Alignment.End)) { Text("Send") }
+                }
             }
         }
         // Or do it yourself on the Mini's screen (a CAPTCHA, anything odd); the task looks again when you hand back
@@ -209,5 +239,21 @@ private fun RequestCard(
         }
         if (sending) Text("Sending…", color = Slate400, fontSize = 12.sp)
         error?.let { Text("Couldn't send: $it", color = Red300, fontSize = 12.sp) }
+    }
+}
+
+
+@Composable
+private fun isLandscape(): Boolean =
+    androidx.compose.ui.platform.LocalConfiguration.current.orientation ==
+        android.content.res.Configuration.ORIENTATION_LANDSCAPE
+
+
+/** Send inside an answer box (sideways, in View only): next to what's typed, never pushed off by the keyboard. */
+@Composable
+private fun SendArrow(enabled: Boolean, onSend: () -> Unit) {
+    androidx.compose.material3.IconButton(onClick = onSend, enabled = enabled) {
+        androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.AutoMirrored.Filled.Send,
+                                        contentDescription = "Send", tint = if (enabled) Sky300 else Slate400)
     }
 }

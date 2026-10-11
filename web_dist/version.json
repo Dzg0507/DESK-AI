@@ -1,7 +1,7 @@
 {
-  "versionCode": 65,
-  "versionName": "2.13.1",
-  "changelog": "DeskAI v2.13.1 (Build 65): Save to Downloads in Repos. A file, folder or repo can now be saved to Downloads/DeskAI, so you can attach it in apps that aren't in the share menu, like Gemini.",
+  "versionCode": 66,
+  "versionName": "2.13.2",
+  "changelog": "DeskAI v2.13.2 (Build 66): View only fixes. The keyboard no longer pops up in View only, and a Needs you request opened there fits the sideways screen: a smaller screenshot, the Send arrow inside the answer box (and on the keyboard), and room above the keyboard.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24460406
+  "fileSizeBytes": 24460404
 }

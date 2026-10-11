@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-10 (DeskAI v2.13.1 / Build 65 shipped — save to Downloads)
+**Last Updated:** 2026-10-11 (DeskAI v2.13.2 / Build 66 shipped — View only fixes)
 
 ---
 
@@ -14,6 +14,12 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-11: DeskAI v2.13.2 (build 66), View only fixes (by the laptop Claude session, at the owner's request)
+
+- `TakeOverScreen.WatchFullScreen`: no keyboard in View only (focus cleared, keyboard hidden on the way in, rechecked for 1.6 s and on every tap; SOFT_INPUT_STATE_ALWAYS_HIDDEN while open, restored on leaving).
+- `NeedsYouSheet`: only when the phone is sideways (View only is the only landscape screen): screenshot at most a third of the screen's height, Send arrow inside the answer/password box and ImeAction.Send, imePadding on the sheet. Upright it's unchanged (the owner: the problem was only in View only).
+- Not tried on the phone before shipping.
 
 ## Shipped 2026-10-10: DeskAI v2.13.1 (build 65), Save to Downloads in Repos (by the laptop Claude session, at the owner's request)
 
