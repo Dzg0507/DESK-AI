@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-11 (DeskAI v2.15.0 / Build 68 shipped — Commands, /retask)
+**Last Updated:** 2026-10-11 (DeskAI v2.16.0 / Build 69 shipped — the Circuit look, part 1)
 
 ---
 
@@ -14,6 +14,14 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-11: DeskAI v2.16.0 (build 69), the Circuit look part 1 (by the laptop Claude session, the owner's design pick)
+
+- The owner chose "Circuit" from a preview: glowing terminal green (#39FF6A) with DEEP cerulean (#0077B6; text tint #1E90D0), a hex circuit texture, and black lightning. Please keep this direction.
+- `Color.kt`: the existing names keep working, their values moved: ElectricCyan is terminal green, the slate scale is green-tinted (light slates are mint text), Cyan400/Sky300/Blue500 are the cerulean text tint, Blue600 (the user's bubble) is deep cerulean. New: TerminalGreen, Cerulean, CeruleanText, PhosphorMint, CircuitBlack. CardGradient is see-through so the texture shows. `Theme.kt` dark scheme follows.
+- `components/CircuitBackground.kt` (new): `Modifier.circuitTexture()` (hex pattern, cerulean nodes, corner glows, scanlines) and `CircuitBackground()` (texture + black lightning: a cerulean flash and a thick black bolt with a thin cerulean rim every 2.6-6.8 s; only while RESUMED; off when ANIMATOR_DURATION_SCALE is 0). Behind the chat screen (Scaffold and top bar see-through).
+- `DeskUi.kt`: `deskSheet()` draws the texture (no lightning) with a green-to-cerulean edge; `deskCard()` glows in its border color; `SheetHeader` titles are mint with a green glow.
+- Checked on the owner's phone over adb before shipping (texture, glow and a lightning strike captured).
 
 ## Shipped 2026-10-11: DeskAI v2.15.0 (build 68), slash commands off the hub, /retask (by the laptop Claude session, at the owner's request)
 

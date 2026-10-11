@@ -68,7 +68,7 @@ import java.util.Locale
 /** The look of every sheet/dialog body: rounded, slate→navy gradient, hairline lit border. */
 fun Modifier.deskSheet(): Modifier = this
     .clip(DeskShapes.sheet)
-    .background(SheetGradient)
+    .circuitTexture(glow = 0.75f)          // the Circuit look (2026-10-11): texture and glows, no lightning
     .border(1.dp, SheetBorderGradient, DeskShapes.sheet)
 
 /** A standard card: rounded 12, slate gradient fill, slate-700 hairline (or [borderColor]). */
@@ -157,7 +157,10 @@ fun SheetHeader(
                 text = title,
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
+                color = com.example.ui.theme.PhosphorMint,
+                // lit like a backlit key
+                style = androidx.compose.ui.text.TextStyle(shadow = androidx.compose.ui.graphics.Shadow(
+                    color = com.example.ui.theme.TerminalGreen.copy(alpha = 0.75f), blurRadius = 14f)),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )

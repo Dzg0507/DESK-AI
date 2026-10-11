@@ -57,6 +57,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import com.example.ui.components.circuitTexture
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -119,19 +121,12 @@ fun CommandPaletteDialog(
                 .fillMaxWidth(0.95f)
                 .fillMaxHeight(0.88f)
                 .clip(RoundedCornerShape(20.dp))
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Slate900,
-                            CodeBlockBackground,
-                            Color(0xFF05070B)
-                        )
-                    )
-                )
+                // the Circuit look (2026-10-11): the circuit texture and a green-to-cerulean frame
+                .circuitTexture(glow = 0.8f)
                 .border(
                     1.dp,
                     Brush.verticalGradient(
-                        colors = listOf(ElectricCyan.copy(alpha = 0.5f), Slate800)
+                        colors = listOf(ElectricCyan.copy(alpha = 0.7f), com.example.ui.theme.Cerulean)
                     ),
                     RoundedCornerShape(20.dp)
                 )
@@ -519,9 +514,14 @@ fun WorkstationCard(
 ) {
     Box(
         modifier = modifier
+            // each tile glows in its own color, running into deep cerulean (the Circuit look, 2026-10-11)
+            .shadow(10.dp, DeskShapes.card, ambientColor = accentColor, spotColor = accentColor)
             .clip(DeskShapes.card)
-            .background(DeepCard)
-            .border(1.dp, accentColor.copy(alpha = 0.35f), DeskShapes.card)
+            .background(DeepCard)          // solid, so the glow underneath only shows outside the tile
+            .background(Brush.linearGradient(listOf(accentColor.copy(alpha = 0.16f), DeepCard.copy(alpha = 0.85f),
+                                                    com.example.ui.theme.Cerulean.copy(alpha = 0.22f))))
+            .border(1.dp, Brush.linearGradient(listOf(accentColor.copy(alpha = 0.85f), com.example.ui.theme.Cerulean.copy(alpha = 0.8f))),
+                    DeskShapes.card)
             .clickable { onClick() }
             .padding(12.dp)
     ) {

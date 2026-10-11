@@ -27,8 +27,8 @@ android {
     applicationId = "com.aistudio.deskai.kzpwqm"
     minSdk = 24
     targetSdk = 36
-    versionCode = 68
-    versionName = "2.15.0"
+    versionCode = 69
+    versionName = "2.16.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }

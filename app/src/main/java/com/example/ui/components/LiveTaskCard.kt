@@ -164,8 +164,17 @@ fun LiveTaskCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(DeskShapes.card)
-            .background(Brush.verticalGradient(listOf(phaseColor.copy(alpha = 0.07f), Slate900)))
-            .border(1.dp, phaseColor.copy(alpha = 0.5f), DeskShapes.card)
+            // the Circuit look: running and finished tasks glow deep cerulean into indigo, chat stays green (the owner, 2026-10-11)
+            .background(
+                if (isCompleted || isInProgress) Brush.verticalGradient(listOf(com.example.ui.theme.Cerulean.copy(alpha = 0.14f), com.example.ui.theme.TaskIndigo.copy(alpha = 0.26f)))
+                else Brush.verticalGradient(listOf(phaseColor.copy(alpha = 0.07f), Slate900))
+            )
+            .border(
+                1.dp,
+                if (isCompleted || isInProgress) Brush.linearGradient(listOf(com.example.ui.theme.Cerulean, com.example.ui.theme.TaskIndigo))
+                else androidx.compose.ui.graphics.SolidColor(phaseColor.copy(alpha = 0.5f)),
+                DeskShapes.card
+            )
             .then(if (onOpenDetails != null && item != null) Modifier.clickable { onOpenDetails(item) } else Modifier)
             .animateContentSize()
             .padding(12.dp)
@@ -348,15 +357,10 @@ fun LiveTaskCard(
                             animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
                             label = "live_task_progress"
                         )
-                        LinearProgressIndicator(
-                            progress = { animatedPercent },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(5.dp)
-                                .clip(RoundedCornerShape(2.5.dp)),
-                            color = AmberPending,
-                            trackColor = Slate800
-                        )
+                        Box(Modifier.fillMaxWidth().height(5.dp).clip(RoundedCornerShape(2.5.dp)).background(Slate800)) {
+                            Box(Modifier.fillMaxWidth(animatedPercent).height(5.dp)
+                                .background(Brush.horizontalGradient(listOf(com.example.ui.theme.Cerulean, com.example.ui.theme.TaskIndigo))))
+                        }
                     }
                 } else {
                     // Indeterminate linear progress
@@ -365,20 +369,13 @@ fun LiveTaskCard(
                             .fillMaxWidth()
                             .height(4.dp)
                             .clip(RoundedCornerShape(2.dp)),
-                        color = AmberPending,
-                        trackColor = Slate800
+                        color = com.example.ui.theme.Cerulean,
+                        trackColor = com.example.ui.theme.TaskIndigo.copy(alpha = 0.35f)
                     )
                 }
             } else if (isCompleted) {
-                LinearProgressIndicator(
-                    progress = { 1f },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(3.dp)
-                        .clip(RoundedCornerShape(1.5.dp)),
-                    color = EmeraldConnected,
-                    trackColor = Slate800
-                )
+                Box(Modifier.fillMaxWidth().height(3.dp).clip(RoundedCornerShape(1.5.dp))
+                    .background(Brush.horizontalGradient(listOf(com.example.ui.theme.Cerulean, com.example.ui.theme.TaskIndigo))))
             }
 
             // Contextual Action Chips (Preview Diff, Apply Update, Discuss Blockers, Post to TikTok, etc.)

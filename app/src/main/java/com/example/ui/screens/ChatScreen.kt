@@ -253,7 +253,11 @@ fun ChatScreen(
             }
         }
     ) {
+      Box(Modifier.fillMaxSize()) {
+        // The Circuit background with black lightning, behind the whole chat screen (2026-10-11)
+        com.example.ui.components.CircuitBackground()
         Scaffold(
+            containerColor = Color.Transparent,
             topBar = {
                 TopAppBar(
                     title = {
@@ -338,8 +342,8 @@ fun ChatScreen(
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = SlateDarkBackground,
-                        titleContentColor = Color.White
+                        containerColor = SlateDarkBackground.copy(alpha = 0.72f),
+                        titleContentColor = com.example.ui.theme.PhosphorMint
                     )
                 )
             },
@@ -351,7 +355,6 @@ fun ChatScreen(
                     .padding(innerPadding)
                     // The Scaffold already padded for the system bars; the input bar adds only the keyboard's extra height
                     .consumeWindowInsets(innerPadding)
-                    .background(Brush.verticalGradient(listOf(ChatBackground, SlateDarkBackground)))
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
                     // A computer task is waiting for the owner (also when the alert was missed)
@@ -566,6 +569,7 @@ fun ChatScreen(
                 }
             }
         }
+      }
     }
 
     // Interactive Command Deck & Bundled Views Hub
