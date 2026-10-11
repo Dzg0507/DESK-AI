@@ -179,6 +179,19 @@ fun ChatScreen(
     // took control and stopped it).
     val uiPrefs = remember { context.getSharedPreferences("deskai_ui", android.content.Context.MODE_PRIVATE) }
     var takeOverViewOnly by remember { mutableStateOf(uiPrefs.getBoolean("takeover_view_only", false)) }
+    // Tasks folded in chat (2026-10-11): what's known of each linked task, which strips are open, and the Tasks switch
+    var hideTasks by remember { mutableStateOf(uiPrefs.getBoolean("hide_tasks", false)) }
+    val taskStates = remember { androidx.compose.runtime.mutableStateMapOf<String, com.example.data.model.AgentTaskItem>() }
+    var openStrips by remember { mutableStateOf(setOf<String>()) }
+    LaunchedEffect(messages) {
+        while (true) {
+            val ids = messages.filter { com.example.ui.components.isTaskMessage(it) }.mapNotNull { it.linkedTaskId }.distinct()
+            ids.filter { id -> taskStates[id]?.let { !com.example.ui.components.isFinished(it) } ?: true }
+                .takeLast(30)
+                .forEach { id -> viewModel.getTask(id).onSuccess { taskStates[id] = it } }
+            kotlinx.coroutines.delay(6000)
+        }
+    }
     var takeOverWatching by remember { mutableStateOf(false) }      // the open Take over screen is view only
     val needsYou by viewModel.needsYou.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { viewModel.startNeedsYouPolling() }
@@ -293,6 +306,11 @@ fun ChatScreen(
                         }
                     },
                     actions = {
+                        // Show or hide task messages in chat (remembered)
+                        com.example.ui.components.TasksToggle(showing = !hideTasks) {
+                            hideTasks = !hideTasks
+                            uiPrefs.edit().putBoolean("hide_tasks", hideTasks).apply()
+                        }
                         // Start a fresh conversation (the assistant's memory lives on the server, so nothing is forgotten)
                         IconButton(
                             onClick = { viewModel.createNewSession() },
@@ -409,7 +427,17 @@ fun ChatScreen(
                                     }
                                 }
                             }
-                            items(messages, key = { it.id }) { message ->
+                            items(
+                                com.example.ui.components.foldChat(messages, taskStates, hideTasks, openStrips),
+                                key = { it.key }
+                            ) { entry ->
+                              when (entry) {
+                                is com.example.ui.components.ChatEntry.Strip -> com.example.ui.components.TaskStrip(entry.tasks, entry.expanded) {
+                                    openStrips = if (entry.expanded) openStrips - entry.groupKey else openStrips + entry.groupKey
+                                }
+                                is com.example.ui.components.ChatEntry.TaskRow -> com.example.ui.components.TaskRow(entry.task, onClick = { chatTaskDetails = entry.task })
+                                is com.example.ui.components.ChatEntry.Message -> {
+                                val message = entry.message
                                 MessageBubble(
                                     message = message,
                                     onRunProposal = { msg, prop -> viewModel.runProposal(msg, prop) },
@@ -494,6 +522,8 @@ fun ChatScreen(
                                     serverBaseUrl = config.getResolvedUrl(),
                                     authToken = config.apiKey
                                 )
+                                }
+                              }
                             }
                         }
 

@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-11 (DeskAI v2.16.1 / Build 70 shipped — hex pattern in the menu tiles)
+**Last Updated:** 2026-10-11 (DeskAI v2.17.0 / Build 71 shipped — tasks folded in chat)
 
 ---
 
@@ -14,6 +14,12 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-11: DeskAI v2.17.0 (build 71), tasks folded in chat (by the laptop Claude session, the owner's ask: "the chat is basically nothing but tasks")
+
+- `components/TaskFolding.kt` (new): `foldChat()` turns the messages into `ChatEntry`s: a finished task's message (assistant + linkedTaskId, task completed/failed/cancelled) becomes a `TaskRow` (one line: mark, title, finish time; tap opens TaskDetailsSheet); 2+ finished in a row fold into a `TaskStrip` ("N tasks finished", tap to show/hide); a running or not-yet-known task stays the full message with its live card. `TasksToggle` in the top bar hides task messages (prefs `deskai_ui`/`hide_tasks`).
+- `ChatScreen`: the list renders `foldChat(...)`; task states come from `viewModel.getTask`, re-checked every 6 s for unfinished ones (last 30).
+- Checked on the owner's phone over adb (strip, Show/Hide, toggle off/on).
 
 ## Shipped 2026-10-11: DeskAI v2.16.1 (build 70), hex pattern in the menu tiles (by the laptop Claude session, the owner's ask)
 

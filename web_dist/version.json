@@ -1,7 +1,7 @@
 {
-  "versionCode": 70,
-  "versionName": "2.16.1",
-  "changelog": "DeskAI v2.16.1 (Build 70): the menu tiles carry the same hex circuit pattern as the background, each washed in its own glowing color.",
+  "versionCode": 71,
+  "versionName": "2.17.0",
+  "changelog": "DeskAI v2.17.0 (Build 71): tasks folded in chat. A finished task is one slim row (tap it for details), two or more in a row fold into a \"N tasks finished\" strip, and a running task keeps its live card. The Tasks switch in the top bar hides task messages altogether (remembered).",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24525937
+  "fileSizeBytes": 24542332
 }
