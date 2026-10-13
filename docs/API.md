@@ -176,6 +176,7 @@ Each task object includes a dynamic `actions` array of contextual 1-tap buttons:
 | `GET /api/tasks/{id}` | | one task, or 404. Cheap: polling every 2 s is fine (the fallback when `/api/events` is down). |
 | `GET /api/tasks/{id}/thumb` | | the task's video thumbnail (JPEG, ~240 px wide, under 50 KB), made on the first ask while the video is still kept; **404** when the task has none. Load it with the token in a header. |
 | `GET /api/events` | | **Live task events** (Server-Sent Events; see below). |
+| `GET /api/activity` | | Background work now (the away shift, docs/PROACTIVE_RESEARCH.md): `{"active": bool, "label", "step", "started_at", "finished_at" (epoch seconds or null), "found": int}`. DeskAI shows a pulsing icon while `active`; changes also arrive on `/api/events` as `event: activity` (below). |
 | `POST /api/tasks` | `{"title", "prompt", "priority": "medium", "engine": "auto", "mode": "accept-edits", "timeout_seconds": 300, "source"?: "Hark"}` | `{"status", "task_id", "woke_daemon", "message"}`. Without `source` (or `X-Task-Source`) the task's source is `DeskAI quick dispatch` |
 | `POST /api/tasks/run` | `{"command": "..."}` (new) or `{"task_id": "..."}` (re-run a failed one) | `{"status", "task_id", "message"}` |
 | `POST /api/cancel/{id}` | | 200; 404 if unknown; **409** if it already finished |
@@ -210,6 +211,21 @@ data: {"type":"started","task_id":"task-052","status":"started","phase":"in_prog
   events (while disconnected) are not replayed: after a reconnect, refresh the tasks on screen once.
 - When the stream fails, fall back to polling `GET /api/tasks/{id}` and retry the stream with backoff. Push
   notifications (FCM) still cover the app being closed.
+
+**Background work (`event: activity`).** The same stream also carries what the agent is doing in the background
+(the away shift), for the app's pulsing icon. Older builds ignore it: they act only on `event: task`.
+
+```
+event: activity
+data: {"state":"started","active":true,"label":"Researching in the background","step":"","started_at":1791432000.0,"finished_at":null,"found":0,"ts":1791432000.0}
+```
+
+`state` is `started`, `step` (a new `step` text) or `finished` (`active` false, `found` = what the session turned up).
+Every event carries the whole state, the same as `GET /api/activity`.
+
+**Presence.** While a stream is connected the agent counts the app as open (`app_last_seen` in `system_state` is
+the last time one was). The away shift starts after 2 hours without one, so DeskAI should keep holding the stream
+only while it's on screen, as it does.
 
 ## Videos (TiktokVideos)
 
