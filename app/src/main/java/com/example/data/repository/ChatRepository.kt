@@ -530,7 +530,8 @@ class ChatRepository(
         ### ⚡ Quick Slash Directives
         • `/status` — Live host CPU, RAM, daemon pulse & task counts
         • `/wake` / `/standby` — Awaken daemon or toggle zero-power sleep mode
-        • `/video [quote]` — Render 3D motion card-flip animation
+        • `/render [chest|bottle] [quote]` — Render a video in the scene you pick
+        • `/video [quote]` — Render a video (the chest and the bottle take turns)
         • `/tiktok [quote]` — Render & auto-publish to @Thevibecheckproject
         • `/remember [fact]` — Permanently record a memory fact
         • `/engine [auto|cloud|ollama]` — Switch execution backend

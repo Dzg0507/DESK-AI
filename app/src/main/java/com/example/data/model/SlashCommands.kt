@@ -31,8 +31,9 @@ object SlashCommands {
         SlashCommand("Tasks", "/cancel", "/cancel [task id]", "Stop the task that's running, or a queued one by its id", "/cancel "),
         SlashCommand("Tasks", "/retry", "/retry <task id>", "Give a failed task another go", "/retry "),
 
-        SlashCommand("Videos & images", "/video", "/video [quote]", "Make a treasure-chest video, with your quote or one it picks", "/video "),
-        SlashCommand("Videos & images", "/tiktok", "/tiktok [quote]", "Make a video and post it to TikTok", "/tiktok "),
+        SlashCommand("Videos & images", "/render", "/render [chest|bottle] [quote]", "Make a video in the scene you pick (the treasure chest or the message in a bottle), with your quote or one it picks", "/render "),
+        SlashCommand("Videos & images", "/video", "/video [quote]", "Make a video (the chest and the bottle take turns), with your quote or one it picks", "/video "),
+        SlashCommand("Videos & images", "/tiktok", "/tiktok [chest|bottle] [quote]", "Make a video and post it to TikTok", "/tiktok "),
         SlashCommand("Videos & images", "/image", "/image <description>", "Create an image from your description", "/image "),
         SlashCommand("Videos & images", "/videos", "/videos", "List your latest videos", "/videos", run = true),
 

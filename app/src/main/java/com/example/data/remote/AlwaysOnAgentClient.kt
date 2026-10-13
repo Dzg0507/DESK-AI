@@ -1295,17 +1295,34 @@ class AlwaysOnAgentClient {
         }
     }
 
+    // "/render bottle You are enough." -> ("bottle", "You are enough."). Only a first word that is a scene counts;
+    // anything else is all quote (a quote starting with a scene word: say the scene first, "chest Chest up...").
+    private fun videoSceneAndQuote(arg: String): Pair<String?, String> {
+        val text = arg.trim()
+        val first = text.substringBefore(' ').lowercase()
+        val scene = when (first) {
+            "chest", "treasure" -> "chest"
+            "bottle", "message" -> "bottle"
+            "card" -> "card"
+            else -> null
+        }
+        return if (scene == null) Pair(null, text) else Pair(scene, text.substringAfter(' ', "").trim())
+    }
+
+    // scene: "chest" or "bottle" (or "card"); null lets the agent's video tool take turns between the scenes
     suspend fun triggerMedia(
         config: BridgeConfig,
         action: String,
         quote: String?,
-        idempotencyKey: String = UUID.randomUUID().toString()
+        idempotencyKey: String = UUID.randomUUID().toString(),
+        scene: String? = null
     ): Result<String> = withContext(Dispatchers.IO) {
         try {
             executeWithFailover(config) { baseUrl ->
                 val payload = JSONObject().apply {
                     put("action", action)
                     if (quote != null) put("quote", quote)
+                    if (scene != null) put("scene", scene)
                 }
                 val req = addAuth(
                     Request.Builder()
@@ -1896,21 +1913,26 @@ class AlwaysOnAgentClient {
                 }
             }
 
-            "/video" -> {
-                val quote = arg.ifBlank { null }
-                val res = triggerMedia(config, "video", quote)
+            "/video", "/render" -> {
+                // "/render bottle You are enough." : a scene word first picks the scene; the rest is the quote
+                val (scene, rest) = videoSceneAndQuote(arg)
+                val res = triggerMedia(config, "video", rest.ifBlank { null }, scene = scene)
                 if (res.isSuccess) {
                     val tid = res.getOrNull()
                     lastReceivedTaskId = tid
-                    onChunk("🎬 Rendering your video")
+                    onChunk(when (scene) {
+                        "chest" -> "🎬 Rendering your treasure chest video"
+                        "bottle" -> "🎬 Rendering your message in a bottle video"
+                        else -> "🎬 Rendering your video"
+                    })
                 } else {
                     onChunk("⚠️ Failed to dispatch video render: ${res.exceptionOrNull()?.message}")
                 }
             }
 
             "/tiktok" -> {
-                val quote = arg.ifBlank { null }
-                val res = triggerMedia(config, "tiktok", quote)
+                val (scene, rest) = videoSceneAndQuote(arg)
+                val res = triggerMedia(config, "tiktok", rest.ifBlank { null }, scene = scene)
                 if (res.isSuccess) {
                     val tid = res.getOrNull()
                     lastReceivedTaskId = tid

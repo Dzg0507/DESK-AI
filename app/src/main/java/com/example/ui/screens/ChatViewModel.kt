@@ -269,7 +269,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
         val initialPhase = when {
             textToSend.startsWith("/image") -> "🎨 Synthesizing image asset with AI..."
-            textToSend.startsWith("/video") || textToSend.startsWith("/tiktok") -> "🎬 Rendering 3D motion video pipeline..."
+            textToSend.startsWith("/video") || textToSend.startsWith("/render") || textToSend.startsWith("/tiktok") -> "🎬 Rendering 3D motion video pipeline..."
             textToSend.startsWith("/memory") -> "🧠 Searching long-term memory vault..."
             textToSend.startsWith("/status") -> "🔍 Querying daemon health & telemetry..."
             else -> "⚡ Reasoning & executing computer mission..."
