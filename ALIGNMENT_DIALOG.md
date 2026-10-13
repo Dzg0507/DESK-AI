@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-11 (DeskAI v2.20.2 / Build 77 shipped — Repos jobs get their chat card)
+**Last Updated:** 2026-10-13 (DeskAI v2.21.0 / Build 78 shipped — /render chest|bottle; Apply update chip no longer folded away)
 
 ---
 
@@ -14,6 +14,17 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-13: DeskAI v2.21.0 (build 78), /render chest|bottle and the Apply update chip (by the laptop Claude session)
+
+- **`/render [chest|bottle] [quote]`** (and `/video`, `/tiktok` with a scene word first) sends `scene` to
+  `POST /api/trigger_media` (AlwaysOnAgent `a7cd236`, docs/API.md mirrored). Without one, TiktokVideos takes turns
+  between the treasure chest and the new message in a bottle. Only a first word that is a scene counts.
+- **A finished task waiting for a tap keeps its card** (`TaskFolding.awaitsTap`): "apply task-189" twice came back
+  folded into a one-line row (build 71's folding), and a tap opened the details, which have no chips, so nothing
+  could be applied from the app. The newest message about a finished task with a primary endpoint chip (⚡ Apply
+  update, 🚀 Push live, 🔁 Try again) shows its full card even with tasks hidden; once live it folds like the rest.
+  Tests: `TaskFoldingTest`. The agent's side of the same incident: AlwaysOnAgent `3fd1cf5`.
 
 ## Shipped 2026-10-11: DeskAI v2.20.2 (build 77), Repos jobs get their chat card (by the laptop Claude session)
 

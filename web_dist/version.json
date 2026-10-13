@@ -1,7 +1,7 @@
 {
-  "versionCode": 77,
-  "versionName": "2.20.2",
-  "changelog": "DeskAI v2.20.2 (Build 77): a job started from Repos now puts its live card in the chat, so you can follow its progress there (before, it only showed in the Tasks list).",
+  "versionCode": 78,
+  "versionName": "2.21.0",
+  "changelog": "DeskAI v2.21.0 (Build 78): /render chest or /render bottle picks the video's scene (the new Message in a Bottle, or the Treasure Chest); without one they take turns. And a finished job waiting for you to apply it keeps its card with the Apply update button in the chat (it was being folded away, so updates couldn't be applied from the app).",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24575112
+  "fileSizeBytes": 24575116
 }
