@@ -51,12 +51,27 @@ fun isTaskMessage(m: ChatMessage): Boolean = m.role == "assistant" && !m.linkedT
 fun isFinished(t: AgentTaskItem): Boolean = t.cancelled || t.phase == "completed" || t.phase == "failed"
 
 /**
+ * A finished task still waiting for the owner's tap: its card carries a primary endpoint chip (⚡ Apply update,
+ * 🚀 Push live, 🔁 Try again). Folding it into a row hid that chip (2026-10-13: "apply task-189" twice, the card
+ * came folded, a tap opened the task's details, which have no chips; nothing could be applied from the app).
+ */
+fun awaitsTap(t: AgentTaskItem): Boolean = t.actions.any { it.action == "post" && it.variant == "primary" }
+
+/**
  * The chat as shown. [tasks]: what's known of each linked task (fetched by the screen). A task whose state isn't
- * known yet, or that's still running, shows as its full message (live card).
+ * known yet, or that's still running, shows as its full message (live card), and so does the newest message about
+ * a finished task that awaits a tap (awaitsTap), even with tasks hidden.
  */
 fun foldChat(messages: List<ChatMessage>, tasks: Map<String, AgentTaskItem>, hideTasks: Boolean,
              expanded: Set<String>): List<ChatEntry> {
     val out = ArrayList<ChatEntry>()
+    // the newest message linking each task: the one that keeps a waiting task's chips
+    val newest = HashMap<String, String>()
+    messages.forEach { m -> if (isTaskMessage(m)) newest[m.linkedTaskId!!] = m.id }
+    val keepsCard = { r: ChatMessage ->
+        val t = tasks[r.linkedTaskId]
+        t != null && isFinished(t) && awaitsTap(t) && newest[r.linkedTaskId] == r.id
+    }
     var i = 0
     while (i < messages.size) {
         val m = messages[i]
@@ -65,14 +80,17 @@ fun foldChat(messages: List<ChatMessage>, tasks: Map<String, AgentTaskItem>, hid
         var j = i
         while (j < messages.size && isTaskMessage(messages[j])) j++
         val run = messages.subList(i, j)
-        if (!hideTasks) {
-            val done = run.filter { r -> tasks[r.linkedTaskId]?.let(::isFinished) == true }
+        if (hideTasks) {
+            run.filter(keepsCard).forEach { r -> out.add(ChatEntry.Message(r)) }
+        } else {
+            val done = run.filter { r -> tasks[r.linkedTaskId]?.let(::isFinished) == true && !keepsCard(r) }
             val key = done.firstOrNull()?.id ?: ""
             var stripPlaced = false
             run.forEach { r ->
                 val t = tasks[r.linkedTaskId]
                 when {
                     t == null || !isFinished(t) -> out.add(ChatEntry.Message(r))        // running or unknown: live card
+                    keepsCard(r) -> out.add(ChatEntry.Message(r))                        // waiting for a tap: card + chips
                     done.size >= 2 -> {
                         if (!stripPlaced) {
                             out.add(ChatEntry.Strip(key, done.mapNotNull { d -> tasks[d.linkedTaskId] }, key in expanded))
