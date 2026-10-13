@@ -227,7 +227,7 @@ data: {"type":"started","task_id":"task-052","status":"started","phase":"in_prog
 
 | Method & path | Notes |
 |---|---|
-| `GET /api/memory` | stats, profile, facts, summaries, categories; add `?query=` to search. `profile` is a few paragraphs of plain prose about the owner, by name (show it in full); facts are written with the owner's name too. Each fact also says where it came from: `source` (`chat`, `hud` = added in the app, `images`), `evidence` (the owner's own words backing it, or null), and `source_message` (`{"id", "at", "excerpt"}`, when the message is known) |
+| `GET /api/memory` | stats, profile, facts, past, open_loops, summaries, categories; add `?query=` to search. `facts` is what the agent believes now (status `active`); `past` holds replaced (`superseded`, with `superseded_by`) and `faded` facts, newest first: show them apart, never as current. `open_loops`: current facts waiting on something, checked daily (`core/open_loops.py`): `[{"fact_id", "content", "waiting_on", "check_after", "checked_at", "asked_at"}]`. `profile` is a few paragraphs of plain prose about the owner, by name (show it in full); facts are written with the owner's name too. Each fact also says where it came from: `source` (`chat`, `hud` = added in the app, `images`), `evidence` (the owner's own words backing it, or null), and `source_message` (`{"id", "at", "excerpt"}`, when the message is known) |
 | `GET /api/memory/search?q=...` | matching facts and archived messages |
 | `GET /api/memory/conversation?limit=50&before_id=` | chat history, oldest first |
 | `POST /api/memory/facts` | `{"content", "category": "fact", "importance": 5, "pinned": true}`. Categories: profile, preference, project, plan, person, instruction, fact. |
@@ -439,6 +439,16 @@ and the app shows a card that opens the canvas screen.
 | `GET /api/canvas?limit=20` | `{"canvases": [{"id", "title", "kind", "version", "updated_at"}]}`, newest first |
 | `GET /api/canvas/{id}?version=` | `{"id", "title", "kind", "version", "latest", "versions": [{"version", "note", "created_at"}], "created_at", "updated_at"}` (no content: that's the preview) |
 | `GET /api/canvas/{id}/preview?version=` | the draft as a full HTML page: a document in a clean reading layout, a page with the website's own stylesheets. Sent with `Content-Security-Policy: default-src 'none'; script-src 'none'; … sandbox`, so nothing in it can run. Load it with the token in a header, not in the URL. |
+
+## AI Research (Opportunity Radar)
+
+Automated research worker that periodically scans the web for free AI credits, developer previews,
+free tiers, and free AI hackathons fitting Devin's building stack, saving digests to Memory and Canvas.
+
+| Method & path | Body | Returns |
+|---|---|---|
+| `GET /api/research/opportunities` | | `{"latest": {"title", "doc_id", "at", "count", "summary"} or null, "last_run_at": "...", "total_digests": int, "history": [...]}` |
+| `POST /api/research/run` | | `{"status": "success", "digest": {"doc": {"id", "title", "kind", "version"}, "summary", "count", "opportunities": {...}}}` |
 
 ## Connection check
 
