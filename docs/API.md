@@ -80,6 +80,7 @@ DeskAI repo at `docs/API.md`, updated whenever this one changes.
 - **Stop:** `POST /api/chat/cancel` `{"turn_id": "..."}` returns `{"ok": true}`. Send it when the user stops a
   reply. The agent finishes the turn anyway but doesn't keep the reply or learn from it, and that `/api/chat`
   call returns `{"success": false, "reply": "(cancelled)"}`. Also abort the HTTP request.
+- **Refine Prompt:** `POST /api/chat/refine` (or alias `POST /api/chat/enhance`) `{"text": "...", "instruction": "..."}` → `{"success": true, "refined": "...", "original": "...", "model": "..."}`. Uses CloudLLM to clarify, polish, and structure a rough user prompt before sending. Powers DeskAI's ✨ prompt enhance button in the chat input bar.
 
 ### Attaching documents
 
