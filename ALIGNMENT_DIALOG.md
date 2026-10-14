@@ -15,6 +15,14 @@
 
 ---
 
+## Shipped 2026-10-14: DeskAI v2.23.0 (build 80), Prompt enhance button in chat box & AlwaysOnAgent refine integration
+
+- **✨ Enhance Prompt button in ChatInputBar**: When user enters text into the message box, an AutoAwesome ✨ button appears next to the Send button. Tapping it triggers `POST /api/chat/refine` on AlwaysOnAgent.
+- **Loading & State**: While refining, the button morphs smoothly into a circular loading indicator and prevents duplicate submissions.
+- **Client & Remote Layer**: Added `refineChatText` in `AlwaysOnAgentClient` and `ChatRepository`, exposed via `ChatViewModel.refineInputText()`.
+- **Backend pairing**: AlwaysOnAgent (`c1b3366`) serves `/api/chat/refine` backed by CloudLLM (`gemini-3.5-flash-lite`).
+- **Build & Verification**: Compiled with Gradle on workstation, verified debug keystore signature.
+
 ## Shipped 2026-10-13: DeskAI v2.22.0 (build 79), Proactive assistant UI & away shift integration (by the laptop Claude session)
 
 - **Away shift background activity indicator**: Top-bar pulsing icon appears when the away shift runs on the desktop/mini (`event: activity` over SSE, snapshot via `GET /api/activity`). Tapping the icon opens `BackgroundWorkSheet` displaying the active phase, current step, and found ideas count.

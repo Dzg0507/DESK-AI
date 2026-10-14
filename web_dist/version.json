@@ -1,7 +1,7 @@
 {
-  "versionCode": 79,
-  "versionName": "2.22.0",
-  "changelog": "DeskAI v2.22.0 (Build 79): Proactive assistant support. Top-bar indicator pulses when the away shift is active (tap to inspect background tasks and discoveries). Proactive messages show 'why' explanations with reaction chips (thumbs up, thumbs down, less like this). Memory overview adds Waiting on (open loops) and Past versions tabs.",
+  "versionCode": 80,
+  "versionName": "2.23.0",
+  "changelog": "DeskAI v2.23.0 (Build 80): Added ✨ prompt enhance button in chat box. Tapping the magic wand refines and clarifies the prompt via AlwaysOnAgent's /api/chat/refine endpoint before sending.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24607890
+  "fileSizeBytes": 24607891
 }
