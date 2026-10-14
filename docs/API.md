@@ -437,7 +437,9 @@ message, and the owner simply replies in the chat.
 
 | Method & path | Returns |
 |---|---|
-| `GET /api/inbox?after=<id>&limit=50` | `{"messages": [{"id": 12, "kind": "brief"\|"notice"\|"suggestion"\|"question"\|"review"\|"memory", "text", "created_at", "canvas"?}], "last_id": 12}`, oldest first, only ids greater than `after`. `canvas` (only when present) is a draft card, the same shape as a chat reply's `canvas` (`{"id", "title", "kind", "version"}`): show the card that opens it. The Sunday growth review comes as `kind: "review"` with one. `kind: "memory"` is the Saturday memory check: show a Review button that opens `GET /api/memory/review` |
+| `GET /api/inbox?after=<id>&limit=50` | `{"messages": [{"id": 12, "kind": "brief"\|"notice"\|"suggestion"\|"question"\|"review"\|"memory", "text", "created_at", "why"?, "canvas"?}], "last_id": 12}`, oldest first, only ids greater than `after`. `why` (optional string): small text line explaining why the proactive message was sent (e.g. quote, signal). `canvas` (only when present) is a draft card, the same shape as a chat reply's `canvas` (`{"id", "title", "kind", "version"}`): show the card that opens it. The Sunday growth review comes as `kind: "review"` with one. `kind: "memory"` is the Saturday memory check: show a Review button that opens `GET /api/memory/review` |
+| `POST /api/inbox/{id}/feedback` | `{"status": "ok", "id": 12, "reaction": "thumbs_up"\|"thumbs_down"\|"less_like_this"}`. Body: `{"reaction": "thumbs_up"\|"thumbs_down"\|"less_like_this", "reason"?}`. Records reactions (Pulse thumbs) to proactive messages, used in scoring and exclusions |
+| `GET /api/proactive/candidates?status=&days=7&limit=50` | `{"candidates": [...], "counts": {"status", "source", "outcome"}}`. Inspects candidate pool items and statistics |
 
 The app keeps the highest id it has shown and asks for newer ones when a push arrives and whenever it opens, so a
 missed push loses nothing. Using `agent-<id>` as the message's id in the app's chat keeps a message from showing
