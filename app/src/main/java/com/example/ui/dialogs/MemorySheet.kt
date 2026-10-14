@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.data.model.MemoryFactItem
 import com.example.data.model.MemoryOverview
+import com.example.data.model.OpenLoopItem
 import com.example.data.model.RecipeItem
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.RoseError
@@ -88,6 +89,8 @@ fun MemorySheet(
     var facts by remember { mutableStateOf(emptyList<MemoryFactItem>()) }
     var profile by remember { mutableStateOf("") }
     var recipes by remember { mutableStateOf(emptyList<RecipeItem>()) }
+    var pastFacts by remember { mutableStateOf(emptyList<MemoryFactItem>()) }
+    var openLoops by remember { mutableStateOf(emptyList<OpenLoopItem>()) }
     var loading by remember { mutableStateOf(true) }
     var loadFailed by remember { mutableStateOf(false) }
 
@@ -97,6 +100,8 @@ fun MemorySheet(
             facts = overview.facts
             profile = overview.profile
             recipes = overview.recipes
+            pastFacts = overview.past
+            openLoops = overview.openLoops
         }
         loadFailed = overview == null
         loading = false
@@ -237,6 +242,51 @@ fun MemorySheet(
                             )
                         }
                     }
+
+                    // Waiting on (open loops): memories waiting on external follow-up
+                    if (openLoops.isNotEmpty()) {
+                        item {
+                            SectionLabel(
+                                text = "⏳ Waiting on",
+                                count = openLoops.size,
+                                color = AmberPending,
+                                modifier = Modifier.padding(top = 6.dp)
+                            )
+                        }
+                        items(openLoops, key = { "loop-${it.factId}" }) { loop ->
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .deskCard(borderColor = AmberPending.copy(alpha = 0.4f))
+                                    .padding(10.dp)
+                            ) {
+                                Column(modifier = Modifier.fillMaxWidth()) {
+                                    Text(
+                                        text = loop.content,
+                                        fontSize = 13.sp,
+                                        color = Slate100,
+                                        lineHeight = 18.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Waiting on: ${loop.waitingOn}",
+                                        fontSize = 11.sp,
+                                        color = AmberPending,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    loop.checkAfter?.let { after ->
+                                        Text(
+                                            text = "Check after: $after",
+                                            fontSize = 10.sp,
+                                            color = Slate400,
+                                            modifier = Modifier.padding(top = 2.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     item {
                         Text(
                             text = when {
@@ -339,6 +389,50 @@ fun MemorySheet(
                                         tint = RoseError.copy(alpha = 0.7f),
                                         modifier = Modifier.size(15.dp)
                                     )
+                                }
+                            }
+                        }
+                    }
+
+                    // Past versions: replaced or faded facts
+                    if (pastFacts.isNotEmpty()) {
+                        item {
+                            SectionLabel(
+                                text = "📜 Past versions",
+                                count = pastFacts.size,
+                                color = Slate400,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
+                        items(pastFacts, key = { "past-${it.id}" }) { fact ->
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .deskCard(borderColor = Slate800)
+                                    .padding(10.dp)
+                            ) {
+                                Column(modifier = Modifier.fillMaxWidth()) {
+                                    Text(
+                                        text = fact.content,
+                                        fontSize = 12.sp,
+                                        color = Slate400,
+                                        lineHeight = 17.sp
+                                    )
+                                    Row(
+                                        modifier = Modifier.padding(top = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        if (fact.category.isNotBlank()) {
+                                            TagChip(text = fact.category, color = Slate500)
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                        }
+                                        Text(
+                                            text = "#${fact.id} · past version",
+                                            fontSize = 10.sp,
+                                            color = Slate500,
+                                            fontFamily = FontFamily.Monospace
+                                        )
+                                    }
                                 }
                             }
                         }

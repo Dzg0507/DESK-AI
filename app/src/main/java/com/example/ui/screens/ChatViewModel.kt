@@ -17,6 +17,7 @@ import android.speech.tts.TextToSpeech
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.local.AppDatabase
+import com.example.data.model.ActivityState
 import com.example.data.model.AgentTaskItem
 import com.example.data.model.AgentWorkProject
 import com.example.data.model.BridgeConfig
@@ -80,6 +81,9 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _isConnected = MutableStateFlow(true)
     val isConnected: StateFlow<Boolean> = _isConnected.asStateFlow()
+
+    /** Background activity (the away shift), null if idle. */
+    val activityState: StateFlow<ActivityState?> = TaskEvents.activity
 
     private var streamJob: Job? = null
     private var messagesCollectJob: Job? = null
@@ -460,6 +464,14 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             repository.updateMessage(message.withAnsweredQuestion(option))
         }
         sendMessage(option)
+    }
+
+    /** Records user reaction (thumbs_up, thumbs_down, less_like_this) to an agent proactive message. */
+    fun onFeedback(message: ChatMessage, reaction: String, reason: String? = null) {
+        val inboxId = message.inboxId ?: message.id.removePrefix("agent-").toLongOrNull() ?: return
+        viewModelScope.launch {
+            repository.postFeedback(inboxId, reaction, reason)
+        }
     }
 
     suspend fun getTask(taskId: String): Result<AgentTaskItem> {

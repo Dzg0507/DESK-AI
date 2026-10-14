@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-13 (DeskAI v2.21.0 / Build 78 shipped — /render chest|bottle; Apply update chip no longer folded away)
+**Last Updated:** 2026-10-13 (DeskAI v2.22.0 / Build 79 shipped — Proactive assistant UI & away shift integration)
 
 ---
 
@@ -14,6 +14,14 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-13: DeskAI v2.22.0 (build 79), Proactive assistant UI & away shift integration (by the laptop Claude session)
+
+- **Away shift background activity indicator**: Top-bar pulsing icon appears when the away shift runs on the desktop/mini (`event: activity` over SSE, snapshot via `GET /api/activity`). Tapping the icon opens `BackgroundWorkSheet` displaying the active phase, current step, and found ideas count.
+- **Proactive message 'why' & reaction feedback**: Messages synced from `/api/inbox` now persist and display the italicized `why` line explaining the signal behind the proactive message. Added interactive reaction chips (👍, 👎, "less like this") which post to `POST /api/inbox/{id}/feedback` and auto-update candidate outcome on the agent.
+- **Memory screen: Waiting on & Past versions**: `MemorySheet` adds "⏳ Waiting on" section displaying active open loops and daily check cadence, and "📜 Past versions" section for retired or updated facts.
+- **Data models & Room DB migration**: Added `ActivityState` and `OpenLoopItem` models, added `why`, `inboxKind`, `inboxId`, and `feedback` to `ChatMessage` with Room `MIGRATION_6_7` (DB version 7).
+- Tests: Added `ProactiveParsingTest` for activity events, inbox parsing, and open loops. All unit tests passing (`testDebugUnitTest`).
 
 ## Shipped 2026-10-13: DeskAI v2.21.0 (build 78), /render chest|bottle and the Apply update chip (by the laptop Claude session)
 

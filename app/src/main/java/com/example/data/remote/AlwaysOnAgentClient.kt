@@ -1,5 +1,6 @@
 package com.example.data.remote
 
+import com.example.data.model.ActivityState
 import com.example.data.model.AgentSchedule
 import com.example.data.model.AgentTaskItem
 import com.example.data.model.AgentWorkProject
@@ -9,10 +10,12 @@ import com.example.data.model.ChatAttachment
 import com.example.data.model.ChatMessage
 import com.example.data.model.ChatQuestion
 import com.example.data.model.DaemonStats
+import com.example.data.model.InboxMessage
 import com.example.data.model.MemoryCheck
 import com.example.data.model.MemoryCheckItem
 import com.example.data.model.MemoryFactItem
 import com.example.data.model.MemoryOverview
+import com.example.data.model.OpenLoopItem
 import com.example.data.model.RecipeItem
 import com.example.data.model.PushRegistrationResult
 import com.example.data.model.ScheduleList
@@ -416,7 +419,9 @@ class AlwaysOnAgentClient {
                             kind = m.optString("kind", "notice"),
                             text = m.optString("text", ""),
                             createdAt = m.optString("created_at", ""),
-                            canvasJson = m.optJSONObject("canvas")?.toString()
+                            canvasJson = m.optJSONObject("canvas")?.toString(),
+                            why = m.optString("why", "").takeIf { it.isNotBlank() && it != "null" },
+                            feedback = m.optString("feedback", "").takeIf { it.isNotBlank() && it != "null" }
                         )
                     }.filter { it.text.isNotBlank() }
                 }
@@ -457,7 +462,8 @@ class AlwaysOnAgentClient {
         config: BridgeConfig,
         onCall: (Call) -> Unit,
         onOpen: () -> Unit,
-        onEvent: (taskId: String, status: String) -> Unit
+        onEvent: (taskId: String, status: String) -> Unit,
+        onActivity: (ActivityState) -> Unit = {}
     ) = withContext(Dispatchers.IO) {
         executeWithFailover(config) { baseUrl ->
             // Stopped (app went to the background) while on the first address: don't open the next one
@@ -487,11 +493,81 @@ class AlwaysOnAgentClient {
                                 // One bad line doesn't end the stream
                             }
                         }
+                        line.startsWith("data:") && eventName == "activity" -> {
+                            try {
+                                val json = JSONObject(line.removePrefix("data:").trim())
+                                onActivity(parseActivityJson(json))
+                            } catch (_: Exception) {
+                                // One bad line doesn't end the stream
+                            }
+                        }
                         line.isEmpty() -> eventName = ""
                     }
                 }
             }
         }
+    }
+
+    /** Background activity snapshot (GET /api/activity) so a freshly opened app knows if the away shift is running. */
+    suspend fun getActivity(config: BridgeConfig): Result<ActivityState> = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                val req = addAuth(Request.Builder().url("$baseUrl/api/activity"), config).build()
+                httpClient.newCall(req).execute().use { resp ->
+                    val body = resp.body?.string() ?: ""
+                    if (resp.isSuccessful) {
+                        Result.success(parseActivityJson(JSONObject(body)))
+                    } else {
+                        Result.failure(Exception("HTTP ${resp.code}: $body"))
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /** Records user reaction (thumbs_up, thumbs_down, less_like_this) to an inbox proactive message. */
+    suspend fun postInboxFeedback(
+        config: BridgeConfig,
+        messageId: Long,
+        reaction: String,
+        reason: String? = null
+    ): Result<Boolean> = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                val payload = JSONObject().apply {
+                    put("reaction", reaction)
+                    if (reason != null) put("reason", reason)
+                }
+                val body = payload.toString().toRequestBody(jsonMediaType)
+                val req = addAuth(
+                    Request.Builder().url("$baseUrl/api/inbox/$messageId/feedback").post(body),
+                    config
+                ).build()
+                httpClient.newCall(req).execute().use { resp ->
+                    if (resp.isSuccessful) {
+                        Result.success(true)
+                    } else {
+                        Result.failure(Exception("HTTP ${resp.code}: ${resp.body?.string()}"))
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    fun parseActivityJson(json: JSONObject): ActivityState {
+        return ActivityState(
+            active = json.optBoolean("active", false),
+            state = json.optString("state", ""),
+            label = json.optString("label", ""),
+            step = json.optString("step", ""),
+            startedAt = if (json.has("started_at") && !json.isNull("started_at")) json.optDouble("started_at") else null,
+            finishedAt = if (json.has("finished_at") && !json.isNull("finished_at")) json.optDouble("finished_at") else null,
+            found = json.optInt("found", 0)
+        )
     }
 
     // The events stream stays open for minutes: no overall timeout, and 45 s of silence (three missed pings) means
@@ -1588,6 +1664,44 @@ class AlwaysOnAgentClient {
                             )
                         }
                     }
+                    val pastArray = json.optJSONArray("past")
+                    val pastList = mutableListOf<MemoryFactItem>()
+                    if (pastArray != null) {
+                        for (i in 0 until pastArray.length()) {
+                            val f = pastArray.getJSONObject(i)
+                            pastList.add(
+                                MemoryFactItem(
+                                    id = f.optInt("id"),
+                                    content = f.optString("content"),
+                                    category = f.optString("category", "fact"),
+                                    importance = f.optInt("importance", 5),
+                                    pinned = f.optBoolean("pinned", false),
+                                    updatedAt = f.optString("updated_at", ""),
+                                    source = f.optString("source", ""),
+                                    evidence = f.optString("evidence", "").takeIf { it.isNotBlank() && it != "null" },
+                                    sourceAt = f.optJSONObject("source_message")?.optString("at"),
+                                    sourceExcerpt = f.optJSONObject("source_message")?.optString("excerpt")
+                                )
+                            )
+                        }
+                    }
+                    val loopsArray = json.optJSONArray("open_loops")
+                    val loopsList = mutableListOf<OpenLoopItem>()
+                    if (loopsArray != null) {
+                        for (i in 0 until loopsArray.length()) {
+                            val l = loopsArray.getJSONObject(i)
+                            loopsList.add(
+                                OpenLoopItem(
+                                    factId = l.optInt("fact_id"),
+                                    content = l.optString("content", ""),
+                                    waitingOn = l.optString("waiting_on", ""),
+                                    checkAfter = l.optString("check_after", "").takeIf { it.isNotBlank() && it != "null" },
+                                    checkedAt = l.optString("checked_at", "").takeIf { it.isNotBlank() && it != "null" },
+                                    askedAt = l.optString("asked_at", "").takeIf { it.isNotBlank() && it != "null" }
+                                )
+                            )
+                        }
+                    }
                     MemoryOverview(
                         profile = json.optString("profile", ""),
                         factsActive = stats?.optInt("facts_active") ?: 0,
@@ -1595,7 +1709,9 @@ class AlwaysOnAgentClient {
                         messagesCount = stats?.optInt("messages") ?: 0,
                         summariesCount = stats?.optInt("summaries") ?: 0,
                         facts = factList,
-                        recipes = fetchRecipes(baseUrl, config)
+                        recipes = fetchRecipes(baseUrl, config),
+                        past = pastList,
+                        openLoops = loopsList
                     )
                 }
             }

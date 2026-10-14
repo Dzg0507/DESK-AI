@@ -12,7 +12,7 @@ import com.example.data.model.ChatSession
 
 @Database(
     entities = [ChatMessage::class, ChatSession::class, BridgeConfig::class],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -47,6 +47,15 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE chat_messages ADD COLUMN why TEXT DEFAULT NULL")
+                db.execSQL("ALTER TABLE chat_messages ADD COLUMN inboxKind TEXT DEFAULT NULL")
+                db.execSQL("ALTER TABLE chat_messages ADD COLUMN inboxId INTEGER DEFAULT NULL")
+                db.execSQL("ALTER TABLE chat_messages ADD COLUMN feedback TEXT DEFAULT NULL")
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -54,7 +63,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "desk_ai_database"
                 )
-                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
                     .fallbackToDestructiveMigration(dropAllTables = true)
                     .build()
                 INSTANCE = instance

@@ -3,6 +3,7 @@ package com.example.data.remote
 import android.content.Context
 import android.util.Log
 import com.example.data.local.AppDatabase
+import com.example.data.model.ActivityState
 import com.example.data.repository.ChatRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -39,6 +40,10 @@ object TaskEvents {
     private val _connected = MutableStateFlow(false)
     /** True while the events stream is open. */
     val connected: StateFlow<Boolean> = _connected.asStateFlow()
+
+    private val _activity = MutableStateFlow<ActivityState?>(null)
+    /** Current background activity (the away shift), null if idle or not loaded yet. */
+    val activity: StateFlow<ActivityState?> = _activity.asStateFlow()
 
     // task id -> how many events it has had; ANY counts every event
     private val _changes = MutableStateFlow<Map<String, Long>>(emptyMap())
@@ -101,8 +106,12 @@ object TaskEvents {
                             _connected.value = true
                             _reconnects.value = _reconnects.value + 1
                             backoff = MIN_BACKOFF_MS
+                            scope.launch {
+                                client.getActivity(config).onSuccess { _activity.value = it }
+                            }
                         },
-                        onEvent = { taskId, _ -> bump(taskId) }
+                        onEvent = { taskId, _ -> bump(taskId) },
+                        onActivity = { state -> _activity.value = state }
                     )
                 } catch (e: CancellationException) {
                     throw e
@@ -125,6 +134,7 @@ object TaskEvents {
         activeCall?.cancel()                    // unblocks the reader at once instead of at the next ping
         activeCall = null
         _connected.value = false
+        _activity.value = null
     }
 
     private fun bump(taskId: String) {

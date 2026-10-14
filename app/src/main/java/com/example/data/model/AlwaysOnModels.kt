@@ -82,15 +82,30 @@ data class MemoryCheckItem(val n: Int, val op: String, val content: String, val 
 
 data class MemoryCheck(val items: List<MemoryCheckItem>)
 
+/** What the agent is doing in the background (the away shift; GET /api/activity and event: activity). */
+data class ActivityState(
+    val active: Boolean = false,
+    val state: String = "",
+    val label: String = "",
+    val step: String = "",
+    val startedAt: Double? = null,
+    val finishedAt: Double? = null,
+    val found: Int = 0
+)
+
 /** A message the agent started itself (GET /api/inbox): kind is brief, notice, suggestion, question, review or
  *  memory (the Saturday memory check: the chat shows a Review card that opens MemoryCheckSheet).
- *  canvasJson: a draft card ({"id","title","kind","version"}), e.g. the Sunday growth review. */
+ *  canvasJson: a draft card ({"id","title","kind","version"}), e.g. the Sunday growth review.
+ *  why: small italicized explanation of why the message was sent (proactive engine).
+ *  feedback: the user's recorded reaction ("thumbs_up", "thumbs_down", "less_like_this", or null). */
 data class InboxMessage(
     val id: Long,
     val kind: String,
     val text: String,
     val createdAt: String,
-    val canvasJson: String? = null
+    val canvasJson: String? = null,
+    val why: String? = null,
+    val feedback: String? = null
 )
 
 data class TaskAction(
@@ -200,6 +215,16 @@ data class RecipeItem(
             if (retired) " · retired (kept failing)" else ""
 }
 
+/** A memory waiting on external event or follow-up, checked daily (GET /api/memory "open_loops"). */
+data class OpenLoopItem(
+    val factId: Int = 0,
+    val content: String = "",
+    val waitingOn: String = "",
+    val checkAfter: String? = null,
+    val checkedAt: String? = null,
+    val askedAt: String? = null
+)
+
 data class MemoryOverview(
     val profile: String = "",
     val factsActive: Int = 0,
@@ -207,7 +232,9 @@ data class MemoryOverview(
     val messagesCount: Int = 0,
     val summariesCount: Int = 0,
     val facts: List<MemoryFactItem> = emptyList(),
-    val recipes: List<RecipeItem> = emptyList()
+    val recipes: List<RecipeItem> = emptyList(),
+    val past: List<MemoryFactItem> = emptyList(),
+    val openLoops: List<OpenLoopItem> = emptyList()
 )
 
 data class VideoItem(

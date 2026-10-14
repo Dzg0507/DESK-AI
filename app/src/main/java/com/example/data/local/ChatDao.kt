@@ -59,4 +59,10 @@ interface ChatDao {
 
     @Query("SELECT COUNT(*) FROM chat_messages WHERE sessionId = :sessionId")
     suspend fun getMessageCount(sessionId: String): Int
+
+    @Query("UPDATE chat_messages SET feedback = :feedback WHERE inboxId = :inboxId")
+    suspend fun updateFeedbackByInboxId(inboxId: Long, feedback: String)
+
+    @Query("UPDATE chat_messages SET feedback = :feedback WHERE id = :messageId")
+    suspend fun updateFeedbackById(messageId: String, feedback: String)
 }

@@ -446,7 +446,11 @@ class ChatRepository(
                     timestamp = at,
                     status = "sent",
                     modelUsed = "AlwaysOnAgent · $label",
-                    canvasJson = m.canvasJson       // the draft card (the Sunday review), as on a chat reply
+                    canvasJson = m.canvasJson,      // the draft card (the Sunday review), as on a chat reply
+                    why = m.why,
+                    inboxKind = m.kind,
+                    inboxId = m.id,
+                    feedback = m.feedback
                 )
             )
             if (row != -1L) added++
@@ -454,6 +458,18 @@ class ChatRepository(
         prefs.edit().putLong("last_id", messages.maxOf { it.id }).apply()
         if (added > 0) chatDao.updateSession(session.copy(updatedAt = System.currentTimeMillis()))
         added
+    }
+
+    suspend fun postFeedback(messageId: Long, reaction: String, reason: String? = null): Result<Boolean> = withContext(Dispatchers.IO) {
+        val result = agentClient.postInboxFeedback(getActiveConfig(), messageId, reaction, reason)
+        if (result.isSuccess) {
+            chatDao.updateFeedbackByInboxId(messageId, reaction)
+        }
+        result
+    }
+
+    suspend fun updateMessageFeedback(messageId: Long, reaction: String) = withContext(Dispatchers.IO) {
+        chatDao.updateFeedbackByInboxId(messageId, reaction)
     }
 
     /**

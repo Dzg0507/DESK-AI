@@ -25,7 +25,11 @@ data class ChatMessage(
     val proposalsJson: String? = null,
     val questionJson: String? = null,
     val canvasJson: String? = null,         // the draft this reply wrote or changed: {"id","title","kind","version"}
-    val attachmentsJson: String? = null     // files the user sent with it: [{"name","kind","path"}]
+    val attachmentsJson: String? = null,    // files the user sent with it: [{"name","kind","path"}]
+    val why: String? = null,                // proactive engine explanation: why this message was sent
+    val inboxKind: String? = null,          // brief, notice, suggestion, question, review, memory
+    val inboxId: Long? = null,              // the server-side inbox id
+    val feedback: String? = null            // thumbs_up, thumbs_down, less_like_this
 ) {
     fun getAttachments(): List<MessageAttachment> = MessageAttachment.fromJson(attachmentsJson)
 

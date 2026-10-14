@@ -30,9 +30,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddComment
 import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material.icons.filled.SystemUpdate
@@ -80,6 +87,7 @@ import com.example.ui.components.MessageBubble
 import com.example.ui.components.SessionDrawerContent
 import com.example.ui.dialogs.ConnectionHubDialog
 import com.example.ui.dialogs.AppUpdaterDialog
+import com.example.ui.dialogs.BackgroundWorkSheet
 import com.example.ui.dialogs.CommandPaletteDialog
 import com.example.ui.dialogs.MediaGallerySheet
 import com.example.ui.dialogs.MemorySheet
@@ -131,6 +139,19 @@ fun ChatScreen(
     var hasUpdateAvailable by remember { mutableStateOf(false) }
     var playbackVideo by remember { mutableStateOf<com.example.data.model.VideoItem?>(null) }
     var openCanvas by remember { mutableStateOf<com.example.data.model.CanvasRef?>(null) }
+    val activityState by viewModel.activityState.collectAsStateWithLifecycle()
+    var showBackgroundWorkSheet by remember { mutableStateOf(false) }
+
+    val infiniteTransition = rememberInfiniteTransition(label = "awayShiftPulse")
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.35f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(900, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "awayShiftAlpha"
+    )
 
     // Check for updates in background
     LaunchedEffect(config.getResolvedUrl()) {
@@ -322,6 +343,20 @@ fun ChatScreen(
                             )
                         }
 
+                        // Away shift background activity pulsing indicator
+                        if (activityState?.active == true) {
+                            IconButton(
+                                onClick = { showBackgroundWorkSheet = true },
+                                modifier = Modifier.testTag("background_activity_button")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.AutoAwesome,
+                                    contentDescription = "Background Activity",
+                                    tint = com.example.ui.theme.PhosphorMint.copy(alpha = pulseAlpha)
+                                )
+                            }
+                        }
+
                         // In-App OTA Update Button with badge indicator
                         IconButton(
                             onClick = { showUpdaterDialog = true },
@@ -509,6 +544,7 @@ fun ChatScreen(
                                     },
                                     onOpenCanvas = { ref -> openCanvas = ref },
                                     onOpenMemoryCheck = { showMemoryCheck = true },
+                                    onFeedback = { msg, reaction -> viewModel.onFeedback(msg, reaction) },
                                     serverBaseUrl = config.getResolvedUrl(),
                                     authToken = config.apiKey
                                 )
@@ -835,6 +871,13 @@ fun ChatScreen(
             onCheckUptime = { viewModel.agentUptime() },
             onFetchLogs = { limit -> viewModel.fetchSystemLogs(limit) },
             onTestPush = { viewModel.testPush() }
+        )
+    }
+
+    if (showBackgroundWorkSheet) {
+        BackgroundWorkSheet(
+            activity = activityState,
+            onDismiss = { showBackgroundWorkSheet = false }
         )
     }
 }

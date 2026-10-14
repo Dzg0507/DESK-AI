@@ -128,6 +128,7 @@ fun MessageBubble(
     onActionClick: ((TaskAction) -> Unit)? = null,
     onOpenCanvas: ((com.example.data.model.CanvasRef) -> Unit)? = null,
     onOpenMemoryCheck: (() -> Unit)? = null,
+    onFeedback: ((ChatMessage, String) -> Unit)? = null,
     serverBaseUrl: String = "",
     authToken: String = "",
     modifier: Modifier = Modifier
@@ -307,6 +308,44 @@ fun MessageBubble(
                             onWatch = onWatchTask,
                             onOpenDetails = onOpenTaskDetails
                         )
+                    }
+
+                    // The "why" line: why this proactive message was sent
+                    if (!message.why.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = message.why,
+                            fontSize = 11.sp,
+                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                            color = Slate400,
+                            lineHeight = 15.sp
+                        )
+                    }
+
+                    // Proactive message reaction chips (thumbs up, thumbs down, less like this)
+                    val isProactive = !isUser && (message.inboxId != null || message.modelUsed?.startsWith("AlwaysOnAgent ·") == true)
+                    if (isProactive && onFeedback != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            FeedbackChip(
+                                label = "👍",
+                                selected = message.feedback == "thumbs_up",
+                                onClick = { onFeedback(message, "thumbs_up") }
+                            )
+                            FeedbackChip(
+                                label = "👎",
+                                selected = message.feedback == "thumbs_down",
+                                onClick = { onFeedback(message, "thumbs_down") }
+                            )
+                            FeedbackChip(
+                                label = "less like this",
+                                selected = message.feedback == "less_like_this",
+                                onClick = { onFeedback(message, "less_like_this") }
+                            )
+                        }
                     }
 
                     // Timestamp
@@ -893,5 +932,32 @@ private fun SentAttachments(attached: List<MessageAttachment>) {
                     modifier = Modifier.fillMaxSize())
             }
         }
+    }
+}
+
+@Composable
+private fun FeedbackChip(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (selected) ElectricCyan.copy(alpha = 0.25f) else Slate800.copy(alpha = 0.6f))
+            .border(
+                1.dp,
+                if (selected) ElectricCyan else Slate700,
+                RoundedCornerShape(12.dp)
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 8.dp, vertical = 3.dp)
+    ) {
+        Text(
+            text = label,
+            fontSize = 11.sp,
+            color = if (selected) ElectricCyan else Slate200,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+        )
     }
 }
