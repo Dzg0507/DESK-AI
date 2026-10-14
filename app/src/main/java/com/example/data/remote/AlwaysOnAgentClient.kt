@@ -239,6 +239,38 @@ class AlwaysOnAgentClient {
         }
     }
 
+    suspend fun refineChatText(config: BridgeConfig, text: String, instruction: String? = null): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                val payload = JSONObject().apply {
+                    put("text", text)
+                    if (!instruction.isNullOrBlank()) {
+                        put("instruction", instruction)
+                    }
+                }
+                val req = addAuth(
+                    Request.Builder()
+                        .url("$baseUrl/api/chat/refine")
+                        .post(payload.toString().toRequestBody(jsonMediaType)),
+                    config
+                ).build()
+
+                httpClient.newCall(req).execute().use { resp ->
+                    val body = resp.body?.string() ?: ""
+                    if (resp.isSuccessful) {
+                        val json = JSONObject(body)
+                        val refined = json.optString("refined", text)
+                        Result.success(refined)
+                    } else {
+                        Result.failure(Exception("HTTP ${resp.code}: $body"))
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun setDefaultEngine(config: BridgeConfig, engine: String): Result<String> = withContext(Dispatchers.IO) {
         try {
             executeWithFailover(config) { baseUrl ->

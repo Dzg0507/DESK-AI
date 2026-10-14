@@ -41,6 +41,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AttachFile
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Image
@@ -98,6 +99,8 @@ fun ChatInputBar(
     attachments: List<ChatAttachment> = emptyList(),
     onAttachFile: (Uri) -> Unit = {},
     onRemoveAttachment: (String) -> Unit = {},
+    isRefining: Boolean = false,
+    onRefine: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     // Files: PDF, Word, text-like files and images (the agent reads their text; images and scans by OCR)
@@ -268,6 +271,41 @@ fun ChatInputBar(
             }
 
             Spacer(modifier = Modifier.width(8.dp))
+
+            // Enhance Button (appears when user has typed something and not streaming)
+            AnimatedVisibility(
+                visible = text.isNotBlank() && !isStreaming,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                Row {
+                    IconButton(
+                        onClick = onRefine,
+                        enabled = !isRefining,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(Slate800)
+                            .border(1.dp, if (isRefining) ElectricCyan else Slate700, CircleShape)
+                    ) {
+                        if (isRefining) {
+                            CircularProgressIndicator(
+                                color = ElectricCyan,
+                                strokeWidth = 2.dp,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.AutoAwesome,
+                                contentDescription = "Enhance Prompt",
+                                tint = ElectricCyan,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+            }
 
             // Send or Stop Button
             if (isStreaming) {

@@ -313,3 +313,15 @@ data class AgentSchedule(
 data class ScheduleList(val schedules: List<AgentSchedule>, val timezone: String)
 
 data class SchedulePreview(val valid: Boolean, val description: String, val nextRuns: List<String>, val error: String?)
+
+data class ChatRefineRequest(
+    val text: String,
+    val instruction: String? = null
+)
+
+data class ChatRefineResponse(
+    val success: Boolean = true,
+    val refined: String,
+    val original: String = "",
+    val model: String = ""
+)

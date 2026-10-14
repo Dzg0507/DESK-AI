@@ -125,6 +125,11 @@ class ChatRepository(
         agentClient.getDaemonStats(config)
     }
 
+    suspend fun refineChatText(text: String, instruction: String? = null): Result<String> = withContext(Dispatchers.IO) {
+        val config = getActiveConfig()
+        agentClient.refineChatText(config, text, instruction)
+    }
+
     suspend fun setDaemonState(state: String): Result<String> = withContext(Dispatchers.IO) {
         val config = getActiveConfig()
         agentClient.setDaemonState(config, state)

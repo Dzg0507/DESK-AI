@@ -66,6 +66,9 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val _inputText = MutableStateFlow("")
     val inputText: StateFlow<String> = _inputText.asStateFlow()
 
+    private val _isRefining = MutableStateFlow(false)
+    val isRefining: StateFlow<Boolean> = _isRefining.asStateFlow()
+
     // Files attached to the message being written (uploaded and read by the agent as soon as they're picked)
     private val _attachments = MutableStateFlow<List<ChatAttachment>>(emptyList())
     val attachments: StateFlow<List<ChatAttachment>> = _attachments.asStateFlow()
@@ -174,6 +177,26 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     fun onInputTextChange(text: String) {
         _inputText.value = text
+    }
+
+    fun refineInputText() {
+        val current = _inputText.value.trim()
+        if (current.isBlank() || _isRefining.value) return
+
+        viewModelScope.launch {
+            _isRefining.value = true
+            try {
+                val res = repository.refineChatText(current)
+                res.onSuccess { refined ->
+                    if (refined.isNotBlank()) {
+                        _inputText.value = refined
+                    }
+                }
+            } catch (_: Exception) {
+            } finally {
+                _isRefining.value = false
+            }
+        }
     }
 
     /** What was shared to DeskAI from another app: the text joins the message box, the files are attached
