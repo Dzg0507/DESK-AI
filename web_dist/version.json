@@ -1,7 +1,7 @@
 {
-  "versionCode": 80,
-  "versionName": "2.23.0",
-  "changelog": "DeskAI v2.23.0 (Build 80): Added ✨ prompt enhance button in chat box. Tapping the magic wand refines and clarifies the prompt via AlwaysOnAgent's /api/chat/refine endpoint before sending.",
+  "versionCode": 81,
+  "versionName": "2.24.0",
+  "changelog": "DeskAI v2.24.0 (Build 81): Enhance now has Undo (the button turns into Undo after enhancing), never replaces text you typed while it worked, and tells you when no AI could enhance it.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24607891
+  "fileSizeBytes": 24624277
 }

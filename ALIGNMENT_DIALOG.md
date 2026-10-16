@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-13 (DeskAI v2.22.0 / Build 79 shipped — Proactive assistant UI & away shift integration)
+**Last Updated:** 2026-10-16 (DeskAI v2.24.0 / Build 81 shipped — Enhance undo, typing guard, failure notice)
 
 ---
 
@@ -14,6 +14,13 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-16: DeskAI v2.24.0 (build 81), Enhance: undo, typing guard, failure notice (Claude)
+
+- **Undo**: after Enhance replaces the draft, the ✨ button shows Undo until the text is edited; tapping it restores the draft. The enhancer can change meaning (in testing, "push it" for git became posting a video).
+- **Typing guard**: the refined text is applied only if the box still holds the draft that was sent; typing during the wait wins.
+- **Failure notice**: a toast when the agent answers `model: "raw"` (every model failed; its `success` stays true) or the call fails. Before, the spinner just stopped.
+- No AlwaysOnAgent change needed: the `/api/chat/refine` contract is unchanged.
 
 ## Shipped 2026-10-14: DeskAI v2.23.0 (build 80), Prompt enhance button in chat box & AlwaysOnAgent refine integration
 
