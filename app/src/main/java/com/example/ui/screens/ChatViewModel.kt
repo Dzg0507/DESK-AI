@@ -35,6 +35,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -68,6 +69,11 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _isRefining = MutableStateFlow(false)
     val isRefining: StateFlow<Boolean> = _isRefining.asStateFlow()
+
+    // (the draft before Enhance, the enhanced text): Undo is offered until the box holds anything else
+    private val _refineUndo = MutableStateFlow<Pair<String, String>?>(null)
+    val canUndoRefine: StateFlow<Boolean> = combine(_inputText, _refineUndo) { text, undo -> undo?.second == text }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     // Files attached to the message being written (uploaded and read by the agent as soon as they're picked)
     private val _attachments = MutableStateFlow<List<ChatAttachment>>(emptyList())
@@ -183,20 +189,39 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         val current = _inputText.value.trim()
         if (current.isBlank() || _isRefining.value) return
 
+        val before = _inputText.value
         viewModelScope.launch {
             _isRefining.value = true
             try {
                 val res = repository.refineChatText(current)
                 res.onSuccess { refined ->
-                    if (refined.isNotBlank()) {
-                        _inputText.value = refined
+                    when {
+                        // typed on while it worked (a refine can take 20 s): their newer words win
+                        _inputText.value != before -> notify("Enhance skipped: the message changed meanwhile")
+                        refined.isBlank() || refined.trim() == current -> notify("Left as it was")
+                        else -> {
+                            _inputText.value = refined
+                            _refineUndo.value = before to refined
+                        }
                     }
-                }
+                }.onFailure { notify(it.message?.takeIf { m -> !m.startsWith("HTTP") } ?: "Couldn't enhance it") }
             } catch (_: Exception) {
+                notify("Couldn't enhance it")
             } finally {
                 _isRefining.value = false
             }
         }
+    }
+
+    /** Back to the draft as it was before Enhance (the enhancer can change what was meant). */
+    fun undoRefine() {
+        val undo = _refineUndo.value ?: return
+        if (_inputText.value == undo.second) _inputText.value = undo.first
+        _refineUndo.value = null
+    }
+
+    private fun notify(text: String) {
+        android.widget.Toast.makeText(getApplication(), text, android.widget.Toast.LENGTH_SHORT).show()
     }
 
     /** What was shared to DeskAI from another app: the text joins the message box, the files are attached

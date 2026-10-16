@@ -40,6 +40,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Close
@@ -101,6 +102,8 @@ fun ChatInputBar(
     onRemoveAttachment: (String) -> Unit = {},
     isRefining: Boolean = false,
     onRefine: () -> Unit = {},
+    canUndoRefine: Boolean = false,
+    onUndoRefine: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     // Files: PDF, Word, text-like files and images (the agent reads their text; images and scans by OCR)
@@ -280,7 +283,7 @@ fun ChatInputBar(
             ) {
                 Row {
                     IconButton(
-                        onClick = onRefine,
+                        onClick = if (canUndoRefine) onUndoRefine else onRefine,
                         enabled = !isRefining,
                         modifier = Modifier
                             .size(40.dp)
@@ -293,6 +296,13 @@ fun ChatInputBar(
                                 color = ElectricCyan,
                                 strokeWidth = 2.dp,
                                 modifier = Modifier.size(18.dp)
+                            )
+                        } else if (canUndoRefine) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Undo,
+                                contentDescription = "Undo Enhance",
+                                tint = ElectricCyan,
+                                modifier = Modifier.size(20.dp)
                             )
                         } else {
                             Icon(

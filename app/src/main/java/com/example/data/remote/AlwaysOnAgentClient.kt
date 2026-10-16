@@ -259,8 +259,12 @@ class AlwaysOnAgentClient {
                     val body = resp.body?.string() ?: ""
                     if (resp.isSuccessful) {
                         val json = JSONObject(body)
-                        val refined = json.optString("refined", text)
-                        Result.success(refined)
+                        // "raw": every model failed and the agent handed the draft back (its success stays true)
+                        if (json.optString("model") == "raw") {
+                            Result.failure(Exception("No AI model could enhance it right now"))
+                        } else {
+                            Result.success(json.optString("refined", text))
+                        }
                     } else {
                         Result.failure(Exception("HTTP ${resp.code}: $body"))
                     }

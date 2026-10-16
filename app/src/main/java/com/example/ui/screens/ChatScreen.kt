@@ -127,6 +127,7 @@ fun ChatScreen(
     val attachments by viewModel.attachments.collectAsStateWithLifecycle()
     val isStreaming by viewModel.isStreaming.collectAsStateWithLifecycle()
     val isRefining by viewModel.isRefining.collectAsStateWithLifecycle()
+    val canUndoRefine by viewModel.canUndoRefine.collectAsStateWithLifecycle()
     val streamingDurationMs by viewModel.streamingDurationMs.collectAsStateWithLifecycle()
     val streamingPhase by viewModel.streamingPhase.collectAsStateWithLifecycle()
     val isConnected by viewModel.isConnected.collectAsStateWithLifecycle()
@@ -623,7 +624,9 @@ fun ChatScreen(
                         onAttachFile = { viewModel.attachFile(it) },
                         onRemoveAttachment = { viewModel.removeAttachment(it) },
                         isRefining = isRefining,
-                        onRefine = { viewModel.refineInputText() }
+                        onRefine = { viewModel.refineInputText() },
+                        canUndoRefine = canUndoRefine,
+                        onUndoRefine = { viewModel.undoRefine() }
                     )
                 }
             }
