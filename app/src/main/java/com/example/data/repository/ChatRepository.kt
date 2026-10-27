@@ -3,6 +3,7 @@ package com.example.data.repository
 import android.content.Context
 
 import com.example.data.local.AppDatabase
+import com.example.data.local.TokenCipher
 import com.example.data.model.AgentTaskItem
 import com.example.data.model.AgentWorkProject
 import com.example.data.model.BridgeConfig
@@ -43,14 +44,14 @@ class ChatRepository(
 
     val bridgeConfig: Flow<BridgeConfig> = configDao.getConfig().map { config ->
         val prefs = context?.getSharedPreferences("desk_ai_credentials", Context.MODE_PRIVATE)
-        val savedKey = prefs?.getString("api_key", null)
+        val savedKey = prefs?.getString("api_key", null)?.let { TokenCipher.open(it) }
         val savedServer = prefs?.getString("server_url", null)
         val savedRemote = prefs?.getString("remote_url", null)
 
         if (config == null) {
             BridgeConfig(
                 serverUrl = savedServer ?: "http://192.168.12.151:8080",
-                remoteUrl = savedRemote ?: "http://100.109.85.92:8080",
+                remoteUrl = BridgeConfig.upgradeRemote(savedRemote ?: BridgeConfig.TAILNET_HTTPS),
                 apiKey = savedKey ?: ""
             )
         } else if (config.apiKey.isBlank() && !savedKey.isNullOrBlank()) {
@@ -60,23 +61,35 @@ class ChatRepository(
                 remoteUrl = if (config.remoteUrl.isBlank() && !savedRemote.isNullOrBlank()) savedRemote else config.remoteUrl
             )
         } else {
-            if (config.serverUrl == "http://192.168.12.153:8080") config.copy(serverUrl = "http://192.168.12.151:8080") else config
+            val fixed = if (config.serverUrl == "http://192.168.12.153:8080") config.copy(serverUrl = "http://192.168.12.151:8080") else config
+            fixed.copy(remoteUrl = BridgeConfig.upgradeRemote(fixed.remoteUrl))
         }
     }
 
     suspend fun getActiveConfig(): BridgeConfig = withContext(Dispatchers.IO) {
         val inDb = configDao.getConfigSync()
         val prefs = context?.getSharedPreferences("desk_ai_credentials", Context.MODE_PRIVATE)
-        val savedKey = prefs?.getString("api_key", null)
+        val storedKey = prefs?.getString("api_key", null)
+        if (prefs != null && !storedKey.isNullOrEmpty() && !TokenCipher.isSealed(storedKey)) {
+            // The backup copy was plain text until 2026-10-27: encrypt it like the database's
+            prefs.edit().putString("api_key", TokenCipher.seal(storedKey)).apply()
+        }
+        val savedKey = storedKey?.let { TokenCipher.open(it) }
         val savedServer = prefs?.getString("server_url", null)
         val savedRemote = prefs?.getString("remote_url", null)
         val savedModel = prefs?.getString("selected_model", null)
         val savedProtocol = prefs?.getString("protocol", null)
 
+        if (inDb != null && BridgeConfig.upgradeRemote(inDb.remoteUrl) != inDb.remoteUrl) {
+            val upgraded = inDb.copy(remoteUrl = BridgeConfig.upgradeRemote(inDb.remoteUrl))
+            configDao.saveConfig(upgraded)
+            return@withContext upgraded
+        }
+
         if (inDb == null) {
             BridgeConfig(
                 serverUrl = savedServer ?: "http://192.168.12.151:8080",
-                remoteUrl = savedRemote ?: "http://100.109.85.92:8080",
+                remoteUrl = BridgeConfig.upgradeRemote(savedRemote ?: BridgeConfig.TAILNET_HTTPS),
                 apiKey = savedKey ?: "",
                 selectedModel = savedModel ?: "auto",
                 protocol = savedProtocol ?: BridgeConfig().protocol
@@ -102,7 +115,7 @@ class ChatRepository(
                 prefs.edit()
                     .putString("server_url", config.serverUrl)
                     .putString("remote_url", config.remoteUrl)
-                    .putString("api_key", config.apiKey)
+                    .putString("api_key", TokenCipher.seal(config.apiKey))    // never in plain text (2026-10-27)
                     .putString("selected_model", config.selectedModel)
                     .putString("protocol", config.protocol)
                     .apply()

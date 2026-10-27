@@ -1,19 +1,18 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample data extraction rules file; uncomment and customize as necessary.
-   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
-   for details.
--->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12 and up. The database (the agent's access token, the chat history) and the Vault's prefs never go to
+     Google's cloud backup or to a new phone (2026-10-27, docs/AUDIT_2026-10-27.md S5). The token is encrypted with a
+     key that stays on this phone, so a copy would be unreadable anyway: on a new phone, enter the token again. -->
 <data-extraction-rules>
     <cloud-backup>
-        <!-- TODO: Use <include> and <exclude> to control what is backed up.
-        <include .../>
-        <exclude .../>
-        -->
+        <exclude domain="database" path="desk_ai_database" />
+        <exclude domain="database" path="desk_ai_database-wal" />
+        <exclude domain="database" path="desk_ai_database-shm" />
+        <exclude domain="sharedpref" path="desk_ai_credentials.xml" />
     </cloud-backup>
-    <!--
     <device-transfer>
-        <include .../>
-        <exclude .../>
+        <exclude domain="database" path="desk_ai_database" />
+        <exclude domain="database" path="desk_ai_database-wal" />
+        <exclude domain="database" path="desk_ai_database-shm" />
+        <exclude domain="sharedpref" path="desk_ai_credentials.xml" />
     </device-transfer>
-    -->
 </data-extraction-rules>

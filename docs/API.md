@@ -7,7 +7,7 @@ DeskAI repo at `docs/API.md`, updated whenever this one changes.
 
 | | |
 |---|---|
-| Base URL | `http://192.168.12.151:8080` on the home Wi-Fi, `http://100.109.85.92:8080` over Tailscale (the mini PC `devinmini`) |
+| Base URL | **`https://devinmini.tailf2cdf6.ts.net`** over Tailscale, at home or away (2026-10-27: `tailscale serve` on the Mini, tailnet only, Let's Encrypt certificate): use it first. Fallbacks: `http://192.168.12.151:8080` on the home Wi-Fi and `http://100.109.85.92:8080` over Tailscale, both plain HTTP (the token crosses the Wi-Fi readable) |
 | Auth | `X-HUD-Token: <HUD_AUTH_TOKEN>` on **every** request (`Authorization: Bearer <token>` also works). Send it only to this host. |
 | No auth | `GET /api/status`, `GET /api/health` |
 | Token in a URL | **Deprecated** (2026-10-07). `?token=<token>` still works so older DeskAI builds keep loading media, but a token in a URL leaks into logs, chat history and shared links. Load media with the header (Coil/OkHttp headers). For a link that must leave the app (external player, share), ask for a signed link: `POST /api/media/link`. The server hides `token=`/`sig=` values in its logs. |
@@ -28,6 +28,14 @@ DeskAI repo at `docs/API.md`, updated whenever this one changes.
 ```
 
 - **Timing:** replies take several seconds (a model with tool calls), so use a read timeout of 90 s or more.
+- **`turn_id` makes a resend safe** (2026-10-27): the same `turn_id` again (the app retrying on its other address)
+  waits for the first run and returns its answer; the message is stored and answered once. Answers are kept 10
+  minutes; a repeat that waits more than 330 s gets `409`. Send a new `turn_id` for every new message.
+- **Passwords never reach a model:** a message holding one ("the password is …", "pw: …", "pin = …" followed by
+  something password-like) is answered right away with `"model": "system"` and a pointer to the Vault, and stored
+  only as "(a message holding a password, hidden)". Google and Zoho sign-in pastes are caught the same way.
+- **No CORS headers** on any chat or media route (until 2026-10-27 `/api/chat`, refine and the media lists sent
+  `Access-Control-Allow-Origin: *`).
 - **One conversation and one memory** for every surface.
 - **`task_id`:** set when the message started a task, e.g. "make me a video" or `/task …`. Show a live task
   card for it.
@@ -80,7 +88,7 @@ DeskAI repo at `docs/API.md`, updated whenever this one changes.
 - **Stop:** `POST /api/chat/cancel` `{"turn_id": "..."}` returns `{"ok": true}`. Send it when the user stops a
   reply. The agent finishes the turn anyway but doesn't keep the reply or learn from it, and that `/api/chat`
   call returns `{"success": false, "reply": "(cancelled)"}`. Also abort the HTTP request.
-- **Refine Prompt:** `POST /api/chat/refine` (or alias `POST /api/chat/enhance`) `{"text": "...", "instruction": "..."}` → `{"success": true, "refined": "...", "original": "...", "model": "..."}`. Uses CloudLLM (background routes, never Flash) to clarify, polish, and structure a rough user prompt before sending. A draft holding a Google sign-in address or Zoho details comes back unchanged with `"model": "none"` (never sent to a model). Powers DeskAI's ✨ prompt enhance button in the chat input bar.
+- **Refine Prompt:** `POST /api/chat/refine` (or alias `POST /api/chat/enhance`) `{"text": "...", "instruction": "..."}` → `{"success": true, "refined": "...", "original": "...", "model": "..."}`. Uses CloudLLM (background routes, never Flash) to clarify, polish, and structure a rough user prompt before sending. A draft holding a Google sign-in address, Zoho details or a password comes back unchanged with `"model": "none"` (never sent to a model). Powers DeskAI's ✨ prompt enhance button in the chat input bar.
 
 ### Attaching documents
 

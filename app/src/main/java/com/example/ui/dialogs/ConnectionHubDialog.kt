@@ -54,6 +54,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.example.data.local.TokenCipher
 import com.example.data.model.BridgeConfig
 import com.example.data.model.BridgeProtocol
 import com.example.ui.theme.ElectricCyan
@@ -95,12 +96,12 @@ fun ConnectionHubDialog(
         val initial = if (config.remoteUrl.isNotBlank() && config.remoteUrl != "http://100.111.163.124:8080") {
             config.remoteUrl
         } else {
-            savedRemote ?: "http://100.109.85.92:8080"
+            savedRemote ?: BridgeConfig.TAILNET_HTTPS
         }
-        mutableStateOf(initial)
+        mutableStateOf(BridgeConfig.upgradeRemote(initial))
     }
     var token by remember {
-        val savedToken = prefs.getString("api_key", null)
+        val savedToken = prefs.getString("api_key", null)?.let { TokenCipher.open(it) }
         val initial = if (config.apiKey.isNotBlank()) config.apiKey else (savedToken ?: "")
         mutableStateOf(initial)
     }
@@ -504,7 +505,7 @@ fun ConnectionHubDialog(
                                 prefs.edit()
                                     .putString("server_url", normalizedLocal)
                                     .putString("remote_url", normalizedRemote)
-                                    .putString("api_key", token.trim())
+                                    .putString("api_key", TokenCipher.seal(token.trim()))   // never plain (2026-10-27)
                                     .putString("selected_model", engine)
                                     .putString("protocol", selectedProtocol)
                                     .apply()

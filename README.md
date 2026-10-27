@@ -38,15 +38,20 @@ the AlwaysOnAgent repo.
 
 | | Address |
 |---|---|
-| At home (Wi-Fi) | `http://192.168.12.151:8080` |
-| Away (Tailscale on) | `http://100.109.85.92:8080` |
+| Tailscale on (home or away), **tried first** | `https://devinmini.tailf2cdf6.ts.net` (`tailscale serve` on the Mini) |
+| At home, Tailscale off | `http://192.168.12.151:8080` (plain HTTP: the fallback) |
 
-- **Failover:** the app pings `GET /api/status` (no token needed) on the home address first and switches to the
-  Tailscale address when that doesn't answer.
+- **Failover:** an `https://` address is always tried first (2026-10-27), so the token only crosses the Wi-Fi in
+  plain HTTP when the phone's Tailscale is off. A remote address still set to the old `http://100.109.85.92:8080`
+  becomes the HTTPS one on its own (`BridgeConfig.upgradeRemote`).
 - **The token:** `HUD_AUTH_TOKEN` from the server's `.env` is sent as `X-HUD-Token` on every request, and only
   to the agent's own address, never to GitHub or anywhere else.
 - **Settings survive updates:** the addresses and token are stored in Room (`BridgeConfig`) and mirrored in
-  `SharedPreferences` (`desk_ai_secure_prefs`).
+  `SharedPreferences` (`desk_ai_credentials`). The token is encrypted in both with an Android Keystore key
+  (`TokenCipher`, AES-GCM). The database and those prefs are kept out of Android's cloud backup and device
+  transfer (`res/xml/*_rules.xml`), so on a new phone you enter the token again.
+- **The Vault** (credentials for the PC's computer tasks) opens with Android's own unlock (`DeviceUnlock`:
+  fingerprint, or the phone's PIN/pattern/password). It replaced a custom pattern lock on 2026-10-27.
 
 ## Updates
 

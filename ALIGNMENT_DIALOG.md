@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-27 (DeskAI v2.26.2 / Build 85 shipped — native pattern lock, first-touch drag fix)
+**Last Updated:** 2026-10-27 (DeskAI v2.27.0 / Build 86 shipped — BiometricPrompt Vault, HTTPS first, encrypted token)
 
 ---
 
@@ -12,6 +12,26 @@
 > ### Inviolable Rules for AlwaysOnAgent & DeskAI Pairing
 > 1. **No Local Android Build Tools:** Never download, install, or run Gradle / Android SDK on this HP EliteDesk Mini PC. This host only runs Python/FastAPI server tasks. DeskAI compilation and debug signing live exclusively on the owner's workstation where `debug.keystore` is stored.
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
+
+## Shipped 2026-10-27: DeskAI v2.27.0 (build 86), audit fixes (by the laptop Claude session)
+
+From AlwaysOnAgent's `docs/AUDIT_2026-10-27.md`, the owner's go-ahead:
+- **S1, the Vault:** opens with Android's BiometricPrompt (`ui/components/DeviceUnlock.kt`: BIOMETRIC_STRONG or
+  DEVICE_CREDENTIAL on Android 11+, WEAK or DEVICE_CREDENTIAL before). The custom pattern lock is gone
+  (`PatternLockView.kt` deleted; its "Reset" worked from the locked screen) and its stored hash is removed on first
+  open. `MainActivity` is a `FragmentActivity` now (BiometricPrompt needs one); fragment 1.8.5 is pinned beside
+  biometric 1.1.0. **Don't undo.**
+- **S5, the token:** encrypted at rest with an Android Keystore AES-GCM key (`data/local/TokenCipher.kt`), in Room
+  (`BridgeConfigDao` seals and opens it, so callers are unchanged) and in the `desk_ai_credentials` prefs copy (it was
+  plain text in both). The database and those prefs are out of cloud backup and device transfer
+  (`res/xml/backup_rules.xml`, `data_extraction_rules.xml`); on a new phone, enter the token again.
+- **S4, HTTPS:** `BridgeConfig.TAILNET_HTTPS` = `https://devinmini.tailf2cdf6.ts.net` (`tailscale serve` on the
+  Mini). https addresses are tried first; the old `http://100.109.85.92:8080` remote upgrades itself. The home LAN
+  address stays as the plain-HTTP fallback when the phone's Tailscale is off.
+- **R6:** the updater refuses a download whose size differs from `version.json`'s `fileSizeBytes`.
+- **T5:** chat sends only what the agent reads (no `system`, `prompt` copy or 10-message `history`).
+- Server side the same day: `/api/chat` answers each `turn_id` once, so the app's failover resend can't make a
+  double reply.
 
 ## Shipped 2026-10-27: DeskAI v2.26.2 (build 85), native pattern lock and the first-touch drag fix (by the laptop Claude session)
 

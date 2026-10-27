@@ -8,7 +8,7 @@ import androidx.room.PrimaryKey
 data class BridgeConfig(
     @PrimaryKey val id: Int = 1,
     val serverUrl: String = "http://192.168.12.151:8080", // Home / Local LAN URL (mini PC devinmini)
-    val remoteUrl: String = "http://100.109.85.92:8080",  // Tailscale URL
+    val remoteUrl: String = TAILNET_HTTPS,                // Tailscale, HTTPS (tailscale serve on the Mini)
     val useRemoteWhenAway: Boolean = true,
     val protocol: String = BridgeProtocol.ALWAYSON_AGENT.name,
     val apiKey: String = "",                         // Matches HUD_AUTH_TOKEN
@@ -37,6 +37,17 @@ data class BridgeConfig(
     }
 
     companion object {
+        /**
+         * The Mini over Tailscale with HTTPS (2026-10-27: `tailscale serve`, tailnet only, a real certificate). The
+         * token crossed the home Wi-Fi in plain HTTP before; the LAN address stays as the fallback.
+         */
+        const val TAILNET_HTTPS = "https://devinmini.tailf2cdf6.ts.net"
+        private const val OLD_TAILNET_HTTP = "http://100.109.85.92:8080"
+
+        /** The old plain-HTTP Tailscale address becomes the HTTPS one; anything the user typed stays as it is. */
+        fun upgradeRemote(url: String): String =
+            if (url.trim().removeSuffix("/") == OLD_TAILNET_HTTP) TAILNET_HTTPS else url
+
         /**
          * Parses a quick-import server link (with an optional ?token=):
          * "http://192.168.1.45:8080/?token=abc123xyz" -> ("http://192.168.1.45:8080", "abc123xyz")

@@ -1,7 +1,7 @@
 {
-  "versionCode": 85,
-  "versionName": "2.26.2",
-  "changelog": "DeskAI v2.26.2 (Build 85): Vault pattern lock fixed and redone in the native Android style. The first touch now drags (it used to need a second try), drawing no longer lags, and the dots, line and colors match a stock Android lock screen.",
+  "versionCode": 86,
+  "versionName": "2.27.0",
+  "changelog": "DeskAI v2.27.0 (Build 86): The Vault now opens with your phone's own fingerprint or screen lock (the old pattern could be reset from the locked screen). The app talks to the agent over HTTPS through Tailscale first, and keeps its access token encrypted and out of cloud backups. Updates are checked against their exact size, and chat sends less data.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24689810
+  "fileSizeBytes": 25738211
 }

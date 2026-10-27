@@ -72,9 +72,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.example.data.model.StoredCredential
 import com.example.ui.components.EmptyState
 import com.example.ui.components.LoadingState
-import com.example.ui.components.PatternLockHelper
-import com.example.ui.components.PatternLockView
-import com.example.ui.components.PatternState
+import com.example.ui.components.DeviceUnlock
 import com.example.ui.components.SheetHeader
 import com.example.ui.components.TagChip
 import com.example.ui.components.circuitTexture
@@ -103,20 +101,29 @@ fun CredentialsVaultDialog(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val prefs = remember { context.getSharedPreferences("desk_ai_credentials", Context.MODE_PRIVATE) }
 
-    var savedHash by remember { mutableStateOf(prefs.getString("vault_pattern_hash", null)) }
-    var isUnlocked by remember { mutableStateOf(false) }
-
-    // Setup mode state (when savedHash is null)
-    var setupCandidatePattern by remember { mutableStateOf<List<Int>?>(null) }
-    var lockPrompt by remember {
-        mutableStateOf(
-            if (savedHash == null) "Draw a pattern to set up lock (at least 4 dots)"
-            else "Connect 9 dots to unlock credentials"
-        )
+    // Unlocked by Android's own prompt (DeviceUnlock); the old pattern's hash is deleted (2026-10-27: its Reset
+    // button worked from the locked screen, so the lock protected nothing)
+    LaunchedEffect(Unit) {
+        context.getSharedPreferences("desk_ai_credentials", Context.MODE_PRIVATE)
+            .edit().remove("vault_pattern_hash").apply()
     }
-    var patternState by remember { mutableStateOf(PatternState.IDLE) }
+    var isUnlocked by remember { mutableStateOf(false) }
+    var lockPrompt by remember { mutableStateOf("Confirm it's you to open the Vault") }
+    var lockError by remember { mutableStateOf(false) }
+
+    fun askToUnlock() {
+        DeviceUnlock.prompt(context, "Unlock the Vault", "Passwords the PC's computer tasks sign in with") { ok, reason ->
+            if (ok) {
+                isUnlocked = true
+            } else {
+                lockError = reason != null
+                lockPrompt = reason ?: "Locked. Tap Unlock to try again."
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) { askToUnlock() }
 
     // Vault contents state
     var credentials by remember { mutableStateOf<List<StoredCredential>>(emptyList()) }
@@ -164,7 +171,7 @@ fun CredentialsVaultDialog(
                 .padding(16.dp)
         ) {
             if (!isUnlocked) {
-                // ==================== 9-DOT PATTERN LOCK SCREEN ====================
+                // ==================== LOCKED: ANDROID'S OWN UNLOCK ====================
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -173,94 +180,37 @@ fun CredentialsVaultDialog(
                     SheetHeader(
                         title = "Vault Security",
                         icon = Icons.Default.Lock,
-                        subtitle = if (savedHash == null) "Setup 9-dot pattern" else "Protected by 9-dot pattern",
+                        subtitle = "Protected by your phone's screen lock",
                         onClose = onDismiss
+                    )
+
+                    Spacer(modifier = Modifier.height(28.dp))
+
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = null,
+                        tint = if (lockError) RoseError else ElectricCyan,
+                        modifier = Modifier.size(56.dp)
                     )
 
                     Spacer(modifier = Modifier.height(18.dp))
 
                     Text(
                         text = lockPrompt,
-                        color = when (patternState) {
-                            PatternState.ERROR -> RoseError
-                            PatternState.SUCCESS -> EmeraldConnected
-                            else -> ElectricCyan
-                        },
+                        color = if (lockError) RoseError else Slate300,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(18.dp))
 
-                    PatternLockView(
-                        modifier = Modifier.size(290.dp),
-                        patternState = patternState,
-                        onPatternStart = {
-                            patternState = PatternState.DRAWING
-                        },
-                        onPatternComplete = { pattern ->
-                            if (savedHash == null) {
-                                // SETUP MODE
-                                if (setupCandidatePattern == null) {
-                                    if (pattern.size < 4) {
-                                        patternState = PatternState.ERROR
-                                        lockPrompt = "Pattern too short (connect at least 4 dots)"
-                                    } else {
-                                        setupCandidatePattern = pattern
-                                        patternState = PatternState.SUCCESS
-                                        lockPrompt = "Draw pattern again to confirm"
-                                    }
-                                } else {
-                                    if (pattern == setupCandidatePattern) {
-                                        val hash = PatternLockHelper.hashPattern(pattern)
-                                        prefs.edit().putString("vault_pattern_hash", hash).apply()
-                                        savedHash = hash
-                                        patternState = PatternState.SUCCESS
-                                        lockPrompt = "Pattern locked! Opening vault..."
-                                        scope.launch {
-                                            delay(500)
-                                            isUnlocked = true
-                                        }
-                                    } else {
-                                        patternState = PatternState.ERROR
-                                        lockPrompt = "Patterns did not match. Try again."
-                                        setupCandidatePattern = null
-                                    }
-                                }
-                            } else {
-                                // UNLOCK MODE
-                                val enteredHash = PatternLockHelper.hashPattern(pattern)
-                                if (enteredHash == savedHash) {
-                                    patternState = PatternState.SUCCESS
-                                    lockPrompt = "Unlocked!"
-                                    scope.launch {
-                                        delay(400)
-                                        isUnlocked = true
-                                    }
-                                } else {
-                                    patternState = PatternState.ERROR
-                                    lockPrompt = "Incorrect pattern. Try again."
-                                }
-                            }
-                        }
-                    )
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    if (savedHash != null) {
-                        TextButton(
-                            onClick = {
-                                prefs.edit().remove("vault_pattern_hash").apply()
-                                savedHash = null
-                                setupCandidatePattern = null
-                                lockPrompt = "Draw a pattern to set up lock (at least 4 dots)"
-                                Toast.makeText(context, "Pattern reset. Set a new pattern.", Toast.LENGTH_SHORT).show()
-                            }
-                        ) {
-                            Text("Reset Pattern Lock", color = Slate500, fontSize = 12.sp)
-                        }
+                    TextButton(onClick = { askToUnlock() }) {
+                        Icon(Icons.Default.LockOpen, contentDescription = null, tint = ElectricCyan,
+                            modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Unlock", color = ElectricCyan, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
             } else {
@@ -278,8 +228,8 @@ fun CredentialsVaultDialog(
                             IconButton(
                                 onClick = {
                                     isUnlocked = false
-                                    patternState = PatternState.IDLE
-                                    lockPrompt = "Connect 9 dots to unlock credentials"
+                                    lockError = false
+                                    lockPrompt = "Locked. Tap Unlock to open it again."
                                 }
                             ) {
                                 Icon(Icons.Default.Lock, contentDescription = "Lock Vault", tint = Slate400)

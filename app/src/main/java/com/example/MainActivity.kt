@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -18,6 +17,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
 import com.example.data.local.AppDatabase
 import com.example.data.remote.AlwaysOnAgentClient
 import com.example.data.remote.TaskEvents
@@ -28,7 +28,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class MainActivity : ComponentActivity() {
+// A FragmentActivity (a ComponentActivity underneath) so the Vault can show Android's BiometricPrompt
+class MainActivity : FragmentActivity() {
   private var openTaskIdState by mutableStateOf<String?>(null)
   private var openNeedsYouState by mutableStateOf<String?>(null)
   // Bumped when something is shared to DeskAI (ShareReceiverActivity): the chat picks it up from SharedInbox

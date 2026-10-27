@@ -110,7 +110,10 @@ class AlwaysOnAgentClient {
             if (remote != null) list.add(remote)
         }
 
-        return list.ifEmpty { listOf(Pair("http://10.0.2.2:8080", "Default")) }
+        // An https address first, at home too (2026-10-27): plain HTTP puts the token on the Wi-Fi readable. With the
+        // phone's Tailscale off the ts.net name doesn't resolve, so the home address takes over at once.
+        return list.sortedBy { !it.first.startsWith("https://") }
+            .ifEmpty { listOf(Pair("http://10.0.2.2:8080", "Default")) }
     }
 
     private suspend fun <T> executeWithFailover(
@@ -2363,22 +2366,14 @@ class AlwaysOnAgentClient {
         onChunk: suspend (String) -> Unit
     ) {
         executeWithFailover(config) { baseUrl ->
+            // Only what the agent reads (ChatRequest). It keeps the conversation and its own prompt itself: the
+            // system prompt, a copy of the message and the last 10 messages sent here were ignored (2026-10-27).
             val payload = JSONObject().apply {
                 put("message", userMessage)
                 if (turnId != null) put("turn_id", turnId)
                 if (attachmentIds.isNotEmpty()) put("attachments", JSONArray(attachmentIds))
-                put("prompt", userMessage)
                 put("model", if (config.selectedModel.isNotBlank()) config.selectedModel else "auto")
                 put("engine", if (config.selectedModel.isNotBlank()) config.selectedModel else "auto")
-                put("system", systemPrompt)
-                val histArray = JSONArray()
-                history.takeLast(10).forEach { msg ->
-                    histArray.put(JSONObject().apply {
-                        put("role", msg.role)
-                        put("content", msg.historyText())
-                    })
-                }
-                put("history", histArray)
             }
 
             val req = addAuth(

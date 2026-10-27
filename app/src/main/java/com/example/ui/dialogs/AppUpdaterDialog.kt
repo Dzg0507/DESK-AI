@@ -241,11 +241,16 @@ fun AppUpdaterDialog(
                     inputStream.close()
                     try { apkFile.setReadable(true, false) } catch (_: Exception) {}
 
-                    if (totalRead < 1000000L) {
+                    // version.json says how big this build is: a short or swapped file stops here with a clear message
+                    // instead of an installer error (2026-10-27; it only checked for "over 1 MB" before)
+                    val expected = remoteFileSize
+                    if (totalRead < 1000000L || (expected > 0L && totalRead != expected)) {
                         withContext(Dispatchers.Main) {
                             updateState = UpdateState.ERROR
                             val kb = (totalRead / 1024).toString()
-                            statusMessage = "Download incomplete ($kb KB). Please check your connection and retry."
+                            statusMessage = if (expected > 0L && totalRead >= 1000000L)
+                                "Download doesn't match this version ($totalRead of $expected bytes). Please retry."
+                            else "Download incomplete ($kb KB). Please check your connection and retry."
                         }
                         return@withContext
                     }

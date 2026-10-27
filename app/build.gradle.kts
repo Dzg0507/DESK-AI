@@ -27,8 +27,8 @@ android {
     applicationId = "com.aistudio.deskai.kzpwqm"
     minSdk = 24
     targetSdk = 36
-    versionCode = 85
-    versionName = "2.26.2"
+    versionCode = 86
+    versionName = "2.27.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -95,6 +95,11 @@ dependencies {
   implementation(platform(libs.firebase.bom))
   // implementation(libs.accompanist.permissions)
   implementation(libs.androidx.activity.compose)
+  // The Vault unlocks with Android's own BiometricPrompt (fingerprint or the phone's PIN/pattern), which needs a
+  // FragmentActivity. fragment is pinned because biometric 1.1.0 alone brings fragment 1.2.5, which breaks
+  // ActivityResult launchers under activity 1.10 (2026-10-27).
+  implementation(libs.androidx.biometric)
+  implementation(libs.androidx.fragment.ktx)
   // implementation(libs.androidx.camera.camera2)
   // implementation(libs.androidx.camera.core)
   // implementation(libs.androidx.camera.lifecycle)
