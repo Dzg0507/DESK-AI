@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-26 (DeskAI v2.25.0 / Build 82 shipped — Chat flow fixes)
+**Last Updated:** 2026-10-27 (DeskAI v2.26.2 / Build 85 shipped — native pattern lock, first-touch drag fix)
 
 ---
 
@@ -12,6 +12,17 @@
 > ### Inviolable Rules for AlwaysOnAgent & DeskAI Pairing
 > 1. **No Local Android Build Tools:** Never download, install, or run Gradle / Android SDK on this HP EliteDesk Mini PC. This host only runs Python/FastAPI server tasks. DeskAI compilation and debug signing live exclusively on the owner's workstation where `debug.keystore` is stored.
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
+
+## Shipped 2026-10-27: DeskAI v2.26.2 (build 85), native pattern lock and the first-touch drag fix (by the laptop Claude session)
+
+- **First touch didn't drag:** `PatternLockView`'s `pointerInput` was keyed on the drawing state, so touch-down
+  (which sets `DRAWING`) restarted the gesture coroutine and cancelled the drag. Now keyed on `enabled` only; the
+  success/error check happens at touch-down, and callbacks go through `rememberUpdatedState`. **Don't undo.**
+- **Lag:** every finger move redrew hundreds of honeycomb hexagons and nine gradient dials, rebuilt per frame.
+- **Look:** replaced with a stock-Android style (owner's ask: "look a little more native"): theme-colored dots
+  that pop with a spring and halo when touched, a thin primary-colored line, red on error, no background of its own.
+- Server side the same day (AlwaysOnAgent `b68e36a`): the chat's `look_into` background helper; nothing DeskAI must
+  change (its answers arrive as ordinary proactive inbox messages).
 
 ## Shipped 2026-10-26: DeskAI v2.26.0 (build 83), Host Credentials Vault & 9-Dot Pattern Lock
 
