@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-27 (DeskAI v2.27.0 / Build 86 shipped — BiometricPrompt Vault, HTTPS first, encrypted token)
+**Last Updated:** 2026-10-27 (DeskAI v2.28.0 / Build 87 shipped — files from the Mini in chat: images, video, audio, PDFs)
 
 ---
 
@@ -12,6 +12,16 @@
 > ### Inviolable Rules for AlwaysOnAgent & DeskAI Pairing
 > 1. **No Local Android Build Tools:** Never download, install, or run Gradle / Android SDK on this HP EliteDesk Mini PC. This host only runs Python/FastAPI server tasks. DeskAI compilation and debug signing live exclusively on the owner's workstation where `debug.keystore` is stored.
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
+
+## Shipped 2026-10-27: DeskAI v2.28.0 (build 87), files from the Mini in chat (by the laptop Claude session)
+
+- The agent's new `mini_files` chat tool (AlwaysOnAgent `69f34f6`, `54e829f`; read only) shows a file as a markdown
+  line. Images are `![name](/api/files/m/…)`, through the existing `MarkdownImage`. Video, audio and PDF are
+  `[▶ name (12 MB)](/api/files/m/…)` (🔊 audio, 📄 PDF), now `MarkdownElement.Media` → `ui/components/MarkdownMedia.kt`.
+- **The media card:** on tap it downloads into `cache/media/` with the token in a header (own server only), shows
+  progress, then opens the phone's own player or viewer through the FileProvider (`Intent.ACTION_VIEW`). A file
+  already downloaded opens at once.
+- Ordinary `[text](link)` lines stay text (`MarkdownMediaParseTest`).
 
 ## Shipped 2026-10-27: DeskAI v2.27.0 (build 86), audit fixes (by the laptop Claude session)
 

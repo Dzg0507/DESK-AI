@@ -395,6 +395,7 @@ card's progress says `Needs you: …` with the `request_id`.
 | `GET /api/computer/credentials` | | `{"credentials": [{"domain": "google.com", "username": "alice@gmail.com"}]}`: credentials saved in the host's Windows Credential Manager vault via DPAPI. Passwords are never returned over the wire. `503` when the tool can't be reached |
 | `POST /api/computer/credentials` | `{"domain": "google.com", "username": "alice@gmail.com", "password": "…"}` | `{"status": "ok", "saved": "google.com", "username": "alice@gmail.com"}`: securely stores the credential for automated sign-ins |
 | `DELETE /api/computer/credentials?domain=google.com&username=alice@gmail.com` | | `{"status": "ok"}`; `404` when not found |
+| `GET /api/files/m/{ref}/{name}` | | A file on the Mini that the chat's `mini_files` tool showed (2026-10-27): an image, video, audio file or PDF, with Range support. `ref` is the path, URL-safe base64, checked again here (inside the allowed folders, never secrets or app data). Replies show images as `![name](/api/files/m/…)` and video/audio/PDF as `[▶ name (12.3 MB)](/api/files/m/…)` (🔊 audio, 📄 PDF): the app plays or opens those. `404` for anything not allowed |
 | `GET /api/computer/runs/{run_id}/screenshots/{name}` | | One step's screenshot from a computer run (`step-NN.jpg` / `snap-NNN.jpg`, JPEG). The chat's `computer_screenshots` tool puts these as markdown images in a reply (2026-10-27); load them with the token header like any image. `404` for an unknown run or file |
 
 

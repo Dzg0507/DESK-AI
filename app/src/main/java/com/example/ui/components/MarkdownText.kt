@@ -74,7 +74,11 @@ sealed class MarkdownElement {
     data class CodeBlock(val language: String, val code: String) : MarkdownElement()
     data class BulletItem(val text: String) : MarkdownElement()
     data class Image(val url: String, val alt: String = "") : MarkdownElement()
+    /** "[▶ clip.mp4 (12 MB)](url)", 🔊 audio, 📄 PDF: a file from the Mini, played or opened on tap (MarkdownMedia) */
+    data class Media(val url: String, val label: String) : MarkdownElement()
 }
+
+private val MEDIA_LINE = Regex("""^\[((?:▶|🔊|📄)[^\]]*)\]\((\S+)\)$""")
 
 @Composable
 fun MarkdownContent(
@@ -142,6 +146,10 @@ fun MarkdownContent(
                         serverBaseUrl = serverBaseUrl,
                         authToken = authToken
                     )
+                }
+                is MarkdownElement.Media -> {
+                    MarkdownMedia(url = element.url, label = element.label, serverBaseUrl = serverBaseUrl,
+                        authToken = authToken)
                 }
             }
         }
@@ -403,6 +411,13 @@ fun parseMarkdown(text: String): List<MarkdownElement> {
         if (trimmed.startsWith("• ") || trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
             val clean = trimmed.removePrefix("• ").removePrefix("- ").removePrefix("* ")
             elements.add(MarkdownElement.BulletItem(clean))
+            i++
+            continue
+        }
+
+        // Video / audio / PDF from the Mini: [▶ name](url)
+        MEDIA_LINE.find(trimmed)?.let { m ->
+            elements.add(MarkdownElement.Media(m.groupValues[2], m.groupValues[1]))
             i++
             continue
         }
