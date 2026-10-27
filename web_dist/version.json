@@ -1,7 +1,7 @@
 {
-  "versionCode": 87,
-  "versionName": "2.28.0",
-  "changelog": "DeskAI v2.28.0 (Build 87): Ask the assistant for a file on the Mini and it shows up in chat: pictures inline, and videos, audio (mp4, wav, mp3) and PDFs as cards you tap to play or open in your phone's own player.",
+  "versionCode": 88,
+  "versionName": "2.28.1",
+  "changelog": "DeskAI v2.28.1 (Build 88): A video, song or PDF the assistant writes as a picture now shows as a card you tap to play, instead of a blank image.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 25738231
+  "fileSizeBytes": 25738210
 }

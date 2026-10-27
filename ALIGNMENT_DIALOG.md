@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-27 (DeskAI v2.28.0 / Build 87 shipped — files from the Mini in chat: images, video, audio, PDFs)
+**Last Updated:** 2026-10-27 (DeskAI v2.28.1 / Build 88 shipped — a video written as a picture link plays as a media card)
 
 ---
 

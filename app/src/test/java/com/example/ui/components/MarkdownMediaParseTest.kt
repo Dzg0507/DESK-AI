@@ -23,6 +23,15 @@ class MarkdownMediaParseTest {
     }
 
     @Test
+    fun aVideoWrittenAsAPictureStillPlays() {
+        // 2026-10-27: "![vibe_check_1793106074.mp4](/videos/vibe_check_1793106074.mp4)" drew a blank image card
+        val parsed = parseMarkdown("![vibe_check_1793106074.mp4](/videos/vibe_check_1793106074.mp4)")
+        val media = parsed.filterIsInstance<MarkdownElement.Media>().single()
+        assertEquals("▶ vibe_check_1793106074.mp4", media.label)
+        assertTrue(parsed.none { it is MarkdownElement.Image })
+    }
+
+    @Test
     fun anOrdinaryLinkStaysText() {
         val parsed = parseMarkdown("[the docs](https://example.com)")
         assertTrue(parsed.none { it is MarkdownElement.Media })

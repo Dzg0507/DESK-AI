@@ -428,7 +428,17 @@ fun parseMarkdown(text: String): List<MarkdownElement> {
         if (imageMatch != null) {
             val alt = imageMatch.groupValues[1]
             val url = imageMatch.groupValues[2].trim().replace("\n", "").replace(" ", "")
-            elements.add(MarkdownElement.Image(url, alt))
+            // A video, audio file or PDF written as a picture (2026-10-27: "![x.mp4](/videos/x.mp4)" drew a blank
+            // image card, "unable to load image stream"): the card that plays it instead
+            val ext = url.substringBefore('?').substringAfterLast('.', "").lowercase()
+            val icon = when (ext) {
+                "mp4", "mov", "mkv", "webm", "avi", "m4v" -> "▶"
+                "mp3", "wav", "m4a", "ogg", "flac", "aac" -> "🔊"
+                "pdf" -> "📄"
+                else -> null
+            }
+            elements.add(if (icon != null) MarkdownElement.Media(url, "$icon ${alt.ifBlank { url.substringAfterLast('/') }}")
+                         else MarkdownElement.Image(url, alt))
             i++
             continue
         }
