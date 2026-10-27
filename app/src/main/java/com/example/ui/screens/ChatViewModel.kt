@@ -627,6 +627,14 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     suspend fun deleteRetask(id: String) = repository.deleteRetask(id)
     suspend fun runScheduleNow(id: Int) = repository.runScheduleNow(id)
 
+    // Credentials vault
+    suspend fun fetchCredentials() = repository.fetchCredentials()
+    suspend fun saveCredential(domain: String, username: String, password: String) =
+        repository.saveCredential(domain, username, password)
+    suspend fun deleteCredential(domain: String, username: String) =
+        repository.deleteCredential(domain, username)
+
+
     suspend fun fetchAgentWorkProjects(): List<com.example.data.model.AgentWorkProject> {
         return repository.fetchAgentWorkProjects()
     }

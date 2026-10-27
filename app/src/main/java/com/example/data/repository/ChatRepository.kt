@@ -219,6 +219,17 @@ class ChatRepository(
     suspend fun deleteRetask(id: String): Result<Unit> =
         withContext(Dispatchers.IO) { agentClient.deleteRetask(getActiveConfig(), id) }
 
+    // Credentials: saved accounts in host Windows Credential Manager for computer use
+    suspend fun fetchCredentials(): Result<List<com.example.data.model.StoredCredential>> =
+        withContext(Dispatchers.IO) { agentClient.getCredentials(getActiveConfig()) }
+
+    suspend fun saveCredential(domain: String, username: String, password: String): Result<Boolean> =
+        withContext(Dispatchers.IO) { agentClient.saveCredential(getActiveConfig(), domain, username, password) }
+
+    suspend fun deleteCredential(domain: String, username: String): Result<Boolean> =
+        withContext(Dispatchers.IO) { agentClient.deleteCredential(getActiveConfig(), domain, username) }
+
+
     suspend fun fetchAgentWorkProjects(): List<AgentWorkProject> = withContext(Dispatchers.IO) {
         val config = getActiveConfig()
         agentClient.getAgentWorkProjects(config)

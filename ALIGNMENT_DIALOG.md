@@ -13,7 +13,16 @@
 > 1. **No Local Android Build Tools:** Never download, install, or run Gradle / Android SDK on this HP EliteDesk Mini PC. This host only runs Python/FastAPI server tasks. DeskAI compilation and debug signing live exclusively on the owner's workstation where `debug.keystore` is stored.
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
----
+## Shipped 2026-10-26: DeskAI v2.26.0 (build 83), Host Credentials Vault & 9-Dot Pattern Lock
+
+- **9-Dot Pattern Lock Security (`PatternLockView`)**: Custom Compose 3x3 drag-gesture canvas with Circuit aesthetic (ElectricCyan glowing nodes, connecting trace lines, and haptic feedback). Protects the credential vault without requiring master tokens or access keys.
+- **Pattern Setup & Verification**: Auto-detects uninitialized lock, guiding user through setup (min 4 dots) and confirmation. Persists salted SHA-256 hash in secure SharedPreferences. Provides reset mechanism.
+- **Credentials Vault Sheet (`CredentialsVaultDialog`)**: Displays accounts saved in the host's Windows Credential Manager. Supports deleting accounts and manually adding new credentials (with password visibility toggle).
+- **Automated Computer Use Auto-Save (`AgentComputerUse` & `AlwaysOnAgent`)**:
+  - When an automation task encounters a sign-in form (e.g. `alwaysonagentlite@gmail.com`), entering the password during Takeover or Needs You automatically persists the credentials into the host's DPAPI vault.
+  - Zero password leakage: passwords are never sent in LLM context, chat turns, or GET API responses.
+- **Command Deck Hub Integration (`CommandPaletteDialog`)**: Added "Credentials" tile under "The Mini" group with live count of saved accounts.
+- **Tests**: Added `PatternLockHelperTest` unit tests verifying hash determinism, uniqueness across distinct patterns, and salt variance.
 
 ## Shipped 2026-10-26: DeskAI v2.25.0 (build 82), Chat flow bugfixes & robustness improvements
 

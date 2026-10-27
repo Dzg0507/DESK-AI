@@ -180,6 +180,7 @@ fun ChatScreen(
     var showAgentWorkSheet by remember { mutableStateOf(false) }
     var showSchedulesSheet by remember { mutableStateOf(false) }
     var showRetasksSheet by remember { mutableStateOf(false) }
+    var showCredentialsSheet by remember { mutableStateOf(false) }
     var showCommandsSheet by remember { mutableStateOf(false) }
     // A slash command picked (the / pop-up or the Commands list): run it, start it in the chat box, or open the list
     val pickCommand: (com.example.data.model.SlashCommand) -> Unit = { c ->
@@ -658,6 +659,7 @@ fun ChatScreen(
             onOpenMaintenance = { showMaintenanceSheet = true },
             onOpenSchedules = { showSchedulesSheet = true },
             onOpenRetasks = { showRetasksSheet = true },
+            onOpenCredentials = { showCredentialsSheet = true },
             onOpenTakeOver = { takeOverFor = null; takeOverWatching = takeOverViewOnly; showTakeOver = true },
             takeOverViewOnly = takeOverViewOnly,
             onTakeOverViewOnlyChange = { on ->
@@ -668,6 +670,7 @@ fun ChatScreen(
             onOpenCommands = { showCommandsSheet = true },
             stats = daemonStats,
             onFetchRetasks = { viewModel.fetchRetasks() },
+            onFetchCredentials = { viewModel.fetchCredentials() },
             onFetchSchedules = { viewModel.fetchSchedules() },
             onSelectCommandTemplate = { template ->
                 viewModel.onInputTextChange(template)
@@ -787,6 +790,16 @@ fun ChatScreen(
             onDismiss = { showRetasksSheet = false },
             onFetch = { viewModel.fetchRetasks() },
             onDelete = { id -> viewModel.deleteRetask(id) }
+        )
+    }
+
+    // Credentials vault: saved accounts in Windows Credential Manager, protected by 9-dot pattern lock
+    if (showCredentialsSheet) {
+        com.example.ui.dialogs.CredentialsVaultDialog(
+            onDismiss = { showCredentialsSheet = false },
+            onFetchCredentials = { viewModel.fetchCredentials() },
+            onSaveCredential = { domain, user, pw -> viewModel.saveCredential(domain, user, pw) },
+            onDeleteCredential = { domain, user -> viewModel.deleteCredential(domain, user) }
         )
     }
 

@@ -384,6 +384,10 @@ card's progress says `Needs you: …` with the `request_id`.
 | `GET /api/computer/retasks` | | `{"retasks": [{"id", "goal", "kind": "task"\|"info", "steps", "uses", "fails", "created", "updated", "last_used"}]}`, newest first. A retask is a clean computer run saved so the SAME task (same wording) asked again is repeated without the AI: answers are always read fresh (`info`: repeated up to the reading point, then one request) and written text is always written fresh. A finished task that was a repeat says "(Repeated an earlier run: N AI requests.)". `503` when the tool can't be reached |
 | `POST /api/computer/retasks/{id}/run` | | `{"status": "ok", "task_id", "goal"}`: runs the retask now (DeskAI's `/retask`): a computer task with its exact wording is queued, no proposal card. `404` when there's no such retask, `503` when the tool can't be reached |
 | `DELETE /api/computer/retasks/{id}` | | `{"status": "ok"}`; `404` when there's no such retask, `400` for a bad id |
+| `GET /api/computer/credentials` | | `{"credentials": [{"domain": "google.com", "username": "alice@gmail.com"}]}`: credentials saved in the host's Windows Credential Manager vault via DPAPI. Passwords are never returned over the wire. `503` when the tool can't be reached |
+| `POST /api/computer/credentials` | `{"domain": "google.com", "username": "alice@gmail.com", "password": "…"}` | `{"status": "ok", "saved": "google.com", "username": "alice@gmail.com"}`: securely stores the credential for automated sign-ins |
+| `DELETE /api/computer/credentials?domain=google.com&username=alice@gmail.com` | | `{"status": "ok"}`; `404` when not found |
+
 
 - `approve`: a step that submits, sends, pays, buys, deletes, posts or signs up. Approve: it's clicked and the
   task carries on; Deny: the task stops with nothing done.

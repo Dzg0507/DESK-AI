@@ -49,6 +49,10 @@ data class SharedDownload(val file: java.io.File, val mime: String, val files: I
 data class ActivityLine(val time: String, val step: String?, val text: String, val level: String,
                         val kind: String = "")   // open, type, click, save, plan ("" on older tasks)
 
+/** A credential stored in the host's Windows Credential Manager vault (GET /api/computer/credentials).
+ *  Passwords are never returned over the network. */
+data class StoredCredential(val domain: String, val username: String)
+
 /** A retask: a clean computer run the agent saved, so the SAME task asked again is repeated without the AI. kind is
  *  "task" (repeated whole) or "info" (repeated up to the reading point; the answer is always read fresh). Written
  *  text is never repeated, it's written fresh. (GET /api/computer/retasks, 2026-10-11.) */

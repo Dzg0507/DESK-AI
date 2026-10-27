@@ -1,7 +1,7 @@
 {
-  "versionCode": 82,
-  "versionName": "2.25.0",
-  "changelog": "DeskAI v2.25.0 (Build 82): Chat fixes: stopping a stream no longer leaves an infinite thinking spinner, residual tasks/proposals no longer leak across turns, questions are safely dispatched, draft text is preserved when tapping answers, and list scrolling properly accounts for folded tasks.",
+  "versionCode": 83,
+  "versionName": "2.26.0",
+  "changelog": "DeskAI v2.26.0 (Build 83): Host Credentials Vault protected by 9-dot pattern lock. Windows Credential Manager DPAPI integration for automated computer tasks sign-in with zero password exposure. Command Deck Hub integration with live saved accounts count.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24624285
+  "fileSizeBytes": 24673423
 }

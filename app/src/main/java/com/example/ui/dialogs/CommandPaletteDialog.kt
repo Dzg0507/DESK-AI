@@ -42,6 +42,7 @@ import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.Task
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
@@ -103,6 +104,7 @@ fun CommandPaletteDialog(
     onOpenMaintenance: () -> Unit = {},
     onOpenSchedules: () -> Unit = {},
     onOpenRetasks: () -> Unit = {},
+    onOpenCredentials: () -> Unit = {},
     onOpenTakeOver: () -> Unit = {},
     takeOverViewOnly: Boolean = false,
     onTakeOverViewOnlyChange: (Boolean) -> Unit = {},
@@ -110,22 +112,26 @@ fun CommandPaletteDialog(
     onOpenCommands: () -> Unit = {},
     stats: com.example.data.model.DaemonStats? = null,
     onFetchRetasks: (suspend () -> Result<List<com.example.data.model.Retask>>)? = null,
+    onFetchCredentials: (suspend () -> Result<List<com.example.data.model.StoredCredential>>)? = null,
     onFetchSchedules: (suspend () -> Result<com.example.data.model.ScheduleList>)? = null,
     onSelectCommandTemplate: (String) -> Unit,
     onExecuteCommand: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    // Live details for the tiles: how many retasks are saved, and the next scheduled run
+    // Live details for the tiles: how many retasks/credentials are saved, and the next scheduled run
     var retaskCount by remember { mutableStateOf<Int?>(null) }
+    var credentialCount by remember { mutableStateOf<Int?>(null) }
     var nextSchedule by remember { mutableStateOf<String?>(null) }
     androidx.compose.runtime.LaunchedEffect(Unit) {
         onFetchRetasks?.invoke()?.onSuccess { retaskCount = it.size }
+        onFetchCredentials?.invoke()?.onSuccess { credentialCount = it.size }
         onFetchSchedules?.invoke()?.onSuccess { list ->
             nextSchedule = list.schedules.filter { it.enabled && !it.nextRunAt.isNullOrBlank() }
                 .minByOrNull { it.nextRunAt!! }
                 ?.let { "Next ${it.nextRunAt!!.substring(11, 16)} · ${it.name.take(16)}" }
         }
     }
+
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -277,12 +283,15 @@ fun CommandPaletteDialog(
                                         Text("View only (watch without taking control)", color = Slate300, fontSize = 13.sp)
                                     }
                                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        WorkstationCard("Credentials", "Host vault & sign-ins", Icons.Default.VpnKey, ElectricCyan,
+                                            Modifier.weight(1f), detail = credentialCount?.let { "$it saved" }, onClick = go(onOpenCredentials))
                                         WorkstationCard("Connection", "Address & access token", Icons.Default.Settings, ElectricCyan,
                                             Modifier.weight(1f), onClick = go(onOpenSettings))
-                                        WorkstationCard("Maintenance", "Backup, restart & logs", Icons.Default.CleaningServices, NeonPurple,
-                                            Modifier.weight(1f), onClick = go(onOpenMaintenance))
                                     }
+                                    WorkstationCard("Maintenance", "Backup, restart & logs", Icons.Default.CleaningServices, NeonPurple,
+                                        Modifier.fillMaxWidth(), onClick = go(onOpenMaintenance))
                                 }
+
 
                                 Spacer(modifier = Modifier.height(8.dp))
 

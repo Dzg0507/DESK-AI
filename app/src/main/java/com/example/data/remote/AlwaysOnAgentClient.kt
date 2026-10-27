@@ -1141,6 +1141,34 @@ class AlwaysOnAgentClient {
     suspend fun runRetask(config: BridgeConfig, id: String): Result<String> =
         scheduleCall(config, "POST", "/api/computer/retasks/$id/run").map { it.optString("task_id") }
 
+    /** Credentials stored securely in the host's Windows Credential Manager vault (GET /api/computer/credentials). */
+    suspend fun getCredentials(config: BridgeConfig): Result<List<com.example.data.model.StoredCredential>> =
+        scheduleCall(config, "GET", "/api/computer/credentials").map { json ->
+            val arr = json.optJSONArray("credentials") ?: JSONArray()
+            (0 until arr.length()).map { i ->
+                val r = arr.getJSONObject(i)
+                com.example.data.model.StoredCredential(
+                    domain = r.optString("domain"),
+                    username = r.optString("username")
+                )
+            }
+        }
+
+    suspend fun saveCredential(config: BridgeConfig, domain: String, username: String, password: String): Result<Boolean> {
+        val payload = JSONObject().apply {
+            put("domain", domain)
+            put("username", username)
+            put("password", password)
+        }
+        return scheduleCall(config, "POST", "/api/computer/credentials", payload).map { true }
+    }
+
+    suspend fun deleteCredential(config: BridgeConfig, domain: String, username: String): Result<Boolean> {
+        val q = "domain=${java.net.URLEncoder.encode(domain, "UTF-8")}&username=${java.net.URLEncoder.encode(username, "UTF-8")}"
+        return scheduleCall(config, "DELETE", "/api/computer/credentials?$q").map { true }
+    }
+
+
     suspend fun runBackup(config: BridgeConfig): Result<String> = withContext(Dispatchers.IO) {
         try {
             executeWithFailover(config) { baseUrl ->
