@@ -18,7 +18,9 @@ import com.example.data.model.TaskProposal
 import com.example.data.model.VideoItem
 import com.example.data.model.ImageItem
 import com.example.data.remote.AlwaysOnAgentClient
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
@@ -604,6 +606,11 @@ class ChatRepository(
     suspend fun uploadAttachment(localId: String, name: String, bytes: ByteArray): ChatAttachment =
         agentClient.uploadAttachment(getActiveConfig(), localId, name, bytes)
 
+    /** Replies left "sending" by an app that was closed mid-reply; call once when the chat opens. */
+    suspend fun markInterruptedReplies(): Int = withContext(Dispatchers.IO) {
+        chatDao.markInterruptedReplies(STOPPED_TEXT)
+    }
+
     fun sendMessageStream(
         session: ChatSession,
         userText: String,
@@ -654,7 +661,7 @@ class ChatRepository(
             agentClient.streamChat(
                 config = config,
                 systemPrompt = session.systemPrompt,
-                history = history,
+                history = historyForAgent(history),
                 userMessage = agentText,
                 attachmentIds = attachments.mapNotNull { it.id },
                 turnId = turnId
@@ -718,14 +725,31 @@ class ChatRepository(
             )
             chatDao.updateMessage(finalAssistantMessage)
 
-            // Update session title if first message
-            val title = if (session.title == "Mission Control" && history.size <= 2) {
+            // Update session title if first message. Read the stored session (the one passed in is from when
+            // Send was tapped and would undo anything changed since), and title new "Mission #N" chats too
+            val stored = chatDao.getSessionById(session.id).firstOrNull() ?: session
+            val title = if (isPlaceholderTitle(stored.title) && history.size <= 2) {
                 userText.trim().ifBlank { attachments.firstOrNull()?.name ?: "" }.take(28).trim().replace("\n", " ")
+                    .ifBlank { stored.title }
             } else {
-                session.title
+                stored.title
             }
-            chatDao.updateSession(session.copy(title = title, updatedAt = System.currentTimeMillis()))
+            chatDao.updateSession(stored.copy(title = title, updatedAt = System.currentTimeMillis()))
 
+        } catch (e: CancellationException) {
+            // Stop (or the screen closing) cancels this flow. Room refuses to run in a cancelled coroutine, so the
+            // generic catch below couldn't save anything and the bubble stayed "sending" with the thinking dots
+            // forever (2026-10-26). Keep what arrived, mark it stopped, and let the cancellation go on.
+            withContext(NonCancellable) {
+                chatDao.updateMessage(
+                    assistantMessage.copy(
+                        content = currentText.ifBlank { STOPPED_TEXT },
+                        status = "stopped",
+                        latencyMs = System.currentTimeMillis() - startTime
+                    )
+                )
+            }
+            throw e
         } catch (e: Exception) {
             val latency = System.currentTimeMillis() - startTime
             val errMsg = e.localizedMessage ?: "Failed to connect to computer bridge"
@@ -745,5 +769,22 @@ class ChatRepository(
         const val TASK_CARD_GRACE_MS = 6_000L
         // task id -> when this phone first saw it (for the grace period)
         private val taskFirstSeen = java.util.concurrent.ConcurrentHashMap<String, Long>()
+
+        /** The bubble of a reply that was stopped before any text arrived. */
+        const val STOPPED_TEXT = "⏹️ Stopped"
+
+        private val MISSION_NUMBER_TITLE = Regex("""Mission #\d+""")
+
+        /** Titles the app gives a chat before its first message; the first message replaces them. */
+        fun isPlaceholderTitle(title: String): Boolean =
+            title == "Mission Control" || MISSION_NUMBER_TITLE.matches(title)
+
+        /**
+         * The conversation the agent gets as context: finished messages with text. The app's own bubbles for a
+         * reply that failed, was stopped or is still on its way are not the agent's words and were sent back to
+         * it as if they were (connection errors, empty replies) (2026-10-26).
+         */
+        fun historyForAgent(history: List<ChatMessage>): List<ChatMessage> =
+            history.filter { it.status == "sent" && it.historyText().isNotBlank() }
     }
 }

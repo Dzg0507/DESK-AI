@@ -65,4 +65,9 @@ interface ChatDao {
 
     @Query("UPDATE chat_messages SET feedback = :feedback WHERE id = :messageId")
     suspend fun updateFeedbackById(messageId: String, feedback: String)
+
+    // A reply still "sending" when the app opens was cut off (the app was closed mid-reply): without this its
+    // bubble showed the thinking dots forever (2026-10-26)
+    @Query("UPDATE chat_messages SET status = 'stopped', content = CASE WHEN content = '' THEN :placeholder ELSE content END WHERE status = 'sending'")
+    suspend fun markInterruptedReplies(placeholder: String): Int
 }

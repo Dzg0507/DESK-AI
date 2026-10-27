@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-16 (DeskAI v2.24.0 / Build 81 shipped — Enhance undo, typing guard, failure notice)
+**Last Updated:** 2026-10-26 (DeskAI v2.25.0 / Build 82 shipped — Chat flow fixes)
 
 ---
 
@@ -14,6 +14,18 @@
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
 
 ---
+
+## Shipped 2026-10-26: DeskAI v2.25.0 (build 82), Chat flow bugfixes & robustness improvements
+
+- **Stopped reply handling**: Tapping Stop cancels the streaming coroutine, which previously bypassed Room persistence because Room refuses to run on cancelled contexts. A `NonCancellable` block now reliably saves partial text (or "⏹️ Stopped") and marks status `stopped`, removing the infinite thinking indicator.
+- **Startup sweep for interrupted replies**: Added `ChatDao.markInterruptedReplies` called in `ChatViewModel.init` so any reply cut off by app exit/crash transitions cleanly out of `sending` state.
+- **Client turn state reset**: Previously `lastReceivedTaskId`, `lastReceivedProposals`, etc. were only cleared on successful response completion. If a message errored or was stopped, residual state leaked into subsequent chat turns. Now `resetTurnState()` clears per-turn artifacts at the start of every stream.
+- **History sanitization**: `ChatRepository.historyForAgent` filters out `sending`, `error`, and `stopped` messages before sending context to AlwaysOnAgent, preventing client-side error wrappers and partial interrupted text from polluting LLM context.
+- **Tapped answers & command chips draft preservation**: `sendMessage(textOverride)` no longer clears active user input or attachments when sending chip actions or multiple-choice answers.
+- **Multiple-choice question safety**: `answerQuestion` ensures `sendMessage` succeeded before updating the message state in Room, avoiding questions being marked as answered when the bridge is busy streaming another reply.
+- **Session title & drawer handling**: New chats starting as `Mission #N` are properly retitled based on the first prompt; deleting a non-active session from the drawer no longer forces a session switch; session title changes update the top bar reactively.
+- **Scroll & FAB visibility**: `ChatScreen` now computes `lastItemIndex` and `showScrollToBottom` using `chatEntries` (folded rows) rather than raw message counts, preventing the scroll-to-bottom FAB from sticking while at the bottom of the list.
+- **Tests**: Added `ChatRepositoryChatTest` with 5 automated unit tests covering cancellation, turn state isolation, interrupted reply sweeping, history filtering, and session title rules.
 
 ## Shipped 2026-10-16: DeskAI v2.24.0 (build 81), Enhance: undo, typing guard, failure notice (Claude)
 

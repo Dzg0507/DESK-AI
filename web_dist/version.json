@@ -1,7 +1,7 @@
 {
-  "versionCode": 81,
-  "versionName": "2.24.0",
-  "changelog": "DeskAI v2.24.0 (Build 81): Enhance now has Undo (the button turns into Undo after enhancing), never replaces text you typed while it worked, and tells you when no AI could enhance it.",
+  "versionCode": 82,
+  "versionName": "2.25.0",
+  "changelog": "DeskAI v2.25.0 (Build 82): Chat fixes: stopping a stream no longer leaves an infinite thinking spinner, residual tasks/proposals no longer leak across turns, questions are safely dispatched, draft text is preserved when tapping answers, and list scrolling properly accounts for folded tasks.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24624277
+  "fileSizeBytes": 24624285
 }

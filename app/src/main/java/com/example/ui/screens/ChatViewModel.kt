@@ -114,10 +114,22 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
         // Initialize session and poll stats
         viewModelScope.launch {
+            // A reply cut off by the app closing must not spin forever (this is the only ChatViewModel, so no
+            // reply of this run is in flight yet)
+            try { repository.markInterruptedReplies() } catch (_: Exception) {}
             val session = repository.ensureDefaultSession()
             _currentSession.value = session
             listenToMessages(session.id)
             pollStatsPeriodically()
+        }
+
+        // Keep the open session current: the first reply renames it, and the top bar showed the old title until
+        // another chat was opened (2026-10-26)
+        viewModelScope.launch {
+            repository.allSessions.collect { list ->
+                val open = _currentSession.value ?: return@collect
+                list.firstOrNull { it.id == open.id }?.let { if (it != open) _currentSession.value = it }
+            }
         }
     }
 
@@ -304,18 +316,22 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         _attachments.value = _attachments.value.filterNot { it.localId == localId }
     }
 
-    fun sendMessage(textOverride: String? = null) {
+    /** Sends the typed message (or [textOverride], e.g. a tapped answer); false if nothing was sent. */
+    fun sendMessage(textOverride: String? = null): Boolean {
         val ready = if (textOverride == null) _attachments.value.filter { it.status == "ready" } else emptyList()
-        if (textOverride == null && _attachments.value.any { it.status == "uploading" }) return
+        if (textOverride == null && _attachments.value.any { it.status == "uploading" }) return false
         // A file may go on its own (the repository asks the agent about it)
         val textToSend = (textOverride ?: _inputText.value).trim()
-        if ((textToSend.isBlank() && ready.isEmpty()) || _isStreaming.value) return
+        if ((textToSend.isBlank() && ready.isEmpty()) || _isStreaming.value) return false
 
-        val session = _currentSession.value ?: return
+        val session = _currentSession.value ?: return false
         val turnId = UUID.randomUUID().toString()
         currentTurnId = turnId
-        _inputText.value = ""
-        if (textOverride == null) _attachments.value = emptyList()
+        // A tapped answer, chip or command leaves what's being typed alone (it used to wipe the draft)
+        if (textOverride == null) {
+            _inputText.value = ""
+            _attachments.value = emptyList()
+        }
         _isStreaming.value = true
         _streamingDurationMs.value = 0L
 
@@ -345,11 +361,16 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     }
                 }
             } finally {
-                if (currentTurnId == turnId) currentTurnId = null
-                _isStreaming.value = false
                 timerJob.cancel()
+                // Only the reply still in progress may end the streaming state: a stopped reply's cleanup can run
+                // after the next one has started, and switched that one's Stop button off (2026-10-26)
+                if (currentTurnId == turnId) {
+                    currentTurnId = null
+                    _isStreaming.value = false
+                }
             }
         }
+        return true
     }
 
     fun stopStreaming() {
@@ -401,7 +422,10 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     fun deleteSession(sessionId: String) {
         viewModelScope.launch {
+            val wasOpen = _currentSession.value?.id == sessionId
             repository.deleteSession(sessionId)
+            // Deleting another chat from the drawer used to jump away from the one being read
+            if (!wasOpen) return@launch
             val remaining = allSessions.value.filter { it.id != sessionId }
             if (remaining.isNotEmpty()) {
                 switchSession(remaining.first())
@@ -508,10 +532,15 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun answerQuestion(message: ChatMessage, option: String) {
+        // Send first: while a reply is on its way the answer isn't sent, and the question used to be marked
+        // answered anyway, so the tap was lost with no way to answer again
+        if (!sendMessage(option)) {
+            notify("Wait for the reply to finish, then tap your answer")
+            return
+        }
         viewModelScope.launch {
             repository.updateMessage(message.withAnsweredQuestion(option))
         }
-        sendMessage(option)
     }
 
     /** Records user reaction (thumbs_up, thumbs_down, less_like_this) to an agent proactive message. */

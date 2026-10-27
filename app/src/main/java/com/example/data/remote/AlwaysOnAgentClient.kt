@@ -77,6 +77,15 @@ class AlwaysOnAgentClient {
     var lastReceivedCanvas: String? = null      // the reply's "canvas" object, as JSON
     var lastReceivedTaskId: String? = null
 
+    /** Forgets the extras of the previous reply. They were only cleared after a reply finished, so one that was
+     *  stopped or failed handed its task card and proposals to the next reply (2026-10-26). */
+    fun resetTurnState() {
+        lastReceivedProposals = emptyList()
+        lastReceivedQuestion = null
+        lastReceivedCanvas = null
+        lastReceivedTaskId = null
+    }
+
     private fun addAuth(builder: Request.Builder, config: BridgeConfig): Request.Builder {
         if (config.apiKey.isNotBlank()) {
             builder.addHeader("X-HUD-Token", config.apiKey.trim())
@@ -1934,6 +1943,7 @@ class AlwaysOnAgentClient {
         attachmentIds: List<String> = emptyList(),
         turnId: String? = null
     ): Flow<String> = flow {
+        resetTurnState()
         val trimmed = userMessage.trim()
 
         // 1. Process slash commands natively

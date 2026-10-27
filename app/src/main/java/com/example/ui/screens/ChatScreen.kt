@@ -234,8 +234,14 @@ fun ChatScreen(
     }
 
     val hasEarlierMessages by viewModel.hasEarlierMessages.collectAsStateWithLifecycle()
+    // What the list shows: task messages fold into rows and strips (or hide), so there can be far fewer rows than
+    // messages. Counting messages put the scroll target past the end and kept the "scroll to bottom" button up
+    // while already at the bottom (2026-10-26). Derived, so the 100 ms reply timer doesn't refold every tick.
+    val chatEntries by remember(messages, hideTasks, openStrips) {
+        derivedStateOf { com.example.ui.components.foldChat(messages, taskStates, hideTasks, openStrips) }
+    }
     // The list has a "Load earlier messages" row above the messages when older ones exist
-    val lastItemIndex = messages.size - 1 + (if (hasEarlierMessages) 1 else 0)
+    val lastItemIndex = chatEntries.size - 1 + (if (hasEarlierMessages) 1 else 0)
 
     // Opening a chat jumps straight to the newest message (no animated scroll through the history);
     // a new or updated last message scrolls smoothly. Loading earlier messages keeps the reading position.
@@ -252,10 +258,12 @@ fun ChatScreen(
 
     val showScrollToBottom by remember {
         derivedStateOf {
-            val totalItems = messages.size
+            // The list's own row count (not captured from composition, so never stale)
+            val info = listState.layoutInfo
+            val totalItems = info.totalItemsCount
             if (totalItems == 0) false
             else {
-                val lastVisible = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+                val lastVisible = info.visibleItemsInfo.lastOrNull()?.index ?: 0
                 lastVisible < totalItems - 2
             }
         }
@@ -455,7 +463,7 @@ fun ChatScreen(
                                 }
                             }
                             items(
-                                com.example.ui.components.foldChat(messages, taskStates, hideTasks, openStrips),
+                                chatEntries,
                                 key = { it.key }
                             ) { entry ->
                               when (entry) {
