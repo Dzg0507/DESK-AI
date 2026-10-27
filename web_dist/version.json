@@ -1,7 +1,7 @@
 {
-  "versionCode": 83,
-  "versionName": "2.26.0",
-  "changelog": "DeskAI v2.26.0 (Build 83): Host Credentials Vault protected by 9-dot pattern lock. Windows Credential Manager DPAPI integration for automated computer tasks sign-in with zero password exposure. Command Deck Hub integration with live saved accounts count.",
+  "versionCode": 84,
+  "versionName": "2.26.1",
+  "changelog": "DeskAI v2.26.1 (Build 84): Streamlined 9-dot pattern lock screen for zero latency. High-performance direct smooth line tracking with zero idle CPU overhead, stationary 3D brushed metallic dials, and dark emerald honeycomb background.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 24673423
+  "fileSizeBytes": 24689814
 }

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -165,10 +166,9 @@ fun CredentialsVaultDialog(
             if (!isUnlocked) {
                 // ==================== 9-DOT PATTERN LOCK SCREEN ====================
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .verticalScroll(rememberScrollState()),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
                     SheetHeader(
                         title = "Vault Security",
@@ -177,7 +177,7 @@ fun CredentialsVaultDialog(
                         onClose = onDismiss
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(18.dp))
 
                     Text(
                         text = lockPrompt,
@@ -187,15 +187,15 @@ fun CredentialsVaultDialog(
                             else -> ElectricCyan
                         },
                         fontSize = 13.sp,
-                        fontWeight = FontWeight.Medium,
+                        fontWeight = FontWeight.SemiBold,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
                     PatternLockView(
-                        modifier = Modifier.size(280.dp),
+                        modifier = Modifier.size(290.dp),
                         patternState = patternState,
                         onPatternStart = {
                             patternState = PatternState.DRAWING
@@ -247,7 +247,7 @@ fun CredentialsVaultDialog(
                         }
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
                     if (savedHash != null) {
                         TextButton(
