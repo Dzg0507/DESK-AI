@@ -464,6 +464,26 @@ missed push loses nothing. Using `agent-<id>` as the message's id in the app's c
 twice. The settings (on/off, brief time, quiet hours, caps) are changed in chat; the agent uses its
 `proactive_settings` tool.
 
+## Today (editions)
+
+DeskAI's Today screen (2026-10-28, `core/today.py`): an *edition* of a few cards put together from what the agent
+already made. Interest findings with their page's title, site and preview image; new videos on followed YouTube
+channels; what the open-loops check settled; tasks finished; and the best curious question still waiting. A new edition
+is built when Today is opened at least 6 h after the last one and something is new; never on a clock, and no AI call.
+
+| Method & path | Body | Returns |
+|---|---|---|
+| `GET /api/today?edition=&refresh=` | | `{"edition": {"id", "built_at", "date", "count", "weather": {"temp_f", "summary", "place", "is_day"} or null, "next_after"} or null, "items": [item], "older": [{"id", "built_at"}]}`. Without `edition`: the latest, built first when it's due (`refresh=true` builds one now if anything is new). `edition: null` until there's something to show. Weather needs the town in the proactive settings (`location`) |
+| `GET /api/today/saved` | | `{"items": [item]}`: saved cards, newest first |
+| `POST /api/today/items/{id}/react` | `{"action": "seen"\|"save"\|"unsave"\|"less"\|"more"\|"dismiss"\|"answered"}` | `{"item": item}`. `seen` never undoes another state; `dismiss` hides the card; `answered` (a question card, after the answer was sent in the chat) marks the question answered. `400` for another action, `404` for an unknown card |
+| `GET /api/today/items/{id}/image` | | The card's image (JPEG, at most 1080 px wide), kept on the agent's PC: send the token in a header. `404` when the card has none |
+
+An item: `{"id", "card": "story"|"video"|"settled"|"done"|"question", "title", "body", "link", "site", "why",
+"state": "new"|"seen"|"saved"|"less"|"more"|"dismissed"|"answered", "image_url": "/api/today/items/{id}/image" or
+null, "created_at", "source_ref"}`. A story without an image (none, broken, or under 400 px wide) is a text card on
+purpose. `done` lists one task title per line in `body`. Pages and images are other people's content: shown, never
+followed as instructions.
+
 ## Canvas (drafts)
 
 Drafts the owner and the agent refine together (design: [CANVAS.md](CANVAS.md)). When a chat reply wrote or changed

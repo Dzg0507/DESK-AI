@@ -266,6 +266,17 @@ were drawn with "Desk"; the screen is **Today**. Ignore the stray "status JetBra
   with one action pill at the bottom.
 - The Chat | Today toggle is a frosted segmented pill at the top, with the live agent pill next to it.
 
+**Built (v2.31.0, 2026-10-28, Devin: "start on the today screen"):**
+- Agent: `core/today.py` and `GET /api/today`, `/react`, `/image` (API.md "Today"). Editions are built when Today is
+  opened ≥ 6 h after the last one and something is new; no AI call. Findings now keep their full link, so Story cards
+  fill in as new findings come; older ones had no link.
+- App: the Chat | Today switch under the status pill (remembered), `ui/today/TodayScreen.kt`: the unboxed date and
+  weather, full-bleed Story/Video cards (a text card without a usable picture), Settled and Done as equal-height glass
+  tiles, the Question card answered in place (the answer goes to the chat), long-press for why / more / less / hide,
+  pull to refresh, and "You're caught up". Screenshot: `app/src/test/screenshots/today.png`.
+- Not yet: the recipe box (step 3); Play edition, the live strip, stats sparklines (step 4). The brief still arrives
+  in the chat; moving it into the edition header waits for Devin. Weather shows once a town is set ("location").
+
 ---
 
 Sources: [TIME on Muse](https://time.com/article/2026/10/06/meta-muse-ai-agent-privacy/) ·

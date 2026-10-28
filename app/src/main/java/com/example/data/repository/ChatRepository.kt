@@ -655,6 +655,12 @@ class ChatRepository(
         }
     }
 
+    /** The Today edition (latest, or [editionId]); throws if the agent can't be reached. */
+    suspend fun getToday(editionId: Long? = null, refresh: Boolean = false): com.example.data.model.TodayPage =
+        agentClient.getToday(getActiveConfig(), editionId, refresh)
+
+    suspend fun reactToday(itemId: Long, action: String): Boolean = agentClient.reactToday(getActiveConfig(), itemId, action)
+
     /** Image bubbles still waiting (the app was closed while the image was made): follow them again. */
     suspend fun imagingMessages(): List<ChatMessage> = withContext(Dispatchers.IO) { chatDao.getImagingMessages() }
 

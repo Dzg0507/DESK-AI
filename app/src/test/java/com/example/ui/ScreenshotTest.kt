@@ -122,7 +122,44 @@ class ScreenshotTest {
         }
     }
 
+    @Test
+    fun today() = capture("today") {
+        Box(Modifier.fillMaxSize()) {
+            AtmosphereBackground()
+            Column(Modifier.fillMaxSize()) {
+                Box(Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 4.dp), contentAlignment = androidx.compose.ui.Alignment.Center) {
+                    com.example.ui.today.ChatTodaySwitch(showingToday = true, onChange = {})
+                }
+                com.example.ui.today.TodayScreen(
+                    state = com.example.ui.today.TodayUiState(page = SAMPLE_TODAY),
+                    onRefresh = {}, onReact = { _, _ -> }, onAsk = {}, onAnswer = { _, _ -> true },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+
     private companion object {
+        val SAMPLE_TODAY = com.example.data.model.TodayPage(
+            edition = com.example.data.model.TodayEdition(1, "2026-10-28T07:57:08-05:00", "2026-10-28", 5,
+                com.example.data.model.TodayWeather(62, "Clear", "Jonesboro", true), "2026-10-28T13:57:08-05:00"),
+            items = listOf(
+                com.example.data.model.TodayItem(1, "story", "Bobcat spotted near Strawberry River",
+                    "A bobcat walked past a trail camera on the Strawberry River slope early Tuesday.",
+                    "https://trails.example.com/bobcat", "Arkansas Outdoors", "You follow Arkansas outdoors", "new",
+                    "https://devinmini.example.ts.net/api/today/items/1/image"),
+                com.example.data.model.TodayItem(2, "story", "Free Gemini credits for indie developers this month",
+                    "Google opened a new round of free API credits for small projects, no card needed.",
+                    "https://news.example.org/credits", "news.example.org", "You build with free tiers", "saved", null),
+                com.example.data.model.TodayItem(3, "settled", "Settled", "The court granted your IFP motion on Oct 5.",
+                    "", "", "", "new", null),
+                com.example.data.model.TodayItem(4, "done", "4 finished",
+                    "Post 1 pin to Pinterest ×2\nWeekly growth review\nAuto-Post to TikTok", "", "", "", "new", null),
+                com.example.data.model.TodayItem(5, "question", "A question",
+                    "Which trail have you liked most this fall?", "", "", "", "new", null)
+            )
+        )
+
         val SAMPLE_MESSAGES = listOf(
             ChatMessage(id = "1", sessionId = "s", role = "assistant", inboxKind = "question",
                 content = "Have you noticed any cool wildlife passing by your trail camera lately down near the " +

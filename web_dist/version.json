@@ -1,7 +1,7 @@
 {
-  "versionCode": 94,
-  "versionName": "2.30.4",
-  "changelog": "DeskAI v2.30.4 (Build 94): While an image is being made, its bubble says what's happening right now (which service it's trying, its place in AI Horde's line, or that it's being drawn), so a slow image doesn't look stuck.",
+  "versionCode": 95,
+  "versionName": "2.31.0",
+  "changelog": "DeskAI v2.31.0 (Build 95): Today. A new screen next to Chat (the switch at the top): an edition of things the agent found for you while you were away, with pictures, what got settled, what finished, and a question you can answer right on its card. Pull down to check for more.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 28190536
+  "fileSizeBytes": 28272598
 }

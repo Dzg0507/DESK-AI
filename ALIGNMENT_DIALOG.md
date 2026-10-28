@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-28 (DeskAI v2.30.4 / Build 94 shipped — the image bubble shows what ImageGen is doing now: GET /api/images/jobs/{id} "stage")
+**Last Updated:** 2026-10-28 (DeskAI v2.31.0 / Build 95 shipped — Today screen: Chat | Today switch, editions from GET /api/today)
 
 ---
 

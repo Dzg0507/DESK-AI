@@ -205,6 +205,8 @@ fun ChatScreen(
     var takeOverViewOnly by remember { mutableStateOf(uiPrefs.getBoolean("takeover_view_only", false)) }
     // Tasks folded in chat (2026-10-11): what's known of each linked task, which strips are open, and the Tasks switch
     var hideTasks by remember { mutableStateOf(uiPrefs.getBoolean("hide_tasks", false)) }
+    // Chat or Today (2026-10-28): the frosted switch under the status pill; the app reopens where it was left
+    var showToday by remember { mutableStateOf(uiPrefs.getBoolean("show_today", false)) }
     val taskStates = remember { androidx.compose.runtime.mutableStateMapOf<String, com.example.data.model.AgentTaskItem>() }
     var openStrips by remember { mutableStateOf(setOf<String>()) }
     LaunchedEffect(messages) {
@@ -442,6 +444,41 @@ fun ChatScreen(
                         onOpenSettings = { showConnectionDialog = true }
                     )
 
+                    Box(Modifier.fillMaxWidth().padding(bottom = 4.dp), contentAlignment = Alignment.Center) {
+                        com.example.ui.today.ChatTodaySwitch(showToday, { today ->
+                            showToday = today
+                            uiPrefs.edit().putBoolean("show_today", today).apply()
+                        })
+                    }
+
+                    if (showToday) {
+                        val todayVm: com.example.ui.today.TodayViewModel = viewModel()
+                        val todayState by todayVm.state.collectAsStateWithLifecycle()
+                        // Each visit: the agent puts a new edition together first when one is due
+                        LaunchedEffect(Unit) { todayVm.load() }
+                        com.example.ui.today.TodayScreen(
+                            state = todayState,
+                            onRefresh = { todayVm.load(refresh = true) },
+                            onReact = { item, action -> todayVm.react(item, action) },
+                            // Ask about a card: back to the chat with it written out, ready to add to and send
+                            onAsk = { item ->
+                                showToday = false
+                                uiPrefs.edit().putBoolean("show_today", false).apply()
+                                val about = item.title.ifBlank { item.body }.lineSequence().first().take(140)
+                                viewModel.onInputTextChange(
+                                    "About “$about”" + (if (item.link.isNotBlank()) " (${item.link})" else "") + ": "
+                                )
+                            },
+                            // A question answered on its card goes to the chat like any message
+                            onAnswer = { item, answer ->
+                                val sent = viewModel.sendMessage("About your question “${item.body}”: $answer")
+                                if (sent) todayVm.react(item, "answered")
+                                sent
+                            },
+                            modifier = Modifier.weight(1f)
+                        )
+                    } else {
+
                     // Messages Scroll Area
                     Box(modifier = Modifier.weight(1f)) {
                         LazyColumn(
@@ -638,6 +675,7 @@ fun ChatScreen(
                         canUndoRefine = canUndoRefine,
                         onUndoRefine = { viewModel.undoRefine() }
                     )
+                    }
                 }
             }
         }

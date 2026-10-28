@@ -2415,6 +2415,75 @@ class AlwaysOnAgentClient {
         return ImageJob(json.optString("job_id"), json.optString("status", "running"), reply, json.optString("stage"))
     }
 
+    /** The Today edition: the latest (built first when it's due), or [editionId]. Throws if the agent can't be reached. */
+    suspend fun getToday(config: BridgeConfig, editionId: Long? = null, refresh: Boolean = false): com.example.data.model.TodayPage =
+        withContext(Dispatchers.IO) {
+            // Building an edition reads a few pages and images first
+            val client = httpClient.newBuilder().readTimeout(90, TimeUnit.SECONDS).build()
+            executeWithFailover(config) { baseUrl ->
+                val q = buildList {
+                    if (editionId != null) add("edition=$editionId")
+                    if (refresh) add("refresh=true")
+                }.joinToString("&")
+                val req = addAuth(Request.Builder().url("$baseUrl/api/today" + if (q.isEmpty()) "" else "?$q"), config).build()
+                client.newCall(req).execute().use { resp ->
+                    val body = resp.body?.string() ?: ""
+                    if (!resp.isSuccessful) throw IllegalStateException("HTTP ${resp.code}")
+                    parseToday(JSONObject(body), baseUrl.trimEnd('/'))
+                }
+            }
+        }
+
+    /** Saves, dismisses, marks seen... one Today card (POST /api/today/items/{id}/react). */
+    suspend fun reactToday(config: BridgeConfig, itemId: Long, action: String): Boolean = withContext(Dispatchers.IO) {
+        try {
+            executeWithFailover(config) { baseUrl ->
+                val body = JSONObject().put("action", action).toString().toRequestBody(jsonMediaType)
+                val req = addAuth(Request.Builder().url("$baseUrl/api/today/items/$itemId/react").post(body), config).build()
+                httpClient.newCall(req).execute().use { it.isSuccessful }
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    private fun parseToday(json: JSONObject, base: String): com.example.data.model.TodayPage {
+        val ed = json.optJSONObject("edition")
+        val edition = ed?.let { e ->
+            val w = e.optJSONObject("weather")
+            com.example.data.model.TodayEdition(
+                id = e.optLong("id"), builtAt = e.optString("built_at"), date = e.optString("date"),
+                count = e.optInt("count"),
+                weather = w?.let {
+                    com.example.data.model.TodayWeather(it.optInt("temp_f"), it.optString("summary"), it.optString("place"),
+                        it.optBoolean("is_day", true))
+                },
+                nextAfter = e.optString("next_after").takeIf { it.isNotBlank() && it != "null" }
+            )
+        }
+        val items = json.optJSONArray("items")?.let { arr ->
+            (0 until arr.length()).map { i ->
+                val o = arr.getJSONObject(i)
+                val image = if (o.isNull("image_url")) null else o.optString("image_url").takeIf { it.isNotBlank() }
+                com.example.data.model.TodayItem(
+                    id = o.optLong("id"), card = o.optString("card"), title = o.optString("title"),
+                    body = o.optString("body"), link = o.optString("link"), site = o.optString("site"),
+                    why = o.optString("why"), state = o.optString("state", "new"),
+                    imageUrl = image?.let { if (it.startsWith("/")) "$base$it" else it }
+                )
+            }
+        } ?: emptyList()
+        val older = json.optJSONArray("older")?.let { arr ->
+            (0 until arr.length()).map { i ->
+                val o = arr.getJSONObject(i)
+                com.example.data.model.TodayEditionRef(o.optLong("id"), o.optString("built_at"))
+            }
+        } ?: emptyList()
+        return com.example.data.model.TodayPage(edition, items, older)
+    }
+
     private suspend fun streamAlwaysOnAgentChat(
         config: BridgeConfig,
         systemPrompt: String,
