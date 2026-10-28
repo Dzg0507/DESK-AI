@@ -147,67 +147,24 @@ fun MessageBubble(
 
     var showActions by remember { mutableStateOf(false) }
 
+    // 2026-10-28, Devin's redesign: no avatar, no "AlwaysOnAgent" header, no latency. The agent's reply reads straight
+    // off the canvas; the owner's is a compact glass capsule. Times show when a message is tapped.
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 4.dp),
+            .padding(horizontal = if (isUser) 12.dp else 20.dp, vertical = if (isUser) 4.dp else 8.dp),
         horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start,
         verticalAlignment = Alignment.Top
     ) {
-        // Assistant Bot Avatar
-        if (!isUser) {
-            Box(
-                modifier = Modifier
-                    .size(28.dp)
-                    .clip(DeskShapes.small)
-                    .background(DeskColors.Agent.copy(alpha = 0.16f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.SmartToy,
-                    contentDescription = "AlwaysOnAgent",
-                    tint = DeskColors.Agent,
-                    modifier = Modifier.size(16.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-        }
-
         Column(
             modifier = if (isUser) Modifier.widthIn(max = 330.dp) else Modifier.weight(1f),
             horizontalAlignment = if (isUser) Alignment.End else Alignment.Start
         ) {
-            // Header for assistant (Model label & latency badge)
-            if (!isUser) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(start = 2.dp, bottom = 4.dp)
-                ) {
-                    Text(
-                        text = "AlwaysOnAgent",
-                        style = DeskType.label,
-                        color = DeskColors.TextSecondary
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = timeFormatted, style = DeskType.label, color = DeskColors.TextMuted)
-                    if (message.latencyMs != null && message.latencyMs > 0) {
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "${message.latencyMs} ms",
-                            style = DeskType.mono,
-                            color = DeskColors.TextMuted
-                        )
-                    }
-                }
-            }
-
-            // Spatial glass (2026-10-27 visual target): the user's message is a smoked-glass bubble; the agent's reply
-            // has no box at all and reads straight off the background, with its name and time above it
             Box(
                 modifier = Modifier
                     .then(if (isUser) Modifier.glass(UserBubbleShape) else Modifier)
                     .clickable { showActions = !showActions }
-                    .padding(horizontal = if (isUser) 14.dp else 2.dp, vertical = if (isUser) 10.dp else 2.dp)
+                    .padding(horizontal = if (isUser) 14.dp else 0.dp, vertical = if (isUser) 9.dp else 0.dp)
             ) {
                 Column {
                     val attached = remember(message.attachmentsJson) { message.getAttachments() }
@@ -356,17 +313,17 @@ fun MessageBubble(
                         }
                     }
 
-                    // Timestamp (the agent's is in its header)
-                    if (isUser) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = timeFormatted,
-                            style = DeskType.caption,
-                            color = DeskColors.TextSecondary,
-                            modifier = Modifier.align(Alignment.End)
-                        )
-                    }
                 }
+            }
+
+            // The time, only when the message is tapped (with its actions below)
+            if (showActions) {
+                Text(
+                    text = timeFormatted,
+                    style = DeskType.caption,
+                    color = DeskColors.TextMuted,
+                    modifier = Modifier.padding(top = 4.dp, start = 2.dp, end = 2.dp)
+                )
             }
 
             // Expandable Action Toolbar

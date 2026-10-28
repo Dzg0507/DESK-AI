@@ -54,6 +54,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.MaterialTheme
@@ -327,7 +328,8 @@ fun ChatScreen(
                     modifier = Modifier.windowInsetsPadding(TopAppBarDefaults.windowInsets),
                     hasUpdate = hasUpdateAvailable,
                     awayShiftActive = activityState?.active == true,
-                    onOpenBackgroundWork = { showBackgroundWorkSheet = true }
+                    onOpenBackgroundWork = { showBackgroundWorkSheet = true },
+                    onNewChat = { viewModel.createNewSession() }
                 )
             },
             modifier = modifier
@@ -392,9 +394,9 @@ fun ChatScreen(
                     Box(modifier = Modifier.weight(1f)) {
                         LazyColumn(
                             state = listState,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(vertical = 4.dp)
+                            modifier = Modifier.fillMaxSize(),
+                            // The first message clears the top bar, the last one the input capsule
+                            contentPadding = PaddingValues(top = 12.dp, bottom = 8.dp)
                         ) {
                             if (hasEarlierMessages) {
                                 item(key = "load_earlier") {

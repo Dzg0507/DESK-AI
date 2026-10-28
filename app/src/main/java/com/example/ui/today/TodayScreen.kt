@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -34,6 +33,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Menu
@@ -223,11 +223,18 @@ private fun Header(header: TodayHeader, shown: Int, onPlayEdition: () -> Unit) {
                 modifier = Modifier.weight(1f)
             )
             header.weather?.let { w ->
-                Text(
-                    text = "${skyGlyph(skyFor(w))} ${w.tempF}°F ${w.summary}".trim(),
-                    style = DeskType.titleSmall,
-                    color = DeskColors.TextPrimary.copy(alpha = 0.85f)
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    skyIcon(skyFor(w))?.let { icon ->
+                        Icon(icon, contentDescription = null, tint = DeskColors.TextPrimary.copy(alpha = 0.85f),
+                            modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(DeskSpace.xs + DeskSpace.xxs))
+                    }
+                    Text(
+                        text = "${w.tempF}°F ${w.summary}",
+                        style = DeskType.titleSmall,
+                        color = DeskColors.TextPrimary.copy(alpha = 0.92f)
+                    )
+                }
             }
         }
         Spacer(Modifier.height(DeskSpace.s))
@@ -242,22 +249,12 @@ private fun Header(header: TodayHeader, shown: Int, onPlayEdition: () -> Unit) {
                 color = DeskColors.TextMuted
             )
         }
-        header.brief?.takeIf { it.isNotBlank() }?.let { brief ->
-            // The tiles come from the facts the brief was written from; the brief itself is a tap away
-            val bento = remember(header) { briefBento(header) }
-            if (bento != null) {
-                Spacer(Modifier.height(DeskSpace.m))
-                BriefBentoRow(bento = bento)
-            }
-            var showBrief by rememberSaveable { mutableStateOf(bento == null) }
-            Spacer(Modifier.height(DeskSpace.s))
-            if (showBrief) {
-                Text(brief.trim(), style = DeskType.body, color = DeskColors.TextSecondary,
-                    modifier = if (bento != null) Modifier.clickable { showBrief = false } else Modifier)
-            } else {
-                Text("Read the brief", style = DeskType.caption, color = DeskColors.TextMuted,
-                    modifier = Modifier.clickable { showBrief = true }.padding(vertical = DeskSpace.xs))
-            }
+        // The brief as MAIL and UP NEXT tiles, from the facts it was written from. Its text is never shown here
+        // (Devin, 2026-10-28: "I never want to see the raw emoji brief text on the Today screen again"); Play
+        // edition still reads it out.
+        briefBento(header)?.let { bento ->
+            Spacer(Modifier.height(DeskSpace.m))
+            BriefBentoRow(bento = bento)
         }
     }
 }
@@ -533,8 +530,8 @@ private fun BigCard(item: TodayItem, base: String, token: String, onReact: (Toda
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .aspectRatio(if (item.card == "video") 16f / 10f else 4f / 3.4f)
-                    .todayGlassCard()
+                    .height(220.dp)                    // full-bleed photo, cropped, 24 dp corners (DeskShapes.media)
+                    .todayGlassCard(DeskShapes.media)
                     .combinedClickable(onClick = { open() }, onLongClick = { menu = true })
             ) {
                 AsyncImage(model = request, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
@@ -703,10 +700,8 @@ internal fun deduplicateDoneTasks(rawBody: String): List<Pair<String, Int>> {
 private fun DoneCard(item: TodayItem, onReact: (TodayItem, String) -> Unit, onAsk: (TodayItem) -> Unit) {
     var menu by remember { mutableStateOf(false) }
     val tasks = remember(item.body) { deduplicateDoneTasks(item.body) }
-    val headerTitle = remember(item.title) {
-        val m = Regex("""^(\d+)\s+finished$""", RegexOption.IGNORE_CASE).matchEntire(item.title.trim())
-        if (m != null) "${m.groupValues[1]} done while you were away" else item.title
-    }
+    // The agent's own short title ("4 finished"): the long form was cut off beside the Ask pill
+    val headerTitle = item.title
     Box(Modifier.fillMaxWidth()) {
         Column(
             Modifier
@@ -954,7 +949,8 @@ fun UnifiedTopBar(
     // there) and the agent working while Devin's away (the pill says so and opens that sheet)
     hasUpdate: Boolean = false,
     awayShiftActive: Boolean = false,
-    onOpenBackgroundWork: () -> Unit = {}
+    onOpenBackgroundWork: () -> Unit = {},
+    onNewChat: (() -> Unit)? = null
 ) {
     val activeCount = if (tasksInProgress > 0) tasksInProgress else if (isRunningTask) 1 else 0
     val away = awayShiftActive && activeCount == 0 && isConnected
@@ -976,20 +972,32 @@ fun UnifiedTopBar(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .testTag("drawer_menu_button")
-                .clickable(onClick = onOpenDrawer)
-                .padding(4.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.Menu,
-                contentDescription = "Open Sessions",
-                tint = DeskColors.TopNavIcon,
-                modifier = Modifier.size(22.dp)
-            )
+        Row(Modifier.align(Alignment.CenterStart), verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .testTag("drawer_menu_button")
+                    .clickable(onClick = onOpenDrawer)
+                    .padding(4.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Menu,
+                    contentDescription = "Open Sessions",
+                    tint = DeskColors.TopNavIcon,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+            // New chat in one tap (Devin, 2026-10-28), only on Chat
+            if (!showingToday && onNewChat != null) {
+                Spacer(Modifier.width(DeskSpace.s))
+                Box(
+                    modifier = Modifier.testTag("new_chat_button").clickable(onClick = onNewChat).padding(4.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "New chat", tint = DeskColors.TopNavIcon,
+                        modifier = Modifier.size(22.dp))
+                }
+            }
         }
 
         ChatTodaySwitch(

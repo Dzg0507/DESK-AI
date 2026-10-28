@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-28 (DeskAI v2.33.0 / Build 97 shipped — Argon UI pass: unified top bar, brief tiles from header.brief facts, Play edition)
+**Last Updated:** 2026-10-28 (DeskAI v2.34.0 / Build 98 shipped — chat capsule + unboxed replies, vivid WeatherAtmosphere, no brief text on Today)
 
 ---
 

@@ -542,7 +542,7 @@ class ChatRepository(
                     id = "taskcard-${t.id}",
                     sessionId = session.id,
                     role = "assistant",
-                    content = "📋 **$who** started a task: ${t.title}",
+                    content = "**$who** started a task: ${t.title}",
                     modelUsed = "AlwaysOnAgent",
                     linkedTaskId = t.id
                 )

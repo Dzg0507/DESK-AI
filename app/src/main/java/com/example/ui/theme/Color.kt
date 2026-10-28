@@ -138,6 +138,8 @@ object DeskColors {
     val GlassStrong = Color(0x24FFFFFF)       // white at 14%: buttons over photos
     val GlassBorder = Color(0x26FFFFFF)       // white at 15%
     val TodayGlassFill = Color(0xCC0B110E)    // smoked-glass card fill on Today
+    val Capsule = Color(0xFF0E1411)           // the chat's floating input capsule
+    val CapsuleBorder = Color(0x2AD8F3DC)     // its 1 dp edge
     val TodayGlassBorderTop = Color(0x28D8F3DC)    // 1 dp top specular edge on Today cards
     val TodayGlassBorderBottom = Color(0x0FD8F3DC) // 1 dp bottom edge on Today cards
     val SegmentActiveTop = Color(0x3838E58B)  // active segmented pill top gradient fill

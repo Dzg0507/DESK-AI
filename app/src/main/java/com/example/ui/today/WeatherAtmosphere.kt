@@ -10,6 +10,13 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.Grain
+import androidx.compose.material.icons.filled.NightsStay
+import androidx.compose.material.icons.filled.Thunderstorm
+import androidx.compose.material.icons.filled.WbSunny
+import androidx.compose.material.icons.filled.WbTwilight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -22,10 +29,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.example.data.model.TodayWeather
-import com.example.ui.theme.DeskColors
 import java.util.Calendar
 import kotlin.math.PI
 import kotlin.math.sin
@@ -34,7 +41,7 @@ import kotlin.random.Random
 /** The sky over Today's header, from the weather now and the time of day. */
 enum class Sky { Rain, Storm, ClearNight, ClearDay, Golden, Cloudy, Fog }
 
-/** The open-meteo summary ("Light rain", "Mostly clear"...) and day/night -> the sky to draw; defaults by hour if null. */
+/** The open-meteo summary ("Light rain", "Mostly clear"...) and day/night -> the sky to draw; null without weather. */
 fun skyFor(weather: TodayWeather?, hour: Int = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)): Sky? {
     weather ?: return null
     val s = weather.summary.lowercase()
@@ -49,191 +56,142 @@ fun skyFor(weather: TodayWeather?, hour: Int = Calendar.getInstance().get(Calend
     }
 }
 
-/** A one-glyph sign for the header, next to the temperature. */
-fun skyGlyph(sky: Sky?): String = when (sky) {
-    Sky.Rain -> "🌧"; Sky.Storm -> "⛈"; Sky.ClearNight -> "☾"; Sky.ClearDay -> "☀"; Sky.Golden -> "🌅"
-    Sky.Cloudy -> "☁"; Sky.Fog -> "🌫"; null -> ""
+/** A monochrome sign for the header, next to the temperature (no color emoji on Today). */
+fun skyIcon(sky: Sky?): ImageVector? = when (sky) {
+    Sky.Rain -> Icons.Default.Grain; Sky.Storm -> Icons.Default.Thunderstorm; Sky.ClearNight -> Icons.Default.NightsStay
+    Sky.ClearDay -> Icons.Default.WbSunny; Sky.Golden -> Icons.Default.WbTwilight
+    Sky.Cloudy, Sky.Fog -> Icons.Default.Cloud; null -> null
 }
 
-private val RainTeal = Color(0xFF13363D)
-private val HorizonAmber = Color(0xFF2B1F14)
-private val TwilightCyan = DeskColors.WeatherTwilightCyan     // #331B4D5C
-private val DeepEmeraldGlow = DeskColors.WeatherDeepEmerald   // #26113828
-private val NightFadeBase = Color(0x00050806)                 // smooth fade into #050806
-private val DaySky = Color(0xFF14404D)
-private val GoldenAmber = Color(0xFF3A2A12)
-private val GoldenEmerald = Color(0xFF12301F)
-private val Mist = Color(0xFF16241F)
-private val StormSlate = Color(0xFF0E252C)
-
-private data class StarParticle(
-    val x: Float,
-    val y: Float,
-    val sizeDp: Float,
-    val alpha: Float
-)
+// Devin's spec (2026-10-28, second pass): rich and unmistakable on an OLED screen, not dark-on-dark
+private val Base = Color(0xFF050806)
+private val NightSapphire = Color(0xFF163B5C).copy(alpha = 0.90f)
+private val NightAurora = Color(0xFF0E4D3B).copy(alpha = 0.75f)
+private val MoonCore = Color(0xFF5CE1E6).copy(alpha = 0.45f)
+private val MoonHalo = Color(0xFF247BA0).copy(alpha = 0.55f)
+private val AuroraGreen = Color(0xFF38E58B).copy(alpha = 0.28f)
+private val AuroraTeal = Color(0xFF2EC4B6).copy(alpha = 0.32f)
+private val StarHalo = Color(0x6680FFBF)
+private val StormTeal = Color(0xFF1F4E5B).copy(alpha = 0.90f)
+private val CopperHorizon = Color(0xFF7A4419).copy(alpha = 0.65f)
+private val RainMist = Color(0x338AB0AB)
+private val DayCerulean = Color(0xFF1D63B8).copy(alpha = 0.85f)
+private val SunFlare = Color(0xFFF59E0B).copy(alpha = 0.50f)
+private val CloudDeck = Color(0xFF2B4C59).copy(alpha = 0.85f)
+private val CloudMist = Color(0x407C9891)
 
 /**
- * Multi-layered weather atmosphere filling the top 380 dp edge-to-edge behind the status bar and top nav.
+ * The weather behind the top of Today: no box, no border. It sits under the status bar, the top row, the recipe bar
+ * and the date, 420 dp tall, and fades into the page (#050806) only between 340 and 420 dp, through a vertical alpha
+ * mask (BlendMode.DstIn). Night: a sapphire-to-aurora sky, an ice-cyan moon glow behind the temperature, an aurora
+ * ribbon, ten haloed hero stars and fifty twinkling ones. Rain: stormy teal, a copper horizon, visible streaks and
+ * mist. Day: cerulean with a sun flare (warmer at golden hour). Clouds and fog: a silver-teal deck with mist bands.
+ * As the cards scroll up it rises a little slower than them and fades out.
  */
 @Composable
 fun WeatherAtmosphere(weather: TodayWeather?, listState: LazyListState?, modifier: Modifier = Modifier) {
-    WeatherAtmosphereCanvas(weather = weather, listState = listState, modifier = modifier)
-}
-
-@Composable
-fun WeatherAtmosphereCanvas(weather: TodayWeather?, listState: LazyListState?, modifier: Modifier = Modifier) {
-    val sky = skyFor(weather) ?: Sky.ClearNight
+    val sky = skyFor(weather) ?: return
     val density = LocalDensity.current
     val fadeOver = with(density) { 320.dp.toPx() }
     val rise = with(density) { 120.dp.toPx() }
+    val moonRadius = with(density) { 260.dp.toPx() }
+    val moonY = with(density) { 150.dp.toPx() }           // about where the temperature sits
+    val haloRadius = with(density) { 8.dp.toPx() }
+    val heroRadius = with(density) { 1.5.dp.toPx() }
     // 0 at the top of the feed, 1 once the header has scrolled away
     val scrolled by remember(listState) {
         derivedStateOf {
             when {
                 listState == null -> 0f
-                listState.firstVisibleItemIndex > 1 -> 1f
-                listState.firstVisibleItemIndex == 1 -> 0.6f + 0.4f * (listState.firstVisibleItemScrollOffset / fadeOver).coerceIn(0f, 1f)
-                else -> (listState.firstVisibleItemScrollOffset / fadeOver * 0.6f).coerceIn(0f, 0.6f)
+                listState.firstVisibleItemIndex > 2 -> 1f
+                else -> ((listState.firstVisibleItemIndex * fadeOver * 0.5f + listState.firstVisibleItemScrollOffset) / fadeOver)
+                    .coerceIn(0f, 1f)
             }
         }
     }
     val motion = rememberInfiniteTransition(label = "weather")
-    val fall by motion.animateFloat(0f, 1f, infiniteRepeatable(tween(1400, easing = LinearEasing)), label = "rain")
-    val drift by motion.animateFloat(0f, 1f, infiniteRepeatable(tween(26000, easing = LinearEasing), RepeatMode.Reverse), label = "mist")
-    val streaks = remember {
-        List(70) {
-            Random(it * 7 + 3).let { r -> Triple(r.nextFloat(), r.nextFloat(), 0.6f + r.nextFloat() * 0.8f) }
-        }
-    }
-    // 35 varied-size star particles (1 dp to 2.5 dp, varying alpha 0.15f..0.75f)
-    val stars = remember {
-        List(35) { i ->
-            val r = Random(i * 13 + 7)
-            StarParticle(
-                x = r.nextFloat(),
-                y = r.nextFloat() * 0.78f,
-                sizeDp = 1.0f + r.nextFloat() * 1.5f,
-                alpha = 0.15f + r.nextFloat() * 0.60f
-            )
-        }
-    }
+    val fall by motion.animateFloat(0f, 1f, infiniteRepeatable(tween(1100, easing = LinearEasing)), label = "rain")
+    val drift by motion.animateFloat(0f, 1f, infiniteRepeatable(tween(24000, easing = LinearEasing), RepeatMode.Reverse), label = "mist")
+    val twinkle by motion.animateFloat(0f, 1f, infiniteRepeatable(tween(3200, easing = LinearEasing), RepeatMode.Reverse), label = "stars")
+    val streaks = remember { List(90) { Random(it * 7 + 3).let { r -> Triple(r.nextFloat(), r.nextFloat(), 0.6f + r.nextFloat() * 0.8f) } } }
+    val heroes = remember { List(10) { Random(it * 31 + 5).let { r -> Triple(r.nextFloat(), 0.04f + r.nextFloat() * 0.5f, r.nextFloat()) } } }
+    val stars = remember { List(50) { Random(it * 13 + 1).let { r -> Triple(r.nextFloat(), r.nextFloat() * 0.72f, r.nextFloat()) } } }
 
     Canvas(
         modifier
             .fillMaxWidth()
-            .height(380.dp)
+            .height(420.dp)
             .graphicsLayer {
                 alpha = 1f - scrolled
                 translationY = -scrolled * rise
                 compositingStrategy = CompositingStrategy.Offscreen     // the mask below needs its own layer
             }
     ) {
-        // Layer 1: Upper-right celestial radial glow behind the temperature (#331B4D5C twilight cyan -> #26113828 deep emerald -> #050806)
-        drawRect(
-            brush = Brush.radialGradient(
-                0.0f to TwilightCyan,
-                0.48f to DeepEmeraldGlow,
-                1.0f to NightFadeBase,
-                center = Offset(size.width * 0.82f, size.height * 0.18f),
-                radius = size.width * 1.15f
-            )
-        )
-        // Secondary upper-left emerald-cyan canopy glow
-        drawRect(
-            brush = Brush.radialGradient(
-                0.0f to DeepEmeraldGlow,
-                0.52f to TwilightCyan.copy(alpha = 0.12f),
-                1.0f to NightFadeBase,
-                center = Offset(size.width * 0.18f, size.height * 0.08f),
-                radius = size.width * 0.95f
-            )
-        )
-        // Layer 2: Soft diagonal atmospheric light haze from upper-right toward lower-left
-        drawRect(
-            brush = Brush.linearGradient(
-                0.0f to TwilightCyan.copy(alpha = 0.24f),
-                0.45f to DeepEmeraldGlow.copy(alpha = 0.18f),
-                1.0f to Color.Transparent,
-                start = Offset(size.width * 0.95f, 0f),
-                end = Offset(size.width * 0.05f, size.height * 0.85f)
-            )
-        )
-
+        val skyEnd = (400.dp.toPx() / size.height).coerceAtMost(1f)
         when (sky) {
-            Sky.Rain, Sky.Storm -> {
-                glow(if (sky == Sky.Storm) StormSlate else RainTeal, Offset(size.width * 0.3f, 0f), size.width * 1.1f)
-                glow(HorizonAmber, Offset(size.width * 0.8f, size.height * 0.75f), size.width * 0.8f)
-                mist(drift, 0.55f)
-                val len = size.height * 0.07f
-                streaks.forEach { (x, y, speed) ->
-                    val yy = ((y + fall * speed) % 1f) * size.height
-                    val xx = x * size.width * 1.2f - yy * 0.25f
-                    drawLine(
-                        Color.White.copy(alpha = if (sky == Sky.Storm) 0.11f else 0.08f),
-                        Offset(xx, yy),
-                        Offset(xx - len * 0.3f, yy + len),
-                        strokeWidth = 1.2f
-                    )
-                }
-            }
             Sky.ClearNight -> {
-                mist(drift, 0.32f)
-                stars.forEach { star ->
-                    val diameterPx = star.sizeDp.dp.toPx()
-                    val radiusPx = diameterPx / 2f
-                    val center = Offset(star.x * size.width, star.y * size.height)
-                    if (star.alpha > 0.45f) {
-                        drawCircle(
-                            color = Color(0xFFD8F3DC).copy(alpha = star.alpha * 0.22f),
-                            radius = radiusPx * 2.3f,
-                            center = center
-                        )
-                    }
-                    drawCircle(
-                        color = Color.White.copy(alpha = star.alpha),
-                        radius = radiusPx,
-                        center = center
-                    )
+                drawRect(Brush.verticalGradient(0f to NightSapphire, skyEnd * 0.55f to NightAurora, skyEnd to Base))
+                aurora(drift)
+                glow(listOf(MoonCore, MoonHalo.copy(alpha = 0.30f), MoonHalo.copy(alpha = 0f)),
+                    Offset(size.width * 0.86f, moonY), moonRadius)
+                stars.forEach { (x, y, a) ->
+                    val alpha = 0.4f + 0.5f * ((a + twinkle * (if (a > 0.5f) 1f else -1f)).mod(1f))
+                    drawCircle(Color.White.copy(alpha = alpha), radius = 0.6f + a * 1.2f, center = Offset(x * size.width, y * size.height))
+                }
+                heroes.forEach { (x, y, _) ->
+                    val c = Offset(x * size.width, y * size.height)
+                    drawCircle(Brush.radialGradient(listOf(StarHalo, StarHalo.copy(alpha = 0f)), center = c, radius = haloRadius),
+                        radius = haloRadius, center = c)
+                    drawCircle(Color.White.copy(alpha = 0.95f), radius = heroRadius, center = c)
                 }
             }
-            Sky.ClearDay -> {
-                glow(DaySky, Offset(size.width, 0f), size.width * 1.3f)
-                glow(DeepEmeraldGlow, Offset(0f, size.height * 0.3f), size.width * 0.7f)
+            Sky.Rain, Sky.Storm -> {
+                drawRect(Brush.verticalGradient(0f to StormTeal, skyEnd * 0.6f to StormTeal.copy(alpha = 0.55f), skyEnd to Base))
+                glow(listOf(CopperHorizon, CopperHorizon.copy(alpha = 0f)), Offset(size.width * 0.75f, size.height * 0.62f), size.width * 0.75f)
+                mist(drift, RainMist, 3)
+                val len = size.height * 0.06f
+                streaks.forEachIndexed { i, (x, y, speed) ->
+                    val yy = ((y + fall * speed) % 1f) * size.height
+                    val xx = x * size.width * 1.25f - yy * 0.28f
+                    val tint = if (i % 3 == 0) Color(0xFFBFF3F8) else Color.White
+                    drawLine(tint.copy(alpha = if (sky == Sky.Storm) 0.35f else 0.25f + (i % 4) * 0.03f),
+                        Offset(xx, yy), Offset(xx - len * 0.3f, yy + len), strokeWidth = 1.6f)
+                }
             }
-            Sky.Golden -> {
-                glow(GoldenAmber, Offset(size.width, 0f), size.width * 1.2f)
-                glow(GoldenEmerald, Offset(0f, size.height * 0.35f), size.width * 0.8f)
+            Sky.ClearDay, Sky.Golden -> {
+                drawRect(Brush.verticalGradient(0f to DayCerulean, skyEnd * 0.6f to DayCerulean.copy(alpha = 0.45f), skyEnd to Base))
+                glow(listOf(SunFlare.copy(alpha = if (sky == Sky.Golden) 0.65f else 0.50f), SunFlare.copy(alpha = 0f)),
+                    Offset(size.width * 0.92f, 0f), moonRadius * (if (sky == Sky.Golden) 1.4f else 1.1f))
             }
             Sky.Cloudy, Sky.Fog -> {
-                glow(StormSlate, Offset(size.width * 0.5f, 0f), size.width * 1.1f)
-                mist(drift, if (sky == Sky.Fog) 0.9f else 0.7f)
+                drawRect(Brush.verticalGradient(0f to CloudDeck, skyEnd * 0.6f to CloudDeck.copy(alpha = 0.5f), skyEnd to Base))
+                mist(drift, CloudMist, if (sky == Sky.Fog) 6 else 4)
             }
         }
-        // Fade into the page: full at the top, gone at the bottom (no edge anywhere)
-        drawRect(
-            Brush.verticalGradient(
-                0f to Color.Black,
-                0.6f to Color.Black.copy(alpha = 0.78f),
-                1f to Color.Transparent
-            ),
-            blendMode = BlendMode.DstIn
-        )
+        // Into the page between 340 and 420 dp only: no edge anywhere
+        val fadeFrom = (340.dp.toPx() / size.height).coerceIn(0f, 1f)
+        drawRect(Brush.verticalGradient(0f to Color.Black, fadeFrom to Color.Black, 1f to Color.Transparent), blendMode = BlendMode.DstIn)
     }
 }
 
-private fun DrawScope.glow(color: Color, center: Offset, radius: Float) =
-    drawRect(Brush.radialGradient(listOf(color, color.copy(alpha = 0f)), center = center, radius = radius))
+private fun DrawScope.glow(colors: List<Color>, center: Offset, radius: Float) =
+    drawRect(Brush.radialGradient(colors, center = center, radius = radius))
 
-/** Soft mist: a few wide radial blobs drifting slowly side to side. */
-private fun DrawScope.mist(drift: Float, strength: Float) {
-    for (i in 0 until 4) {
+/** The aurora: a soft diagonal ribbon, emerald into teal, sweeping across the header and swaying slowly. */
+private fun DrawScope.aurora(drift: Float) {
+    val sway = (drift - 0.5f) * size.width * 0.12f
+    drawRect(Brush.linearGradient(
+        0f to Color.Transparent, 0.38f to AuroraGreen, 0.52f to AuroraTeal, 0.68f to Color.Transparent,
+        start = Offset(size.width * 0.05f + sway, 0f), end = Offset(size.width * 0.75f + sway, size.height * 0.8f)))
+}
+
+/** Mist: wide radial bands drifting slowly side to side. */
+private fun DrawScope.mist(drift: Float, color: Color, bands: Int) {
+    for (i in 0 until bands) {
         val phase = drift * 2f * PI.toFloat() + i * 1.7f
-        val c = Offset(size.width * (0.15f + i * 0.25f) + sin(phase) * size.width * 0.08f, size.height * (0.25f + (i % 2) * 0.25f))
-        drawCircle(
-            Brush.radialGradient(listOf(Mist.copy(alpha = strength), Mist.copy(alpha = 0f)), center = c, radius = size.width * 0.45f),
-            radius = size.width * 0.45f,
-            center = c
-        )
+        val c = Offset(size.width * (0.1f + i * (0.85f / bands)) + sin(phase) * size.width * 0.1f,
+            size.height * (0.2f + (i % 3) * 0.17f))
+        val r = size.width * 0.5f
+        drawCircle(Brush.radialGradient(listOf(color, color.copy(alpha = 0f)), center = c, radius = r), radius = r, center = c)
     }
 }

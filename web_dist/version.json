@@ -1,7 +1,7 @@
 {
-  "versionCode": 97,
-  "versionName": "2.33.0",
-  "changelog": "DeskAI v2.33.0 (Build 97): A cleaner top: one row with the menu, the Chat | Today switch, your tasks and quick actions (a dot there means an app update is ready). Today shows your mail and what's up next as two tiles, a Play edition button reads it out loud, and the sky behind it has stars at night.",
+  "versionCode": 98,
+  "versionName": "2.34.0",
+  "changelog": "DeskAI v2.34.0 (Build 98): A cleaner Chat and a brighter Today. Chat: one floating input capsule, no avatars or timing labels, your messages as compact bubbles (tap one for its time), and a + for a new chat at the top. Today: a vivid sky that follows the real weather, your mail and what's up next as tiles, and photo story cards.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 28338144
+  "fileSizeBytes": 28338137
 }

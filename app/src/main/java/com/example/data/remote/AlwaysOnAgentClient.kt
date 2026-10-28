@@ -2036,16 +2036,16 @@ class AlwaysOnAgentClient {
             "/status" -> {
                 val stats = getDaemonStats(config)
                 if (stats != null) {
-                    val statusText = if (stats.daemonStatus == "running_task") "🟢 Executing Mission" else if (stats.daemonStatus == "idle") "🟢 Online / Idle" else "⏸️ Standby (Sleep)"
+                    // No emoji in status output (Devin, 2026-10-28)
+                    val statusText = if (stats.daemonStatus == "running_task") "Running a task" else if (stats.daemonStatus == "idle") "Online, idle" else "Standby"
                     onChunk("""
-                        📊 **AlwaysOnAgent Command Center (v2.1)**
-                        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-                        • **Daemon Status:** $statusText
+                        **AlwaysOnAgent status**
+                        • **Daemon:** $statusText
                         • **Project Phase:** `${stats.overallPhase.uppercase()}`
                         • **Default Engine:** `${stats.defaultEngine}`
                         • **Last Pulse:** `${stats.lastHeartbeat.ifBlank { "Live" }}`
-                        
-                        📈 **Task Metrics:**
+
+                        **Tasks:**
                         • Completed: `${stats.tasksCompleted}`
                         • In Progress: `${stats.tasksInProgress}`
                         • Backlog: `${stats.tasksBacklog}`
@@ -2070,13 +2070,13 @@ class AlwaysOnAgentClient {
                 val res = setDaemonState(config, "idle")
                 if (res.isSuccess) {
                     onChunk("""
-                        🟢 **AlwaysOnAgent Daemon Awakened!**
-                        
+                        **AlwaysOnAgent is awake**
+
                         • **State:** `ONLINE & ACTIVE`
                         • **Worker Pool:** Listening for missions
                         • **Host Hardware:** Resumed processing
-                        
-                        🚀 Pending backlog tasks will be executed immediately.
+
+                        Pending backlog tasks will run now.
                     """.trimIndent())
                 } else {
                     onChunk("⚠️ Error waking daemon: ${res.exceptionOrNull()?.message}")

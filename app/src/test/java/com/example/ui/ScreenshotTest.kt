@@ -74,17 +74,15 @@ class ScreenshotTest {
         Box(Modifier.fillMaxSize()) {
             AtmosphereBackground()
             Column(Modifier.fillMaxSize()) {
-                AgentStatusBar(
-                    stats = DaemonStats(daemonStatus = "running_task", tasksCompleted = 231, tasksInProgress = 1,
-                        activeTask = AgentTaskItem(id = "task-232", title = "Render tonight's TikTok", phase = "in_progress")),
-                    serverUrl = "https://devinmini.example.ts.net", isConnected = true, onToggleDaemon = {},
-                    onOpenTasks = {}, onOpenMemory = {}, onOpenMedia = {}, onOpenSettings = {}
+                // The real top row, as on Chat: menu and new chat, the switch, the tasks pill, quick actions
+                com.example.ui.today.UnifiedTopBar(
+                    showingToday = false, onSelectTab = {}, onOpenDrawer = {}, tasksInProgress = 1,
+                    isRunningTask = true, isConnected = true, onOpenTasks = {}, onOpenQuickActions = {},
+                    hasUpdate = true, onNewChat = {}
                 )
-                Column(
-                    Modifier.weight(1f).padding(horizontal = 12.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
+                Column(Modifier.weight(1f).padding(vertical = 12.dp)) {
                     SAMPLE_MESSAGES.forEach { MessageBubble(message = it) }
+                    MessageBubble(message = ChatMessage(id = "9", sessionId = "s", role = "user", content = "Thanks!"))
                 }
                 ChatInputBar(text = "", onTextChange = {}, onSend = {}, isStreaming = false, onStopStreaming = {})
             }

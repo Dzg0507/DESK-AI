@@ -1,6 +1,7 @@
 package com.example.ui.components
 
 import com.example.ui.theme.DeskColors
+import com.example.ui.theme.DeskType
 import com.example.ui.theme.DeskTextSize
 import com.example.ui.theme.DeskShapes
 import androidx.compose.ui.graphics.Brush
@@ -21,6 +22,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.navigationBars
@@ -131,118 +133,57 @@ fun ChatInputBar(
         }
     }
 
+    // One floating capsule (2026-10-28, Devin's redesign): no bar, no boxed buttons. Actions and files on the left,
+    // the text in the middle, the mic (empty) or send (typed) on the right; stop while a reply streams.
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(Brush.verticalGradient(listOf(Slate900, DeepNavy)))
-            .border(1.dp, Slate800)
             // Above the keyboard when it's open, above the navigation bar when it isn't
             .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime))
-            .padding(vertical = 6.dp)
+            .padding(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 8.dp)
     ) {
-        // Attached files, above the input row
+        // Attached files, above the capsule
         if (attachments.isNotEmpty()) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = 10.dp, vertical = 4.dp),
+                    .padding(bottom = 6.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 attachments.forEach { a -> AttachmentChip(a, onRemove = { onRemoveAttachment(a.localId) }) }
             }
         }
 
-        // Input row
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 10.dp),
+                .clip(DeskShapes.sheet)
+                .background(DeskColors.Capsule)
+                .border(1.dp, DeskColors.CapsuleBorder, DeskShapes.sheet)
+                .padding(horizontal = 12.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Actions: every command and hub (the command palette)
-            IconButton(
-                onClick = onOpenCommandPalette,
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .glass(CircleShape, fill = if (text.startsWith("/")) DeskColors.Agent.copy(alpha = 0.18f) else DeskColors.Glass)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Apps,
-                    contentDescription = "Actions",
-                    tint = if (text.startsWith("/")) DeskColors.Agent else DeskColors.TextSecondary,
-                    modifier = Modifier.size(22.dp)
-                )
+            val slash = text.startsWith("/")
+            CapsuleIcon(Icons.Default.Apps, "Actions", if (slash) DeskColors.Agent else DeskColors.TextSecondary, onOpenCommandPalette)
+            CapsuleIcon(Icons.Default.Add, "Attach a file", if (attachments.isNotEmpty()) DeskColors.Agent else DeskColors.TextSecondary) {
+                try {
+                    fileLauncher.launch(arrayOf("application/pdf",
+                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        "text/*", "application/json", "image/*", "video/*"))
+                } catch (_: Exception) {
+                    // No document picker on this device
+                }
             }
+            Spacer(modifier = Modifier.width(6.dp))
 
-            Spacer(modifier = Modifier.width(8.dp))
-            // Voice Mic Button
-            IconButton(
-                onClick = {
-                    val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                        putExtra(
-                            RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                            RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
-                        )
-                        putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
-                        putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak instruction to AlwaysOnAgent...")
-                    }
-                    try {
-                        speechLauncher.launch(intent)
-                    } catch (_: Exception) {
-                        // Ignore if speech recognizer unavailable
-                    }
-                },
-                modifier = Modifier.size(40.dp).clip(CircleShape).glass(CircleShape)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Mic,
-                    contentDescription = "Voice Dictation",
-                    tint = DeskColors.TextSecondary,
-                    modifier = Modifier.size(22.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.width(8.dp))
-            // Attach files
-            IconButton(
-                onClick = {
-                    try {
-                        fileLauncher.launch(arrayOf("application/pdf",
-                            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                            "text/*", "application/json", "image/*", "video/*"))
-                    } catch (_: Exception) {
-                        // No document picker on this device
-                    }
-                },
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .glass(CircleShape, fill = if (attachments.isNotEmpty()) DeskColors.Agent.copy(alpha = 0.18f) else DeskColors.Glass)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.AttachFile,
-                    contentDescription = "Attach a file",
-                    tint = if (attachments.isNotEmpty()) DeskColors.Agent else DeskColors.TextSecondary,
-                    modifier = Modifier.size(22.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            // Main Text Input Field
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .glass(DeskShapes.card)
-                    .padding(horizontal = 14.dp, vertical = 10.dp)
-            ) {
+            Box(modifier = Modifier.weight(1f).padding(vertical = 8.dp)) {
                 if (text.isEmpty()) {
                     Text(
-                        text = if (attachments.isNotEmpty()) "Ask about the file…" else "Talk to AlwaysOnAgent, or type / for commands",
+                        text = if (attachments.isNotEmpty()) "Ask about the file…" else "Message AlwaysOnAgent",
+                        style = DeskType.body,
                         color = DeskColors.TextMuted,
-                        fontSize = DeskTextSize.base
+                        maxLines = 1
                     )
                 }
                 // The cursor goes to the end when the text is set from outside (a slash command picked from the
@@ -254,99 +195,53 @@ fun ChatInputBar(
                 BasicTextField(
                     value = field,
                     onValueChange = { field = it; if (it.text != text) onTextChange(it.text) },
-                    textStyle = TextStyle(
-                        color = Slate50,
-                        fontSize = DeskTextSize.base
-                    ),
+                    textStyle = DeskType.body.copy(color = DeskColors.TextPrimary),
                     cursorBrush = SolidColor(DeskColors.Signal),
                     maxLines = 5,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
 
-            Spacer(modifier = Modifier.width(8.dp))
-
-            // Enhance Button (appears when user has typed something and not streaming)
-            AnimatedVisibility(
-                visible = text.isNotBlank() && !isStreaming,
-                enter = fadeIn(),
-                exit = fadeOut()
-            ) {
-                Row {
-                    IconButton(
-                        onClick = if (canUndoRefine) onUndoRefine else onRefine,
-                        enabled = !isRefining,
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(Slate800)
-                            .border(1.dp, if (isRefining) ElectricCyan else Slate700, CircleShape)
-                    ) {
-                        if (isRefining) {
-                            CircularProgressIndicator(
-                                color = ElectricCyan,
-                                strokeWidth = 2.dp,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        } else if (canUndoRefine) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.Undo,
-                                contentDescription = "Undo Enhance",
-                                tint = ElectricCyan,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.Default.AutoAwesome,
-                                contentDescription = "Enhance Prompt",
-                                tint = ElectricCyan,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
+            // Enhance (while there's text to enhance): sparkle, or undo after enhancing
+            AnimatedVisibility(visible = text.isNotBlank() && !isStreaming, enter = fadeIn(), exit = fadeOut()) {
+                if (isRefining) {
+                    Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = DeskColors.Agent, strokeWidth = 2.dp, modifier = Modifier.size(18.dp))
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
+                } else {
+                    CapsuleIcon(if (canUndoRefine) Icons.AutoMirrored.Filled.Undo else Icons.Default.AutoAwesome,
+                        if (canUndoRefine) "Undo Enhance" else "Enhance Prompt", DeskColors.Agent,
+                        if (canUndoRefine) onUndoRefine else onRefine)
                 }
             }
 
-            // Send or Stop Button
-            if (isStreaming) {
-                IconButton(
-                    onClick = onStopStreaming,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(Red500)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Stop,
-                        contentDescription = "Stop Generating",
-                        tint = Color.White,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            } else {
-                IconButton(
-                    onClick = {
-                        if (canSend) onSend()
-                    },
-                    enabled = canSend,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .glass(CircleShape, fill = if (canSend) UserBubbleBackground else DeskColors.Glass)
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Send,
-                        contentDescription = "Send Message",
-                        tint = if (canSend) Color.White else DeskColors.TextMuted,
-                        modifier = Modifier.size(18.dp)
-                    )
+            when {
+                isStreaming -> CapsuleIcon(Icons.Default.Stop, "Stop Generating", DeskColors.Error, onStopStreaming)
+                canSend -> CapsuleIcon(Icons.AutoMirrored.Filled.Send, "Send Message", DeskColors.Signal, onSend)
+                else -> CapsuleIcon(Icons.Default.Mic, "Voice Dictation", DeskColors.TextSecondary) {
+                    val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                        putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                        putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+                        putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak instruction to AlwaysOnAgent...")
+                    }
+                    try {
+                        speechLauncher.launch(intent)
+                    } catch (_: Exception) {
+                        // Ignore if speech recognizer unavailable
+                    }
                 }
             }
         }
     }
 }
 
+/** An unboxed icon inside the capsule: a 40 dp touch target, no circle, no border. */
+@Composable
+private fun CapsuleIcon(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, tint: Color, onClick: () -> Unit) {
+    IconButton(onClick = onClick, modifier = Modifier.size(40.dp)) {
+        Icon(imageVector = icon, contentDescription = label, tint = tint, modifier = Modifier.size(22.dp))
+    }
+}
 
 /** One attached file: its type, name and how the agent read it (or why it couldn't), with a remove button. */
 @Composable
