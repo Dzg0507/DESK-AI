@@ -130,12 +130,25 @@ class AlwaysOnAgentClient {
                 return result
             } catch (e: CancellationException) {
                 throw e                       // the user stopped it: don't try the next address
+            } catch (e: java.net.SocketTimeoutException) {
+                // Connected, sent, and the answer was slow: the agent has the request and is still working on it.
+                // Sending it to the next address would start the same work twice (2026-10-27: a slow /image ran two
+                // image generations side by side, and the retry over plain HTTP failed). Only a failed connect moves on.
+                if (!isConnectTimeout(e)) throw e
+                lastException = e
             } catch (e: Exception) {
                 lastException = e
             }
         }
         throw lastException ?: IllegalStateException("Unable to connect to computer bridge")
     }
+
+    // A chat turn can make an image (ImageGen stops at 200 s) or run several tool rounds: wait 260 s, not the
+    // client's 120. Stop still cancels at any time.
+    private val CHAT_READ_TIMEOUT_SECONDS = 260L
+
+    private fun isConnectTimeout(e: java.net.SocketTimeoutException): Boolean =
+        e.message?.contains("connect", ignoreCase = true) == true
 
     suspend fun ping(config: BridgeConfig): Triple<Boolean, Long, String> = withContext(Dispatchers.IO) {
         val candidates = getCandidateUrls(config)
@@ -2139,7 +2152,15 @@ class AlwaysOnAgentClient {
                 if (arg.isBlank()) {
                     onChunk("🎨 **AI Image Generation:**\n\nUsage: `/image <prompt>`\nExample: `/image futuristic cyberpunk workstation with neon cyan glow, 8k`")
                 } else {
-                    streamAlwaysOnAgentChat(config, "You are AlwaysOnAgent AI assistant.", emptyList(), "/image $arg", emptyList(), null, onChunk)
+                    // Making an image takes up to ~3 minutes (ImageGen stops at 200 s): wait longer than the usual
+                    // 120 s, and send a turn id so the agent answers a repeat once. A timeout isn't a failure: the
+                    // image still lands in the gallery (2026-10-27).
+                    try {
+                        streamAlwaysOnAgentChat(config, "You are AlwaysOnAgent AI assistant.", emptyList(), "/image $arg",
+                            emptyList(), java.util.UUID.randomUUID().toString(), onChunk)
+                    } catch (e: java.net.SocketTimeoutException) {
+                        onChunk("🎨 Still making it: it's taking longer than usual. It'll show up in the image hub when it's done.")
+                    }
                 }
             }
 
@@ -2363,8 +2384,10 @@ class AlwaysOnAgentClient {
         userMessage: String,
         attachmentIds: List<String>,
         turnId: String?,
-        onChunk: suspend (String) -> Unit
+        onChunk: suspend (String) -> Unit,
+        readTimeoutSeconds: Long = CHAT_READ_TIMEOUT_SECONDS
     ) {
+        val client = httpClient.newBuilder().readTimeout(readTimeoutSeconds, TimeUnit.SECONDS).build()
         executeWithFailover(config) { baseUrl ->
             // Only what the agent reads (ChatRequest). It keeps the conversation and its own prompt itself: the
             // system prompt, a copy of the message and the last 10 messages sent here were ignored (2026-10-27).
@@ -2384,7 +2407,7 @@ class AlwaysOnAgentClient {
             ).build()
 
             // Cancellable: Stop aborts the request (a blocking execute() kept waiting for the whole reply)
-            awaitResponse(httpClient.newCall(req)).use { resp ->
+            awaitResponse(client.newCall(req)).use { resp ->
                 if (resp.isSuccessful) {
                     val contentType = resp.header("Content-Type") ?: ""
                     if (contentType.contains("text/event-stream")) {
