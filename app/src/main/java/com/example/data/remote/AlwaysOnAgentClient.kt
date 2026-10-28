@@ -2377,8 +2377,11 @@ class AlwaysOnAgentClient {
         }
     }
 
-    /** An image the agent is making in the background: status running, done, failed, or gone (the agent restarted). */
-    data class ImageJob(val id: String, val status: String, val reply: String?)
+    /**
+     * An image the agent is making in the background: status running, done, failed, or gone (the agent restarted).
+     * [stage] is what ImageGen is doing right now ("AI Horde: 3rd in line"), from the services' own live state.
+     */
+    data class ImageJob(val id: String, val status: String, val reply: String?, val stage: String = "")
 
     /** Starts making the image [message] (a /image request) asks for; answers at once. Throws if it can't be sent. */
     suspend fun startImageJob(config: BridgeConfig, message: String, turnId: String): ImageJob = withContext(Dispatchers.IO) {
@@ -2409,7 +2412,7 @@ class AlwaysOnAgentClient {
         // Saved in the chat history: the image link gets the address, never the token (MarkdownImage sends it)
         val reply = if (json.isNull("reply")) null
             else json.optString("reply").replace("](/images/", "](${baseUrl.trimEnd('/')}/images/")
-        return ImageJob(json.optString("job_id"), json.optString("status", "running"), reply)
+        return ImageJob(json.optString("job_id"), json.optString("status", "running"), reply, json.optString("stage"))
     }
 
     private suspend fun streamAlwaysOnAgentChat(

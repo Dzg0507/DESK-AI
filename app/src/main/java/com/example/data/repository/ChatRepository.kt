@@ -673,6 +673,9 @@ class ChatRepository(
                 null                                                                // offline for now: ask again
             }
             if (job != null && finishImage(bubble, job)) return@withContext
+            // Still working: say what it's doing now (or that the PC can't be reached), so it doesn't look stuck
+            val shown = imagingText(if (job == null) "Can't reach the PC right now, still trying" else job.stage)
+            if (shown != bubble.content) chatDao.updateMessage(bubble.copy(content = shown))
             if (System.currentTimeMillis() - bubble.timestamp > IMAGE_GIVE_UP_MS) {
                 chatDao.updateMessage(bubble.copy(status = "error",
                     content = "⚠️ Lost touch with the PC while it made this image. If it finished, it's in the image hub."))
@@ -680,6 +683,9 @@ class ChatRepository(
             }
         }
     }
+
+    private fun imagingText(stage: String): String =
+        if (stage.isBlank()) IMAGING_TEXT else "$IMAGING_TEXT\n\n*${stage.replace("*", "")}*"
 
     /** Puts a finished job's answer in its bubble; false while it's still being made. */
     private suspend fun finishImage(bubble: ChatMessage, job: AlwaysOnAgentClient.ImageJob): Boolean {

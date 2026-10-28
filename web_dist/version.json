@@ -1,7 +1,7 @@
 {
-  "versionCode": 93,
-  "versionName": "2.30.3",
-  "changelog": "DeskAI v2.30.3 (Build 93): Images are made in the background. A /image prompt shows a \"Making your image\" bubble that fills in when it's ready, and the chat stays free to use meanwhile.",
+  "versionCode": 94,
+  "versionName": "2.30.4",
+  "changelog": "DeskAI v2.30.4 (Build 94): While an image is being made, its bubble says what's happening right now (which service it's trying, its place in AI Horde's line, or that it's being drawn), so a slow image doesn't look stuck.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 28218300
+  "fileSizeBytes": 28190536
 }
