@@ -299,8 +299,8 @@ fun ChatScreen(
         }
     ) {
       Box(Modifier.fillMaxSize()) {
-        // The Circuit background with black lightning, behind the whole chat screen (2026-10-11)
-        com.example.ui.components.CircuitBackground()
+        // Near-black with a soft glow from the top (2026-10-27 spatial-glass target; was the Circuit texture)
+        com.example.ui.components.AtmosphereBackground()
         Scaffold(
             containerColor = Color.Transparent,
             topBar = {
@@ -397,7 +397,7 @@ fun ChatScreen(
                         // (The three-dot button only opened the Connection Hub; it's in the menu now)
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = SlateDarkBackground.copy(alpha = 0.72f),
+                        containerColor = Color.Transparent,
                         titleContentColor = com.example.ui.theme.PhosphorMint
                     )
                 )

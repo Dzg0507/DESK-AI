@@ -133,6 +133,13 @@ val CardGradient: Brush = Brush.verticalGradient(listOf(DeskColors.Raised, DeskC
 
 // ---- Semantic tokens (2026-10-27): what new code uses ---------------------------------------------------------------
 object DeskColors {
+    // Spatial glass (2026-10-27 visual target): floating pills and buttons over the atmosphere, frosted white
+    val Glass = Color(0x14FFFFFF)             // white at 8%
+    val GlassStrong = Color(0x24FFFFFF)       // white at 14%: buttons over photos
+    val GlassBorder = Color(0x26FFFFFF)       // white at 15%
+    val GlowEmerald = Color(0xFF0D261D)       // the top atmosphere
+    val GlowCerulean = Color(0xFF0A1E29)
+    val Scrim = Color(0xF2050806)             // the bottom of a photo under its text
     val Base = Color(0xFF050806)              // the app background
     val Raised = Color(0xFF0B100D)            // cards, sheets
     val Raised2 = Color(0xFF121914)           // a card inside a card, inputs, pressed

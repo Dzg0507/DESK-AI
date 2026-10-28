@@ -1,5 +1,8 @@
 package com.example.ui.components
 
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -75,79 +78,107 @@ fun MarkdownMedia(url: String, label: String, serverBaseUrl: String = "", authTo
         URLDecoder.decode(url.substringAfterLast('/').substringBefore('?'), "UTF-8").replace(Regex("[\\\\/:*?\"<>|]"), "_")
     }
 
+    val onTap: () -> Unit = {
+        busy = true
+        scope.launch {
+            val result = withContext(Dispatchers.IO) {
+                download(context, fullUrl, fileName, serverBaseUrl, authToken) { done, total ->
+                    status = if (total > 0) "Downloading… ${done * 100 / total}%" else "Downloading…"
+                }
+            }
+            busy = false
+            result.onSuccess { file ->
+                status = "Tap to open"
+                open(context, file)
+            }.onFailure {
+                status = "Couldn't download: ${it.message ?: "error"}"
+            }
+        }
+    }
+    // "▶ cabin bear.mp4 (12.3 MB)": the name, and the size apart from it
+    val title = label.drop(2).trim().ifEmpty { fileName }
+    val size = Regex("""\s*\(([0-9.]+ [KMG]?B)\)$""").find(title)
+    val name = size?.let { title.removeRange(it.range) } ?: title
+    // A video from the Mini has a still at <its url>/thumbnail; one in the TikTok folder is the videos hub's own
+    // (2026-10-27, Devin: "That video really really needs a thumbnail")
+    val thumbRequest = remember(fullUrl, authToken) {
+        val isVideo = fileName.substringAfterLast('.', "").lowercase() in VIDEO_EXTENSIONS
+        if (!isVideo || "/api/files/m/" !in fullUrl) null
+        else ImageRequest.Builder(context).data(fullUrl.substringBefore('?') + "/thumbnail").crossfade(true).apply {
+            if (authToken.isNotBlank() && com.example.data.remote.MediaAuth.isOwnServer(fullUrl, serverBaseUrl)) {
+                addHeader("X-HUD-Token", authToken.trim())
+            }
+        }.build()
+    }
+
+    if (thumbRequest != null) {
+        // Full bleed (2026-10-27 visual target): the still fills the card, a scrim darkens its lower part, a frosted
+        // play button in the middle and the name, size and status on a glass pill at the bottom
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(16f / 10f)
+                .clip(DeskShapes.media)
+                .background(DeskColors.Raised2)
+                .clickable(enabled = !busy, onClick = onTap),
+            contentAlignment = Alignment.Center
+        ) {
+            AsyncImage(
+                model = thumbRequest,
+                contentDescription = "Video thumbnail",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.matchParentSize()
+            )
+            Box(
+                modifier = Modifier.matchParentSize().background(
+                    Brush.verticalGradient(0f to Color.Transparent, 0.4f to Color.Transparent, 1f to DeskColors.Scrim))
+            )
+            Box(
+                modifier = Modifier.size(56.dp).glass(CircleShape, fill = DeskColors.GlassStrong),
+                contentAlignment = Alignment.Center
+            ) {
+                if (busy) CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(24.dp))
+                else Icon(Icons.Default.PlayArrow, contentDescription = "Play", tint = Color.White,
+                    modifier = Modifier.size(32.dp))
+            }
+            Text(
+                text = listOfNotNull(name, size?.groupValues?.get(1), status.takeIf { it != "Tap to open" })
+                    .joinToString(" · "),
+                style = DeskType.label,
+                color = DeskColors.TextPrimary,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .glass(fill = DeskColors.GlassStrong)
+                    .padding(horizontal = 12.dp, vertical = 6.dp)
+            )
+            Box(modifier = Modifier.matchParentSize().border(1.dp, DeskColors.GlassBorder, DeskShapes.media))
+        }
+        return
+    }
+
+    // Audio and PDFs: a compact row, the icon in a tinted tile
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .deskCardSurface(DeskShapes.card, fill = DeskColors.Raised2)
-            .clickable(enabled = !busy) {
-                busy = true
-                scope.launch {
-                    val result = withContext(Dispatchers.IO) {
-                        download(context, fullUrl, fileName, serverBaseUrl, authToken) { done, total ->
-                            status = if (total > 0) "Downloading… ${done * 100 / total}%" else "Downloading…"
-                        }
-                    }
-                    busy = false
-                    result.onSuccess { file ->
-                        status = "Tap to open"
-                        open(context, file)
-                    }.onFailure {
-                        status = "Couldn't download: ${it.message ?: "error"}"
-                    }
-                }
-            }
+            .clickable(enabled = !busy, onClick = onTap)
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // "▶ cabin bear.mp4 (12.3 MB)": a thumbnail (videos) or the icon in a tile, the name on one line, the size
-        // with the status
-        val title = label.drop(2).trim().ifEmpty { fileName }
-        val size = Regex("""\s*\(([0-9.]+ [KMG]?B)\)$""").find(title)
-        // A video from the Mini has a still at <its url>/thumbnail; one in the TikTok folder is the videos hub's own
-        // (2026-10-27, Devin: "That video really really needs a thumbnail")
-        val thumbRequest = remember(fullUrl, authToken) {
-            val isVideo = fileName.substringAfterLast('.', "").lowercase() in VIDEO_EXTENSIONS
-            if (!isVideo || "/api/files/m/" !in fullUrl) null
-            else ImageRequest.Builder(context).data(fullUrl.substringBefore('?') + "/thumbnail").crossfade(true).apply {
-                if (authToken.isNotBlank() && com.example.data.remote.MediaAuth.isOwnServer(fullUrl, serverBaseUrl)) {
-                    addHeader("X-HUD-Token", authToken.trim())
-                }
-            }.build()
-        }
-        var thumbShown by remember(thumbRequest) { mutableStateOf(false) }
         Box(
-            modifier = Modifier
-                .then(if (thumbRequest != null) Modifier.size(width = 72.dp, height = 128.dp) else Modifier.size(40.dp))
-                .clip(DeskShapes.small)
-                .background(DeskColors.Agent.copy(alpha = 0.16f)),
+            modifier = Modifier.size(40.dp).clip(DeskShapes.small).background(DeskColors.Agent.copy(alpha = 0.16f)),
             contentAlignment = Alignment.Center
         ) {
-            if (!thumbShown) Text(label.take(2).trim().ifEmpty { "▶" }, fontSize = DeskTextSize.l, color = DeskColors.Agent)
-            if (thumbRequest != null) {
-                AsyncImage(
-                    model = thumbRequest,
-                    contentDescription = "Video thumbnail",
-                    contentScale = ContentScale.Crop,
-                    onSuccess = { thumbShown = true },
-                    modifier = Modifier.matchParentSize()
-                )
-                if (thumbShown) {
-                    Box(
-                        modifier = Modifier.size(32.dp).clip(CircleShape).background(Color.Black.copy(alpha = 0.55f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.White,
-                            modifier = Modifier.size(20.dp))
-                    }
-                }
-            }
+            Text(label.take(2).trim().ifEmpty { "▶" }, fontSize = DeskTextSize.l, color = DeskColors.Agent)
         }
         Column(modifier = Modifier.weight(1f)) {
-            Text(size?.let { title.removeRange(it.range) } ?: title, style = DeskType.body,
-                fontWeight = FontWeight.SemiBold, color = DeskColors.TextPrimary, maxLines = 1,
-                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-            Text(listOfNotNull(size?.groupValues?.get(1), status).joinToString("  ·  "), style = DeskType.mono,
+            Text(name, style = DeskType.body, fontWeight = FontWeight.SemiBold, color = DeskColors.TextPrimary,
+                maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+            Text(listOfNotNull(size?.groupValues?.get(1), status).joinToString(" · "), style = DeskType.mono,
                 color = DeskColors.TextSecondary)
         }
     }

@@ -1,7 +1,7 @@
 {
-  "versionCode": 89,
-  "versionName": "2.29.0",
-  "changelog": "DeskAI v2.29.0 (Build 89): A cleaner, more polished look. New fonts (Inter and JetBrains Mono), a calmer top bar that says what the agent is working on, fresh chat bubbles, quieter cards and sheets, and videos from the PC now show their thumbnail in chat.",
+  "versionCode": 90,
+  "versionName": "2.30.0",
+  "changelog": "DeskAI v2.30.0 (Build 90): The chat goes glass. A soft glow instead of the circuit pattern, the agent's replies without boxes, your messages in smoked glass, a floating status pill (Tasks, Memory and Videos tuck behind the button next to it), and videos as big full-width cards with their thumbnail.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 28157752
+  "fileSizeBytes": 28157747
 }

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -93,7 +94,37 @@ fun Modifier.deskCardSurface(shape: Shape = DeskShapes.card, fill: Color = DeskC
         }
     }
 
-/** The look of every sheet/dialog body: the card surface at sheet size. The circuit texture stays on the chat. */
+/** Frosted glass (2026-10-27 visual target): floating pills and buttons over the atmosphere or a photo. */
+fun Modifier.glass(shape: Shape = DeskShapes.pill, fill: Color = DeskColors.Glass): Modifier = this
+    .clip(shape)
+    .background(fill)
+    .border(1.dp, DeskColors.GlassBorder, shape)
+
+/**
+ * The chat's background: near-black with a soft emerald and cerulean glow at the top, like light from above
+ * (replaces the circuit texture, 2026-10-27).
+ */
+@Composable
+fun AtmosphereBackground(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(DeskColors.Base)
+            .drawWithCache {
+                val emerald = Brush.radialGradient(listOf(DeskColors.GlowEmerald, Color.Transparent),
+                    center = androidx.compose.ui.geometry.Offset(size.width * 0.3f, 0f), radius = size.width * 1.1f)
+                val cerulean = Brush.radialGradient(listOf(DeskColors.GlowCerulean, Color.Transparent),
+                    center = androidx.compose.ui.geometry.Offset(size.width * 0.8f, size.height * 0.04f),
+                    radius = size.width * 0.9f)
+                onDrawBehind {
+                    drawRect(emerald)
+                    drawRect(cerulean)
+                }
+            }
+    )
+}
+
+/** The look of every sheet/dialog body: the card surface at sheet size. */
 fun Modifier.deskSheet(): Modifier = this.deskCardSurface(DeskShapes.sheet, catchlight = 40.dp)
 
 /** A standard card. A [borderColor] other than the default draws that color instead of the hairline (selected, error). */

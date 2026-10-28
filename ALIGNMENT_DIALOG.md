@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-27 (DeskAI v2.29.0 / Build 89 shipped — design foundation: fonts, tokens, screenshot tests; chat video thumbnails via `/api/files/m/{ref}/{name}/thumbnail`)
+**Last Updated:** 2026-10-27 (DeskAI v2.30.0 / Build 90 shipped — spatial-glass chat: glow background, unboxed replies, floating status pill, full-bleed video cards)
 
 ---
 

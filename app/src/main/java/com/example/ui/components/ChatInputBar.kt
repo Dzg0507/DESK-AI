@@ -166,7 +166,7 @@ fun ChatInputBar(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(if (text.startsWith("/")) DeskColors.Agent.copy(alpha = 0.18f) else Color.Transparent)
+                    .glass(CircleShape, fill = if (text.startsWith("/")) DeskColors.Agent.copy(alpha = 0.18f) else DeskColors.Glass)
             ) {
                 Icon(
                     imageVector = Icons.Default.Apps,
@@ -176,6 +176,7 @@ fun ChatInputBar(
                 )
             }
 
+            Spacer(modifier = Modifier.width(8.dp))
             // Voice Mic Button
             IconButton(
                 onClick = {
@@ -193,7 +194,7 @@ fun ChatInputBar(
                         // Ignore if speech recognizer unavailable
                     }
                 },
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier.size(40.dp).clip(CircleShape).glass(CircleShape)
             ) {
                 Icon(
                     imageVector = Icons.Default.Mic,
@@ -203,6 +204,7 @@ fun ChatInputBar(
                 )
             }
 
+            Spacer(modifier = Modifier.width(8.dp))
             // Attach files
             IconButton(
                 onClick = {
@@ -217,7 +219,7 @@ fun ChatInputBar(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(if (attachments.isNotEmpty()) DeskColors.Agent.copy(alpha = 0.18f) else Color.Transparent)
+                    .glass(CircleShape, fill = if (attachments.isNotEmpty()) DeskColors.Agent.copy(alpha = 0.18f) else DeskColors.Glass)
             ) {
                 Icon(
                     imageVector = Icons.Default.AttachFile,
@@ -233,7 +235,7 @@ fun ChatInputBar(
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .deskCardSurface(DeskShapes.card, fill = DeskColors.Raised2)
+                    .glass(DeskShapes.card)
                     .padding(horizontal = 14.dp, vertical = 10.dp)
             ) {
                 if (text.isEmpty()) {
@@ -331,7 +333,7 @@ fun ChatInputBar(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(if (canSend) UserBubbleBackground else DeskColors.Raised2)
+                        .glass(CircleShape, fill = if (canSend) UserBubbleBackground else DeskColors.Glass)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Send,

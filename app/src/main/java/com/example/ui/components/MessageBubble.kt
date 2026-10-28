@@ -174,7 +174,7 @@ fun MessageBubble(
         }
 
         Column(
-            modifier = Modifier.widthIn(max = 330.dp),
+            modifier = if (isUser) Modifier.widthIn(max = 330.dp) else Modifier.weight(1f),
             horizontalAlignment = if (isUser) Alignment.End else Alignment.Start
         ) {
             // Header for assistant (Model label & latency badge)
@@ -188,6 +188,8 @@ fun MessageBubble(
                         style = DeskType.label,
                         color = DeskColors.TextSecondary
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = timeFormatted, style = DeskType.label, color = DeskColors.TextMuted)
                     if (message.latencyMs != null && message.latencyMs > 0) {
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
@@ -199,13 +201,13 @@ fun MessageBubble(
                 }
             }
 
-            // The bubble: solid cerulean for the user, the card surface for the agent, a small "tail" corner
+            // Spatial glass (2026-10-27 visual target): the user's message is a smoked-glass bubble; the agent's reply
+            // has no box at all and reads straight off the background, with its name and time above it
             Box(
                 modifier = Modifier
-                    .then(if (isUser) Modifier.clip(UserBubbleShape).background(UserBubbleBackground)
-                          else Modifier.deskCardSurface(AssistantBubbleShape))
+                    .then(if (isUser) Modifier.glass(UserBubbleShape) else Modifier)
                     .clickable { showActions = !showActions }
-                    .padding(horizontal = 14.dp, vertical = 10.dp)
+                    .padding(horizontal = if (isUser) 14.dp else 2.dp, vertical = if (isUser) 10.dp else 2.dp)
             ) {
                 Column {
                     val attached = remember(message.attachmentsJson) { message.getAttachments() }
@@ -218,7 +220,7 @@ fun MessageBubble(
                     } else if (message.content.isNotBlank() || attached.isEmpty()) {
                         MarkdownContent(
                             content = message.content,
-                            textColor = if (isUser) Color.White else Slate100,
+                            textColor = DeskColors.TextPrimary,
                             serverBaseUrl = serverBaseUrl,
                             authToken = authToken
                         )
@@ -344,14 +346,16 @@ fun MessageBubble(
                         }
                     }
 
-                    // Timestamp
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = timeFormatted,
-                        fontSize = DeskTextSize.xs,
-                        color = if (isUser) Color(0xCCFFFFFF) else Slate400,
-                        modifier = Modifier.align(if (isUser) Alignment.End else Alignment.Start)
-                    )
+                    // Timestamp (the agent's is in its header)
+                    if (isUser) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = timeFormatted,
+                            style = DeskType.caption,
+                            color = DeskColors.TextSecondary,
+                            modifier = Modifier.align(Alignment.End)
+                        )
+                    }
                 }
             }
 

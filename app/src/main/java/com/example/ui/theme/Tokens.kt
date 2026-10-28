@@ -24,6 +24,7 @@ object DeskRadius {
     val small = 8.dp
     val card = 16.dp
     val sheet = 28.dp
+    val media = 24.dp     // full-bleed photo and video cards (the 2026-10-27 visual target)
     val chip = small
     val control = small
 }
@@ -34,6 +35,7 @@ object DeskShapes {
     val sheet = RoundedCornerShape(DeskRadius.sheet)
     val sheetTop = RoundedCornerShape(topStart = DeskRadius.sheet, topEnd = DeskRadius.sheet)
     val pill = RoundedCornerShape(50)
+    val media = RoundedCornerShape(DeskRadius.media)
     val chip = small
     val control = small
 }

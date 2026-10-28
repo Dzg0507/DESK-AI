@@ -22,7 +22,7 @@ import com.example.data.model.ChatMessage
 import com.example.data.model.DaemonStats
 import com.example.ui.components.AgentStatusBar
 import com.example.ui.components.ChatInputBar
-import com.example.ui.components.CircuitBackground
+import com.example.ui.components.AtmosphereBackground
 import com.example.ui.components.EmptyState
 import com.example.ui.components.MessageBubble
 import com.example.ui.components.SectionCard
@@ -72,7 +72,7 @@ class ScreenshotTest {
     @Test
     fun chat() = capture("chat") {
         Box(Modifier.fillMaxSize()) {
-            CircuitBackground()
+            AtmosphereBackground()
             Column(Modifier.fillMaxSize()) {
                 AgentStatusBar(
                     stats = DaemonStats(daemonStatus = "running_task", tasksCompleted = 231, tasksInProgress = 1,

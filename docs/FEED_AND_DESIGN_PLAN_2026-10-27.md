@@ -240,6 +240,34 @@ media) and the go-ahead for step 1.
 
 ---
 
+## 8. Visual target: spatial glass (Devin, 2026-10-27)
+
+Mockups: [design/target_chat.png](design/target_chat.png) and [design/target_today.png](design/target_today.png). They
+were drawn with "Desk"; the screen is **Today**. Ignore the stray "status JetBrains Mono" label in the second one.
+
+**Built now, for chat (v2.30.0):**
+- The chat background is near-black with a soft emerald/cerulean glow from the top (`AtmosphereBackground`). The
+  circuit texture is gone.
+- The agent's replies have no box. They read straight off the background, with the name and time above them. The
+  owner's messages are smoked glass (`Modifier.glass`: white 8%, 1 dp white-15% edge).
+- The full-width status banner became a floating frosted pill: beacon, "AlwaysOnAgent · 1 running" and what it's
+  doing.
+- Tasks, Memory and Videos (also in the hub menu) sit behind one collapsible toggle beside the pill. Devin: "some kind
+  of collapsable icon, that hides them".
+- Video cards are full-bleed: the thumbnail fills a 24 dp card (`DeskShapes.media`), with a scrim over the bottom 60%
+  (transparent → #F2050806), a frosted play button, and the name and size on a glass pill.
+- The input bar's buttons are frosted circles.
+
+**For step 2 (Today), not built yet (Devin: "Dont go to step 2"):**
+- The edition header (date, weather) sits unboxed on the canvas over the top glow, not in a card.
+- Story and Video cards are 100% full-bleed (24 dp, Crop). The scrim covers the bottom 60%, and the Newsreader
+  headline, metadata and frosted buttons (white 14% + 1 dp #26FFFFFF) sit inside the bottom of the image.
+- Compact cards (Settled, Done, Stats) form a 2-column bento row (`spacedBy(12.dp)`): square smoked-glass tiles, each
+  with one action pill at the bottom.
+- The Chat | Today toggle is a frosted segmented pill at the top, with the live agent pill next to it.
+
+---
+
 Sources: [TIME on Muse](https://time.com/article/2026/10/06/meta-muse-ai-agent-privacy/) ·
 [Social Media Today: Meta launches Muse](https://www.socialmediatoday.com/news/meta-launches-muse-personal-ai/829984/) ·
 [CNBC: Muse Spark agents](https://www.cnbc.com/2026/09/08/meta-personal-ai-agents-public-reckoning-privacy-safety.html) ·
