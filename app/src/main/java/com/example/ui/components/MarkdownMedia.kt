@@ -1,5 +1,17 @@
 package com.example.ui.components
 
+import android.net.Uri
+import android.widget.FrameLayout
+import android.widget.VideoView
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
+import androidx.compose.material.icons.filled.Replay
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.ui.viewinterop.AndroidView
+import kotlinx.coroutines.delay
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.material3.CircularProgressIndicator
@@ -111,6 +123,13 @@ fun MarkdownMedia(url: String, label: String, serverBaseUrl: String = "", authTo
         }.build()
     }
 
+    // A video plays right here in the card (2026-10-27, Devin: "i want them to be playable where they are")
+    var playing by remember(fullUrl) { mutableStateOf(false) }
+    if (thumbRequest != null && playing) {
+        InlineVideo(fullUrl, fileName, serverBaseUrl, authToken)
+        return
+    }
+
     if (thumbRequest != null) {
         // Full bleed (2026-10-27 visual target): the still fills the card, a scrim darkens its lower part, a frosted
         // play button in the middle and the name, size and status on a glass pill at the bottom
@@ -120,7 +139,7 @@ fun MarkdownMedia(url: String, label: String, serverBaseUrl: String = "", authTo
                 .aspectRatio(16f / 10f)
                 .clip(DeskShapes.media)
                 .background(DeskColors.Raised2)
-                .clickable(enabled = !busy, onClick = onTap),
+                .clickable { playing = true },
             contentAlignment = Alignment.Center
         ) {
             AsyncImage(
@@ -185,6 +204,132 @@ fun MarkdownMedia(url: String, label: String, serverBaseUrl: String = "", authTo
 }
 
 private val VIDEO_EXTENSIONS = setOf("mp4", "mov", "mkv", "webm", "avi", "m4v")
+
+/**
+ * The video playing inside its chat card. It streams from the Mini with the token in a request header (never in the
+ * URL); a copy already downloaded plays from the phone. If streaming fails it downloads the file and plays that,
+ * like the videos hub. The card takes the video's own shape (a vertical TikTok is tall), up to 520 dp high.
+ * Tap: pause or resume; at the end, tap to play again. Leaving the screen stops it.
+ */
+@Composable
+private fun InlineVideo(fullUrl: String, fileName: String, serverBaseUrl: String, authToken: String) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var view by remember { mutableStateOf<VideoView?>(null) }
+    var prepared by remember { mutableStateOf(false) }
+    var paused by remember { mutableStateOf(false) }
+    var finished by remember { mutableStateOf(false) }
+    var aspect by remember { mutableFloatStateOf(9f / 16f) }
+    var progress by remember { mutableFloatStateOf(0f) }
+    var note by remember { mutableStateOf<String?>(null) }
+    var fellBack by remember { mutableStateOf(false) }
+    val cached = remember(fileName) { File(File(context.cacheDir, "media"), fileName) }
+
+    fun playFromDownload() {
+        fellBack = true
+        note = "Downloading…"
+        scope.launch {
+            val result = withContext(Dispatchers.IO) {
+                download(context, fullUrl, fileName, serverBaseUrl, authToken) { done, total ->
+                    note = if (total > 0) "Downloading… ${done * 100 / total}%" else "Downloading…"
+                }
+            }
+            result.onSuccess { file -> note = null; view?.setVideoURI(Uri.fromFile(file)) }
+                .onFailure { note = "Couldn't play it: ${it.message ?: "error"}" }
+        }
+    }
+
+    // While it plays, the bar along the bottom follows it
+    LaunchedEffect(prepared) {
+        while (prepared) {
+            view?.let { v -> if (v.duration > 0) progress = v.currentPosition / v.duration.toFloat() }
+            delay(250)
+        }
+    }
+    DisposableEffect(Unit) { onDispose { view?.stopPlayback() } }
+
+    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        Box(
+            modifier = Modifier
+                .heightIn(max = 520.dp)
+                .aspectRatio(aspect.coerceIn(0.4f, 2.4f))
+                .clip(DeskShapes.media)
+                .background(Color.Black)
+                .border(1.dp, DeskColors.GlassBorder, DeskShapes.media)
+                .clickable {
+                    val v = view ?: return@clickable
+                    when {
+                        finished -> { finished = false; paused = false; v.seekTo(0); v.start() }
+                        v.isPlaying -> { v.pause(); paused = true }
+                        prepared -> { v.start(); paused = false }
+                    }
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            AndroidView(
+                factory = { ctx ->
+                    FrameLayout(ctx).apply {
+                        addView(VideoView(ctx).apply {
+                            layoutParams = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
+                                FrameLayout.LayoutParams.MATCH_PARENT, android.view.Gravity.CENTER)
+                            view = this
+                            setOnPreparedListener { mp ->
+                                if (mp.videoWidth > 0 && mp.videoHeight > 0) aspect = mp.videoWidth / mp.videoHeight.toFloat()
+                                prepared = true
+                                start()
+                            }
+                            setOnCompletionListener { finished = true }
+                            setOnErrorListener { _, _, _ ->
+                                if (!fellBack) playFromDownload() else note = "Couldn't play this video"
+                                true
+                            }
+                            if (cached.isFile && cached.length() > 0) {
+                                fellBack = true
+                                setVideoURI(Uri.fromFile(cached))
+                            } else {
+                                val own = authToken.isNotBlank() &&
+                                    com.example.data.remote.MediaAuth.isOwnServer(fullUrl, serverBaseUrl)
+                                setVideoURI(Uri.parse(fullUrl), if (own) mapOf("X-HUD-Token" to authToken.trim()) else emptyMap())
+                            }
+                        })
+                    }
+                },
+                modifier = Modifier.matchParentSize()
+            )
+            if (!prepared || note != null) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    if (note == null || note!!.startsWith("Downloading")) {
+                        CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(28.dp))
+                    }
+                    note?.let {
+                        Text(it, style = DeskType.label, color = DeskColors.TextPrimary,
+                            modifier = Modifier.padding(top = 10.dp).glass(fill = DeskColors.GlassStrong)
+                                .padding(horizontal = 12.dp, vertical = 6.dp))
+                    }
+                }
+            } else if (paused || finished) {
+                Box(
+                    modifier = Modifier.size(56.dp).glass(CircleShape, fill = DeskColors.GlassStrong),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(if (finished) Icons.Default.Replay else Icons.Default.PlayArrow,
+                        contentDescription = if (finished) "Play again" else "Play", tint = Color.White,
+                        modifier = Modifier.size(32.dp))
+                }
+            }
+            if (prepared) {
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(3.dp),
+                    color = DeskColors.Signal,
+                    trackColor = Color.White.copy(alpha = 0.18f),
+                    gapSize = 0.dp,
+                    drawStopIndicator = {}
+                )
+            }
+        }
+    }
+}
 
 private fun download(
     context: Context, url: String, name: String, serverBaseUrl: String, authToken: String,

@@ -1,7 +1,7 @@
 {
-  "versionCode": 90,
-  "versionName": "2.30.0",
-  "changelog": "DeskAI v2.30.0 (Build 90): The chat goes glass. A soft glow instead of the circuit pattern, the agent's replies without boxes, your messages in smoked glass, a floating status pill (Tasks, Memory and Videos tuck behind the button next to it), and videos as big full-width cards with their thumbnail.",
+  "versionCode": 91,
+  "versionName": "2.30.1",
+  "changelog": "DeskAI v2.30.1 (Build 91): Videos play right in the chat. Tap a video card and it streams in place, shaped to the video; tap to pause or resume, with a progress bar along the bottom.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 28157747
+  "fileSizeBytes": 28174139
 }
