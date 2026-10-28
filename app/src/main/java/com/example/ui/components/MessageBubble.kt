@@ -1,5 +1,6 @@
 package com.example.ui.components
 
+import com.example.ui.theme.DeskTextSize
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.ui.graphics.Brush
 import com.example.ui.theme.CardGradient
@@ -76,6 +77,9 @@ import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldConnected
 import com.example.ui.theme.RoseError
 import com.example.ui.theme.UserBubbleBackground
+import com.example.ui.theme.DeskColors
+import com.example.ui.theme.DeskRadius
+import com.example.ui.theme.DeskType
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -103,10 +107,12 @@ import com.example.ui.theme.Slate700
 import com.example.ui.theme.Slate800
 import com.example.ui.theme.Slate900
 
-private val UserBubbleShape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 18.dp, bottomEnd = 6.dp)
-private val AssistantBubbleShape = RoundedCornerShape(topStart = 6.dp, topEnd = 18.dp, bottomStart = 18.dp, bottomEnd = 18.dp)
-private val UserBubbleBrush = Brush.linearGradient(listOf(UserBubbleBackground, ElectricCyanGlow))
-private val AssistantBubbleBrush = CardGradient
+// 2026-10-27 redesign: the user's bubble is solid cerulean (no gradient, no outline), the agent's is the card surface
+// with the mint hairline; the "tail" corner is the small radius
+private val UserBubbleShape = RoundedCornerShape(topStart = DeskRadius.card, topEnd = DeskRadius.card,
+    bottomStart = DeskRadius.card, bottomEnd = DeskRadius.small / 2)
+private val AssistantBubbleShape = RoundedCornerShape(topStart = DeskRadius.small / 2, topEnd = DeskRadius.card,
+    bottomStart = DeskRadius.card, bottomEnd = DeskRadius.card)
 
 @Composable
 fun MessageBubble(
@@ -152,17 +158,16 @@ fun MessageBubble(
         if (!isUser) {
             Box(
                 modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .background(Brush.radialGradient(listOf(ElectricCyan.copy(alpha = 0.28f), Slate800)))
-                    .border(1.dp, ElectricCyan.copy(alpha = 0.5f), CircleShape),
+                    .size(28.dp)
+                    .clip(DeskShapes.small)
+                    .background(DeskColors.Agent.copy(alpha = 0.16f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.SmartToy,
                     contentDescription = "AlwaysOnAgent",
-                    tint = ElectricCyan,
-                    modifier = Modifier.size(18.dp)
+                    tint = DeskColors.Agent,
+                    modifier = Modifier.size(16.dp)
                 )
             }
             Spacer(modifier = Modifier.width(8.dp))
@@ -180,34 +185,25 @@ fun MessageBubble(
                 ) {
                     Text(
                         text = "AlwaysOnAgent",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = ElectricCyan,
-                        letterSpacing = 0.3.sp
+                        style = DeskType.label,
+                        color = DeskColors.TextSecondary
                     )
                     if (message.latencyMs != null && message.latencyMs > 0) {
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "⚡ ${message.latencyMs}ms",
-                            fontSize = 9.sp,
-                            fontFamily = FontFamily.Monospace,
-                            color = EmeraldConnected,
-                            modifier = Modifier
-                                .clip(DeskShapes.pill)
-                                .background(EmeraldConnected.copy(alpha = 0.12f))
-                                .padding(horizontal = 6.dp, vertical = 1.dp)
+                            text = "${message.latencyMs} ms",
+                            style = DeskType.mono,
+                            color = DeskColors.TextMuted
                         )
                     }
                 }
             }
 
-            // Message Bubble Box (user: blue→sky gradient; assistant: slate card gradient; a small "tail" corner)
-            val bubbleShape = if (isUser) UserBubbleShape else AssistantBubbleShape
+            // The bubble: solid cerulean for the user, the card surface for the agent, a small "tail" corner
             Box(
                 modifier = Modifier
-                    .clip(bubbleShape)
-                    .background(if (isUser) UserBubbleBrush else AssistantBubbleBrush)
-                    .border(1.dp, if (isUser) Blue500.copy(alpha = 0.7f) else Slate700, bubbleShape)
+                    .then(if (isUser) Modifier.clip(UserBubbleShape).background(UserBubbleBackground)
+                          else Modifier.deskCardSurface(AssistantBubbleShape))
                     .clickable { showActions = !showActions }
                     .padding(horizontal = 14.dp, vertical = 10.dp)
             ) {
@@ -315,7 +311,7 @@ fun MessageBubble(
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
                             text = message.why,
-                            fontSize = 11.sp,
+                            fontSize = DeskTextSize.xs,
                             fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
                             color = Slate400,
                             lineHeight = 15.sp
@@ -352,7 +348,7 @@ fun MessageBubble(
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = timeFormatted,
-                        fontSize = 10.sp,
+                        fontSize = DeskTextSize.xs,
                         color = if (isUser) Color(0xCCFFFFFF) else Slate400,
                         modifier = Modifier.align(if (isUser) Alignment.End else Alignment.Start)
                     )
@@ -518,7 +514,7 @@ fun ProposalCard(
                         Text(
                             "$label · $number",
                             color = Slate200,
-                            fontSize = 14.sp,
+                            fontSize = DeskTextSize.base,
                             modifier = Modifier.fillMaxWidth().clickable { pickFrom = null; openWith(number) }.padding(vertical = 10.dp)
                         )
                     }
@@ -543,11 +539,11 @@ fun ProposalCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = when { isAddProject -> "📁"; kind == "text" -> "💬"; kind == "call" -> "📞"; else -> "🧩" }, fontSize = 14.sp)
+                    Text(text = when { isAddProject -> "📁"; kind == "text" -> "💬"; kind == "call" -> "📞"; else -> "🧩" }, fontSize = DeskTextSize.base)
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = when { isAddProject -> "Add AgentWork Project"; kind == "text" -> "Text"; kind == "call" -> "Call"; else -> "Suggested Mission" },
-                        fontSize = 12.sp,
+                        fontSize = DeskTextSize.s,
                         fontWeight = FontWeight.Bold,
                         color = ElectricCyan
                     )
@@ -556,16 +552,16 @@ fun ProposalCard(
                 if (isAddProject) {
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(4.dp))
+                            .clip(DeskShapes.small)
                             .background(ElectricCyan.copy(alpha = 0.15f))
                             .padding(horizontal = 6.dp, vertical = 2.dp)
                     ) {
                         Text(
                             text = "REPOSITORY",
-                            fontSize = 9.sp,
+                            fontSize = DeskTextSize.xs,
                             fontWeight = FontWeight.Bold,
                             color = ElectricCyan,
-                            fontFamily = FontFamily.Monospace
+                            fontFamily = com.example.ui.theme.JetBrainsMono
                         )
                     }
                 }
@@ -574,8 +570,8 @@ fun ProposalCard(
             if (!project.isNullOrBlank()) {
                 Text(
                     text = "Project: $project",
-                    fontSize = 11.sp,
-                    fontFamily = FontFamily.Monospace,
+                    fontSize = DeskTextSize.xs,
+                    fontFamily = com.example.ui.theme.JetBrainsMono,
                     color = Slate400,
                     modifier = Modifier.padding(top = 2.dp)
                 )
@@ -584,7 +580,7 @@ fun ProposalCard(
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = instruction,
-                fontSize = 12.sp,
+                fontSize = DeskTextSize.s,
                 color = Slate200
             )
 
@@ -607,7 +603,7 @@ fun ProposalCard(
                                 kind == "call" -> "Opened the dialer ✓"
                                 else -> "Dispatched to worker pool 🚀"
                             },
-                            fontSize = 11.sp,
+                            fontSize = DeskTextSize.xs,
                             color = EmeraldConnected,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -616,7 +612,7 @@ fun ProposalCard(
                 "expired" -> {
                     Text(
                         text = "This suggestion expired (agent restarted)",
-                        fontSize = 11.sp,
+                        fontSize = DeskTextSize.xs,
                         color = RoseError,
                         fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
                     )
@@ -624,7 +620,7 @@ fun ProposalCard(
                 "dismissed" -> {
                     Text(
                         text = "Dismissed",
-                        fontSize = 11.sp,
+                        fontSize = DeskTextSize.xs,
                         color = Slate500,
                         fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
                     )
@@ -654,7 +650,7 @@ fun ProposalCard(
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = when { isAddProject -> "Add project"; kind == "text" -> "Open in Messages"; kind == "call" -> "Call"; else -> "Run it" },
-                                    fontSize = 11.sp,
+                                    fontSize = DeskTextSize.xs,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White
                                 )
@@ -681,7 +677,7 @@ fun ProposalCard(
                                         modifier = Modifier.size(13.dp)
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text(text = "Run & View only", fontSize = 11.sp, fontWeight = FontWeight.Bold,
+                                    Text(text = "Run & View only", fontSize = DeskTextSize.xs, fontWeight = FontWeight.Bold,
                                          color = ElectricCyan)
                                 }
                             }
@@ -691,7 +687,7 @@ fun ProposalCard(
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .clip(RoundedCornerShape(6.dp))
+                                .clip(DeskShapes.small)
                                 .background(Slate700)
                                 .clickable { onDismiss() }
                                 .padding(vertical = 6.dp),
@@ -707,7 +703,7 @@ fun ProposalCard(
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = "Dismiss",
-                                    fontSize = 11.sp,
+                                    fontSize = DeskTextSize.xs,
                                     color = Slate300
                                 )
                             }
@@ -742,7 +738,7 @@ fun QuestionChoicesCard(
         ) {
             Text(
                 text = "CHOICE REQUIRED",
-                fontSize = 10.sp,
+                fontSize = DeskTextSize.xs,
                 fontWeight = FontWeight.Bold,
                 color = ElectricCyan,
                 letterSpacing = 0.5.sp
@@ -755,7 +751,7 @@ fun QuestionChoicesCard(
         if (question.text.isNotBlank()) {
             Text(
                 text = question.text,
-                fontSize = 12.sp,
+                fontSize = DeskTextSize.s,
                 fontWeight = FontWeight.SemiBold,
                 color = Color.White
             )
@@ -797,7 +793,7 @@ fun QuestionChoicesCard(
                     ) {
                         Text(
                             text = option,
-                            fontSize = 12.sp,
+                            fontSize = DeskTextSize.s,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                             color = if (isSelected) EmeraldConnected else if (isAnswered) Slate400 else Color.White
                         )
@@ -833,7 +829,7 @@ fun QuestionChoicesCard(
                     ) {
                         Text(
                             text = if (isOtherSelected) "Other: ${question.answeredOption}" else "Other… (Type answer)",
-                            fontSize = 12.sp,
+                            fontSize = DeskTextSize.s,
                             fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
                             color = if (isOtherSelected) EmeraldConnected else Slate400
                         )
@@ -861,7 +857,7 @@ private fun ThinkingIndicator() {
         label = "thinking_phase"
     )
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 2.dp)) {
-        Text(text = "Thinking", fontSize = 14.sp, color = Slate400)
+        Text(text = "Thinking", fontSize = DeskTextSize.base, color = Slate400)
         Spacer(modifier = Modifier.width(4.dp))
         repeat(3) { i ->
             val lit = phase.toInt() == i
@@ -891,14 +887,14 @@ private fun SentAttachments(attached: List<MessageAttachment>) {
                     modifier = Modifier
                         .widthIn(max = 260.dp)
                         .heightIn(max = 320.dp)
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(DeskShapes.small)
                         .clickable { fullScreen = file.absolutePath }
                 )
             } else {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(DeskShapes.small)
                         .background(Color(0x33000000))
                         .padding(horizontal = 8.dp, vertical = 6.dp)
                 ) {
@@ -914,7 +910,7 @@ private fun SentAttachments(attached: List<MessageAttachment>) {
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text(a.name, color = Color.White, fontSize = 13.sp, maxLines = 1)
+                    Text(a.name, color = Color.White, fontSize = DeskTextSize.m, maxLines = 1)
                 }
             }
         }
@@ -943,19 +939,19 @@ private fun FeedbackChip(
 ) {
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
+            .clip(DeskShapes.card)
             .background(if (selected) ElectricCyan.copy(alpha = 0.25f) else Slate800.copy(alpha = 0.6f))
             .border(
                 1.dp,
                 if (selected) ElectricCyan else Slate700,
-                RoundedCornerShape(12.dp)
+                DeskShapes.card
             )
             .clickable(onClick = onClick)
             .padding(horizontal = 8.dp, vertical = 3.dp)
     ) {
         Text(
             text = label,
-            fontSize = 11.sp,
+            fontSize = DeskTextSize.xs,
             color = if (selected) ElectricCyan else Slate200,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
         )

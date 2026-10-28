@@ -1,5 +1,7 @@
 package com.example.ui.components
 
+import com.example.ui.theme.DeskTextSize
+import com.example.ui.theme.DeskShapes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -126,7 +128,7 @@ fun TaskRow(task: AgentTaskItem, onClick: () -> Unit, modifier: Modifier = Modif
         isRetask(task) -> "↻" to Violet300
         else -> "✓" to CeruleanText
     }
-    val shape = RoundedCornerShape(12.dp)
+    val shape = DeskShapes.card
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -139,19 +141,19 @@ fun TaskRow(task: AgentTaskItem, onClick: () -> Unit, modifier: Modifier = Modif
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
-            Modifier.size(22.dp).clip(RoundedCornerShape(7.dp)).background(color.copy(alpha = 0.18f)),
+            Modifier.size(22.dp).clip(DeskShapes.small).background(color.copy(alpha = 0.18f)),
             contentAlignment = Alignment.Center
-        ) { Text(mark, color = color, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+        ) { Text(mark, color = color, fontSize = DeskTextSize.s, fontWeight = FontWeight.Bold) }
         Spacer(Modifier.width(10.dp))
         Text(
             task.title.removePrefix("Computer: "),
-            color = Slate200, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+            color = Slate200, fontSize = DeskTextSize.m, maxLines = 1, overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f)
         )
         Spacer(Modifier.width(8.dp))
         Text(
             (if (task.cancelled) "cancelled " else if (failed) "failed " else "") + clock(task.completedAt),
-            color = if (failed) RoseError else Slate500, fontSize = 10.5.sp, fontFamily = FontFamily.Monospace
+            color = if (failed) RoseError else Slate500, fontSize = DeskTextSize.xs, fontFamily = com.example.ui.theme.JetBrainsMono
         )
     }
 }
@@ -160,7 +162,7 @@ fun TaskRow(task: AgentTaskItem, onClick: () -> Unit, modifier: Modifier = Modif
 @Composable
 fun TaskStrip(tasks: List<AgentTaskItem>, expanded: Boolean, onToggle: () -> Unit) {
     val failed = tasks.count { it.phase == "failed" && !it.cancelled }
-    val shape = RoundedCornerShape(12.dp)
+    val shape = DeskShapes.card
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -172,10 +174,10 @@ fun TaskStrip(tasks: List<AgentTaskItem>, expanded: Boolean, onToggle: () -> Uni
             .padding(horizontal = 12.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text("${tasks.size} tasks finished", color = Slate200, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold)
-        if (failed > 0) Text(" · $failed failed", color = RoseError, fontSize = 12.5.sp)
+        Text("${tasks.size} tasks finished", color = Slate200, fontSize = DeskTextSize.s, fontWeight = FontWeight.SemiBold)
+        if (failed > 0) Text(" · $failed failed", color = RoseError, fontSize = DeskTextSize.s)
         Spacer(Modifier.weight(1f))
-        Text(if (expanded) "Hide ▴" else "Show ▾", color = CeruleanText, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+        Text(if (expanded) "Hide ▴" else "Show ▾", color = CeruleanText, fontSize = DeskTextSize.s, fontWeight = FontWeight.SemiBold)
     }
 }
 
@@ -198,7 +200,7 @@ fun TasksToggle(showing: Boolean, onToggle: () -> Unit) {
             contentAlignment = if (showing) Alignment.CenterEnd else Alignment.CenterStart
         ) { Box(Modifier.padding(1.dp).size(9.dp).clip(RoundedCornerShape(50)).background(c)) }
         Spacer(Modifier.width(6.dp))
-        Text("Tasks", color = c, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+        Text("Tasks", color = c, fontSize = DeskTextSize.xs, fontWeight = FontWeight.SemiBold)
     }
 }
 

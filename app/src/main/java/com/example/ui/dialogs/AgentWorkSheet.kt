@@ -368,7 +368,7 @@ fun AgentWorkSheet(
                         text = statusMessage!!,
                         fontSize = 11.sp,
                         color = if (statusSuccess) EmeraldConnected else RoseError,
-                        fontFamily = FontFamily.Monospace
+                        fontFamily = com.example.ui.theme.JetBrainsMono
                     )
                 }
 

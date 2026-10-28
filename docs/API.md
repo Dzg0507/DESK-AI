@@ -396,6 +396,7 @@ card's progress says `Needs you: …` with the `request_id`.
 | `POST /api/computer/credentials` | `{"domain": "google.com", "username": "alice@gmail.com", "password": "…"}` | `{"status": "ok", "saved": "google.com", "username": "alice@gmail.com"}`: securely stores the credential for automated sign-ins |
 | `DELETE /api/computer/credentials?domain=google.com&username=alice@gmail.com` | | `{"status": "ok"}`; `404` when not found |
 | `GET /api/files/m/{ref}/{name}` | | A file on the Mini that the chat's `mini_files` tool showed (2026-10-27): an image, video, audio file or PDF, with Range support. `ref` is the path, URL-safe base64, checked again here (inside the allowed folders, never secrets or app data). Replies show images as `![name](/api/files/m/…)` and video/audio/PDF as `[▶ name (12.3 MB)](/api/files/m/…)` (🔊 audio, 📄 PDF): the app plays or opens those. `404` for anything not allowed |
+| `GET /api/files/m/{ref}/{name}/thumbnail` | | A JPEG still (360 px wide) of a video the chat showed, for its card (2026-10-27). A video in the TikTok folder shares the videos hub's cached thumbnail, so it's the same picture. `404` when it isn't a video or no frame could be taken |
 | `GET /api/computer/runs/{run_id}/screenshots/{name}` | | One step's screenshot from a computer run (`step-NN.jpg` / `snap-NNN.jpg`, JPEG). The chat's `computer_screenshots` tool puts these as markdown images in a reply (2026-10-27); load them with the token header like any image. `404` for an unknown run or file |
 
 

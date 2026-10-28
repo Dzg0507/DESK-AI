@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import com.example.ui.theme.DeskTextSize
 import androidx.compose.ui.graphics.Brush
 import com.example.ui.theme.ChatBackground
 import com.example.ui.theme.EmeraldConnected
@@ -316,7 +317,7 @@ fun ChatScreen(
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = currentSession?.title ?: "AlwaysOnAgent",
-                                fontSize = 16.sp,
+                                fontSize = DeskTextSize.l,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White,
                                 maxLines = 1,
@@ -380,7 +381,7 @@ fun ChatScreen(
                                             containerColor = ElectricCyan,
                                             contentColor = Color.Black
                                         ) {
-                                            Text("!", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                            Text("!", fontSize = DeskTextSize.xs, fontWeight = FontWeight.Bold)
                                         }
                                     }
                                 }
@@ -421,12 +422,12 @@ fun ChatScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text("⚠️ Needs you (${needsYou.size}): ${needsYou.first().question.take(70)}",
-                                 color = Amber200, fontSize = 13.sp,
+                                 color = Amber200, fontSize = DeskTextSize.m,
                                  fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, maxLines = 1,
                                  overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                                  modifier = Modifier.weight(1f))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Open ›", color = AmberPending, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text("Open ›", color = AmberPending, fontSize = DeskTextSize.s, fontWeight = FontWeight.Bold)
                         }
                     }
                     // AlwaysOnAgent Live Status & Pulse Bar
@@ -458,7 +459,7 @@ fun ChatScreen(
                                         contentAlignment = Alignment.Center
                                     ) {
                                         TextButton(onClick = { viewModel.loadEarlierMessages() }) {
-                                            Text("Load earlier messages", color = ElectricCyan, fontSize = 12.sp)
+                                            Text("Load earlier messages", color = ElectricCyan, fontSize = DeskTextSize.s)
                                         }
                                     }
                                 }

@@ -62,7 +62,7 @@ private fun mark(level: String): String = when (level) {
 fun ActivityLogLine(line: ActivityLine, fontSize: Int = 12, showTime: Boolean = true) {
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
         if (showTime && line.time.isNotBlank()) {
-            Text(line.time, fontSize = (fontSize - 2).sp, color = Slate500, fontFamily = FontFamily.Monospace,
+            Text(line.time, fontSize = (fontSize - 2).sp, color = Slate500, fontFamily = com.example.ui.theme.JetBrainsMono,
                  modifier = Modifier.padding(top = 1.dp))
             Spacer(Modifier.width(8.dp))
         }

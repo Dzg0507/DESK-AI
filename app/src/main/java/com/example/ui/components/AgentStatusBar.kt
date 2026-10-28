@@ -1,9 +1,5 @@
 package com.example.ui.components
 
-import androidx.compose.ui.graphics.Brush
-import com.example.ui.theme.DeepNavy
-import com.example.ui.theme.SheetBorderGradient
-import com.example.ui.theme.DeskShapes
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -27,15 +23,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Memory
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.PowerSettingsNew
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Task
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -44,23 +35,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.data.model.DaemonStats
-import com.example.ui.theme.ElectricCyan
-import com.example.ui.theme.EmeraldConnected
-import com.example.ui.theme.NeonIndigo
-import com.example.ui.theme.RoseError
-import com.example.ui.theme.AmberPending
-import com.example.ui.theme.Slate300
-import com.example.ui.theme.Slate400
-import com.example.ui.theme.Slate50
-import com.example.ui.theme.Slate700
-import com.example.ui.theme.Slate800
-import com.example.ui.theme.Slate900
+import com.example.ui.theme.DeskColors
+import com.example.ui.theme.DeskRadius
+import com.example.ui.theme.DeskShapes
+import com.example.ui.theme.DeskType
 
+/*
+ * The bar above the chat (2026-10-27 redesign, docs/FEED_AND_DESIGN_PLAN_2026-10-27.md): the status in plain words,
+ * one quiet mono line of numbers instead of four colored pills, and the running task by name. The three menu buttons
+ * stay big and in their own colors (the owner, 2026-10-11), as a soft tint rather than a bright outline.
+ */
 @Composable
 fun AgentStatusBar(
     stats: DaemonStats,
@@ -76,250 +67,136 @@ fun AgentStatusBar(
     val isPaused = stats.daemonStatus in listOf("paused", "sleep", "stopped")
     val isRunning = stats.daemonStatus == "running_task"
 
-    // Infinite radar pulse animation for the beacon ring
+    // The beacon's ring pulses outward while the agent is up
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val pulseScale by infiniteTransition.animateFloat(
         initialValue = 0.8f,
         targetValue = 2.2f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1800, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Restart
-        ),
+        animationSpec = infiniteRepeatable(animation = tween(1800, easing = FastOutSlowInEasing), repeatMode = RepeatMode.Restart),
         label = "pulse_scale"
     )
     val pulseAlpha by infiniteTransition.animateFloat(
         initialValue = 0.7f,
         targetValue = 0.0f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1800, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Restart
-        ),
+        animationSpec = infiniteRepeatable(animation = tween(1800, easing = FastOutSlowInEasing), repeatMode = RepeatMode.Restart),
         label = "pulse_alpha"
     )
 
     val beaconColor = when {
-        !isConnected -> RoseError
-        isPaused -> Slate400
-        isRunning -> AmberPending
-        else -> EmeraldConnected
+        !isConnected -> DeskColors.Error
+        isPaused -> DeskColors.TextMuted
+        isRunning -> DeskColors.Waiting
+        else -> DeskColors.Signal
     }
-
     val statusLabel = when {
-        !isConnected -> "OFFLINE / UNREACHABLE"
-        isPaused -> "STANDBY (SLEEP)"
-        isRunning -> "PROCESSING MISSION"
-        else -> "ONLINE / IDLE"
+        !isConnected -> "Offline"
+        isPaused -> "Standby"
+        isRunning -> "Working"
+        else -> "Online"
     }
+    val shape = RoundedCornerShape(bottomStart = DeskRadius.card, bottomEnd = DeskRadius.card)
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp))
-            .background(Brush.verticalGradient(listOf(DeepNavy, Slate900)))
-            .border(1.dp, SheetBorderGradient, RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp))
-            .padding(horizontal = 14.dp, vertical = 10.dp)
+            .deskCardSurface(shape, fill = DeskColors.Base)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            // Row 1: Pulse Beacon, Status Text & Fast Action Icons
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Pulse & Host
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.clickable { onOpenSettings() }
+                    modifier = Modifier.weight(1f).clickable { onOpenSettings() }
                 ) {
-                    Box(
-                        modifier = Modifier.size(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
+                    Box(modifier = Modifier.size(16.dp), contentAlignment = Alignment.Center) {
                         if (isConnected && !isPaused) {
                             Box(
                                 modifier = Modifier
                                     .size(16.dp)
                                     .scale(pulseScale)
-                                    .border(1.5.dp, beaconColor.copy(alpha = pulseAlpha), CircleShape)
+                                    .border(1.dp, beaconColor.copy(alpha = pulseAlpha), CircleShape)
                             )
                         }
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(beaconColor)
-                        )
+                        Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(beaconColor))
                     }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
+                    Spacer(modifier = Modifier.width(10.dp))
                     Column {
+                        Text(text = statusLabel, style = DeskType.titleSmall, color = DeskColors.TextPrimary)
                         Text(
-                            text = statusLabel,
-                            color = beaconColor,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 0.5.sp
-                        )
-                        Text(
-                            text = serverUrl.removePrefix("http://").removePrefix("https://").take(24),
-                            color = Slate400,
-                            fontSize = 10.sp,
-                            fontFamily = FontFamily.Monospace
+                            text = serverUrl.removePrefix("http://").removePrefix("https://").take(28),
+                            style = DeskType.mono,
+                            color = DeskColors.TextMuted,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
-
-                // Action Buttons Bar
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    // No Standby button here (the owner, 2026-10-11: overkill); /standby and /wake still work
-                    // Tasks Sheet Trigger: bigger and lit in its menu color (the owner, 2026-10-11)
-                    Box(
-                        modifier = Modifier
-                            .padding(start = 6.dp)
-                            .size(44.dp)
-                            .clip(DeskShapes.control)
-                            .background(com.example.ui.theme.AmberPending.copy(alpha = 0.16f))
-                            .border(1.dp, com.example.ui.theme.AmberPending.copy(alpha = 0.6f), DeskShapes.control)
-                            .clickable { onOpenTasks() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Task,
-                            contentDescription = "Tasks",
-                            tint = com.example.ui.theme.AmberPending,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-
-                    // Memory Sheet Trigger: bigger and lit in its menu color (the owner, 2026-10-11)
-                    Box(
-                        modifier = Modifier
-                            .padding(start = 6.dp)
-                            .size(44.dp)
-                            .clip(DeskShapes.control)
-                            .background(com.example.ui.theme.EmeraldConnected.copy(alpha = 0.16f))
-                            .border(1.dp, com.example.ui.theme.EmeraldConnected.copy(alpha = 0.6f), DeskShapes.control)
-                            .clickable { onOpenMemory() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Memory,
-                            contentDescription = "Memory",
-                            tint = com.example.ui.theme.EmeraldConnected,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-
-                    // Media Videos Trigger: bigger and lit in its menu color (the owner, 2026-10-11)
-                    Box(
-                        modifier = Modifier
-                            .padding(start = 6.dp)
-                            .size(44.dp)
-                            .clip(DeskShapes.control)
-                            .background(com.example.ui.theme.Purple400.copy(alpha = 0.16f))
-                            .border(1.dp, com.example.ui.theme.Purple400.copy(alpha = 0.6f), DeskShapes.control)
-                            .clickable { onOpenMedia() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Videocam,
-                            contentDescription = "3D Videos",
-                            tint = com.example.ui.theme.Purple400,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-
-                    // No settings gear here either: the Connection Hub is in the menu (The Mini)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    // No Standby or settings buttons here (the owner, 2026-10-11): /standby and /wake, and the menu
+                    MenuButton(Icons.Default.Task, "Tasks", DeskColors.Waiting, onOpenTasks)
+                    MenuButton(Icons.Default.Memory, "Memory", DeskColors.Emerald, onOpenMemory)
+                    MenuButton(Icons.Default.Videocam, "3D Videos", DeskColors.Memory, onOpenMedia)
                 }
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(text = metricsLine(stats), style = DeskType.mono, maxLines = 1, overflow = TextOverflow.Ellipsis)
 
-            // Row 2: Metrics chips
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                MetricChip(label = "ENGINE", value = stats.defaultEngine.uppercase(), color = NeonIndigo)
-                MetricChip(label = "COMPLETED", value = "${stats.tasksCompleted}", color = EmeraldConnected)
-                if (stats.tasksInProgress > 0) {
-                    MetricChip(label = "ACTIVE", value = "${stats.tasksInProgress}", color = AmberPending)
-                }
-                MetricChip(label = "QUEUE", value = "${stats.tasksBacklog}", color = ElectricCyan)
-            }
-
-            // Active Daemon Processing Progress Bar
             if (isRunning || stats.tasksInProgress > 0) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(6.dp)
-                                    .clip(CircleShape)
-                                    .background(AmberPending)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "DAEMON BUSY: EXECUTING TASK PIPELINE",
-                                fontSize = 9.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = AmberPending,
-                                letterSpacing = 0.5.sp
-                            )
-                        }
-                        Text(
-                            text = "${stats.tasksInProgress} active",
-                            fontSize = 9.sp,
-                            color = Slate400,
-                            fontFamily = FontFamily.Monospace
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    LinearProgressIndicator(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(4.dp)
-                            .clip(RoundedCornerShape(2.dp)),
-                        color = AmberPending,
-                        trackColor = Slate800
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(DeskColors.Waiting))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = stats.activeTask?.title?.takeIf { it.isNotBlank() } ?: "Working on a task",
+                        style = DeskType.label,
+                        color = DeskColors.TextSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
+                Spacer(modifier = Modifier.height(6.dp))
+                LinearProgressIndicator(
+                    modifier = Modifier.fillMaxWidth().height(3.dp).clip(DeskShapes.pill),
+                    color = DeskColors.Waiting,
+                    trackColor = DeskColors.Raised2,
+                    gapSize = 0.dp
+                )
             }
         }
     }
 }
 
+/** "auto · 231 done · 1 running · 0 queued": numbers bright, words muted, all on the mono grid. */
+private fun metricsLine(stats: DaemonStats) = buildAnnotatedString {
+    val parts = buildList {
+        add(stats.defaultEngine.lowercase() to "")
+        add("${stats.tasksCompleted}" to " done")
+        if (stats.tasksInProgress > 0) add("${stats.tasksInProgress}" to " running")
+        add("${stats.tasksBacklog}" to " queued")
+    }
+    parts.forEachIndexed { i, (value, word) ->
+        if (i > 0) withStyle(SpanStyle(color = DeskColors.TextMuted)) { append(" · ") }
+        withStyle(SpanStyle(color = DeskColors.TextPrimary)) { append(value) }
+        withStyle(SpanStyle(color = DeskColors.TextMuted)) { append(word) }
+    }
+}
+
+/** One of the bar's menu buttons: 44 dp, its own color as a soft tint (the owner, 2026-10-11: big and lit). */
 @Composable
-fun MetricChip(label: String, value: String, color: Color) {
+private fun MenuButton(icon: ImageVector, label: String, color: Color, onClick: () -> Unit) {
     Box(
         modifier = Modifier
-            .clip(DeskShapes.pill)
-            .background(color.copy(alpha = 0.12f))
-            .border(0.8.dp, color.copy(alpha = 0.35f), DeskShapes.pill)
-            .padding(horizontal = 6.dp, vertical = 2.dp)
+            .size(44.dp)
+            .clip(DeskShapes.small)
+            .background(color.copy(alpha = 0.14f))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = "$label: ",
-                color = color,
-                fontSize = 9.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily.Monospace
-            )
-            Text(
-                text = value,
-                color = Slate50,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily.Monospace
-            )
-        }
+        Icon(imageVector = icon, contentDescription = label, tint = color, modifier = Modifier.size(22.dp))
     }
 }

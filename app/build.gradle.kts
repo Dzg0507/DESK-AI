@@ -7,7 +7,12 @@ plugins {
   alias(libs.plugins.google.devtools.ksp)
   alias(libs.plugins.secrets)
   alias(libs.plugins.google.services)
+  alias(libs.plugins.roborazzi)
 }
+
+// Screenshot tests (2026-10-27): the key screens render to PNGs on every test run, so the look is reviewed like code.
+// `gradle recordRoborazziDebug` writes the reference images here; `verifyRoborazziDebug` fails when one changes.
+roborazzi { outputDir.set(file("src/test/screenshots")) }
 
 // Signing settings come from local.properties (gitignored) or the environment, never from git (2026-10-07: the
 // debug keystore had been committed inside DeskAI-source.zip). local.properties first, then the environment.
@@ -27,8 +32,8 @@ android {
     applicationId = "com.aistudio.deskai.kzpwqm"
     minSdk = 24
     targetSdk = 36
-    versionCode = 88
-    versionName = "2.28.1"
+    versionCode = 89
+    versionName = "2.29.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -146,6 +151,9 @@ dependencies {
   testImplementation(libs.junit)
   testImplementation(libs.kotlinx.coroutines.test)
   testImplementation(libs.robolectric)
+  testImplementation(libs.roborazzi)
+  testImplementation(libs.roborazzi.compose)
+  testImplementation(libs.roborazzi.junit.rule)
   androidTestImplementation(platform(libs.androidx.compose.bom))
   androidTestImplementation(libs.androidx.compose.ui.test.junit4)
   androidTestImplementation(libs.androidx.espresso.core)

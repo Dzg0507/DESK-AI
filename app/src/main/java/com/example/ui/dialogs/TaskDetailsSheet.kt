@@ -1,5 +1,6 @@
 package com.example.ui.dialogs
 
+import com.example.ui.theme.DeskTextSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -140,7 +141,7 @@ fun TaskDetailsSheet(
                     verticalAlignment = Alignment.Top
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(t.title, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White, lineHeight = 22.sp)
+                        Text(t.title, fontSize = DeskTextSize.xl, fontWeight = FontWeight.Bold, color = Color.White, lineHeight = 22.sp)
                         Spacer(modifier = Modifier.height(6.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             StatusPill(text = phaseLabel(t.phase, isCancelled), color = phaseColor)
@@ -152,7 +153,7 @@ fun TaskDetailsSheet(
                                 TagChip(text = ago, icon = Icons.Default.Schedule)
                             }
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("#${t.id}", fontSize = 10.sp, color = Slate500, fontFamily = FontFamily.Monospace,
+                            Text("#${t.id}", fontSize = DeskTextSize.xs, color = Slate500, fontFamily = com.example.ui.theme.JetBrainsMono,
                                 maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
@@ -210,10 +211,10 @@ fun TaskDetailsSheet(
                                         .border(1.dp, c.copy(alpha = 0.55f), com.example.ui.theme.DeskShapes.card)
                                         .padding(horizontal = 10.dp, vertical = 8.dp)
                                 ) {
-                                    Text(value, color = com.example.ui.theme.PhosphorMint, fontSize = 18.sp,
+                                    Text(value, color = com.example.ui.theme.PhosphorMint, fontSize = DeskTextSize.xl,
                                          fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                                          style = androidx.compose.ui.text.TextStyle(shadow = androidx.compose.ui.graphics.Shadow(c.copy(alpha = 0.7f), blurRadius = 12f)))
-                                    Text(label, color = Slate400, fontSize = 11.sp)
+                                    Text(label, color = Slate400, fontSize = DeskTextSize.xs)
                                 }
                             }
                         }
@@ -256,8 +257,8 @@ fun TaskDetailsSheet(
                             // diffstat colors and branch badges (ui/components/RichText.kt). Both allow long-press copy.
                             SelectionContainer {
                                 if (showRaw) {
-                                    Text(summary, fontSize = 11.sp, color = Slate300, lineHeight = 16.sp,
-                                        fontFamily = FontFamily.Monospace)
+                                    Text(summary, fontSize = DeskTextSize.xs, color = Slate300, lineHeight = 16.sp,
+                                        fontFamily = com.example.ui.theme.JetBrainsMono)
                                 } else {
                                     RichText(summary)
                                 }
@@ -289,7 +290,7 @@ fun TaskDetailsSheet(
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                                Text("⚠ ERROR", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = RoseError,
+                                Text("⚠ ERROR", fontSize = DeskTextSize.xs, fontWeight = FontWeight.Bold, color = RoseError,
                                     letterSpacing = 0.5.sp, modifier = Modifier.weight(1f))
                                 SmallChip("Copy", color = RoseError) {
                                     clipboard.setText(AnnotatedString(error))
@@ -298,8 +299,8 @@ fun TaskDetailsSheet(
                             }
                             SelectionContainer {
                                 if (showRaw) {
-                                    Text(error, fontSize = 11.sp, color = Red300, lineHeight = 16.sp,
-                                        fontFamily = FontFamily.Monospace)
+                                    Text(error, fontSize = DeskTextSize.xs, color = Red300, lineHeight = 16.sp,
+                                        fontFamily = com.example.ui.theme.JetBrainsMono)
                                 } else {
                                     RichText(error, baseColor = Red300)
                                 }
@@ -382,7 +383,7 @@ private fun TaskVideoPreview(thumbUrl: String?, authToken: String, playable: Boo
         Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = if (playable) "Tap to play" else "Video no longer kept",
-            fontSize = 11.sp,
+            fontSize = DeskTextSize.xs,
             color = if (playable) ElectricCyan else Slate400
         )
     }
@@ -405,7 +406,7 @@ private fun DetailSection(
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(accent))
             Spacer(modifier = Modifier.width(6.dp))
-            Text(label, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = accent, letterSpacing = 1.sp,
+            Text(label, fontSize = DeskTextSize.xs, fontWeight = FontWeight.Bold, color = accent, letterSpacing = 1.sp,
                 modifier = Modifier.weight(1f))
             if (trailing != null) trailing()
         }
@@ -423,21 +424,21 @@ private fun SmallChip(label: String, color: Color = ElectricCyan, active: Boolea
             .clickable(onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 3.dp)
     ) {
-        Text(label, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, color = color)
+        Text(label, fontSize = DeskTextSize.xs, fontWeight = FontWeight.SemiBold, color = color)
     }
 }
 
 @Composable
 private fun DetailText(text: String, color: Color = Slate200) {
-    Text(text, fontSize = 12.sp, color = color, lineHeight = 17.sp)
+    Text(text, fontSize = DeskTextSize.s, color = color, lineHeight = 17.sp)
 }
 
 @Composable
 private fun DetailRow(label: String, value: String) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(label, fontSize = 11.sp, color = Slate400)
+        Text(label, fontSize = DeskTextSize.xs, color = Slate400)
         Spacer(modifier = Modifier.width(12.dp))
-        Text(value, fontSize = 11.sp, color = Slate200, fontFamily = FontFamily.Monospace)
+        Text(value, fontSize = DeskTextSize.xs, color = Slate200, fontFamily = com.example.ui.theme.JetBrainsMono)
     }
 }
 

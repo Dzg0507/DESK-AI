@@ -1,5 +1,6 @@
 package com.example.ui.dialogs
 
+import com.example.ui.theme.DeskTextSize
 import com.example.data.remote.MediaLinks
 import com.example.ui.components.SheetHeader
 import com.example.ui.components.SectionLabel
@@ -242,7 +243,7 @@ fun MediaGallerySheet(
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = "Images (${images.size})",
-                                fontSize = 12.sp,
+                                fontSize = DeskTextSize.s,
                                 fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal,
                                 color = if (selectedTab == 0) Color.White else Slate400
                             )
@@ -274,7 +275,7 @@ fun MediaGallerySheet(
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = "Videos (${videos.size})",
-                                fontSize = 12.sp,
+                                fontSize = DeskTextSize.s,
                                 fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal,
                                 color = if (selectedTab == 1) Color.White else Slate400
                             )
@@ -352,8 +353,8 @@ fun MediaGallerySheet(
                     OutlinedTextField(
                         value = customQuote,
                         onValueChange = { customQuote = it },
-                        placeholder = { Text("Custom quote (leave blank for daily affirmation)...", color = Slate500, fontSize = 12.sp) },
-                        textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 12.sp),
+                        placeholder = { Text("Custom quote (leave blank for daily affirmation)...", color = Slate500, fontSize = DeskTextSize.s) },
+                        textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = DeskTextSize.s),
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
@@ -375,9 +376,9 @@ fun MediaGallerySheet(
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .clip(RoundedCornerShape(8.dp))
+                                .clip(DeskShapes.small)
                                 .background(Slate800)
-                                .border(1.dp, Slate700, RoundedCornerShape(8.dp))
+                                .border(1.dp, Slate700, DeskShapes.small)
                             .clickable {
                                 scope.launch {
                                     val res = onTriggerRender(customQuote.ifBlank { null })
@@ -396,7 +397,7 @@ fun MediaGallerySheet(
                         ) {
                             Text(
                                 text = "🎬 Render 3D Video",
-                                fontSize = 12.sp,
+                                fontSize = DeskTextSize.s,
                                 fontWeight = FontWeight.Bold,
                                 color = Slate200
                             )
@@ -406,7 +407,7 @@ fun MediaGallerySheet(
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .clip(RoundedCornerShape(8.dp))
+                                .clip(DeskShapes.small)
                                 .background(ElectricCyanGlow)
                                 .clickable {
                                     scope.launch {
@@ -425,7 +426,7 @@ fun MediaGallerySheet(
                         ) {
                             Text(
                                 text = "🚀 Post to TikTok",
-                                fontSize = 12.sp,
+                                fontSize = DeskTextSize.s,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
                             )
@@ -436,9 +437,9 @@ fun MediaGallerySheet(
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = statusMessage!!,
-                            fontSize = 11.sp,
+                            fontSize = DeskTextSize.xs,
                             color = EmeraldConnected,
-                            fontFamily = FontFamily.Monospace
+                            fontFamily = com.example.ui.theme.JetBrainsMono
                         )
                     }
 
@@ -579,9 +580,9 @@ fun VideoGalleryCard(
                 modifier = Modifier
                     .width(60.dp)
                     .height(86.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(DeskShapes.small)
                     .background(Slate900)
-                    .border(1.dp, Slate700, RoundedCornerShape(8.dp)),
+                    .border(1.dp, Slate700, DeskShapes.small),
                 contentAlignment = Alignment.Center
             ) {
                 if (thumbRequest != null) {
@@ -632,7 +633,7 @@ fun VideoGalleryCard(
             ) {
                 Text(
                     text = video.filename,
-                    fontSize = 12.sp,
+                    fontSize = DeskTextSize.s,
                     fontWeight = FontWeight.SemiBold,
                     color = Slate100,
                     maxLines = 2,
@@ -640,9 +641,9 @@ fun VideoGalleryCard(
                 )
                 Text(
                     text = "${video.sizeMb} MB • ${video.createdAt}",
-                    fontSize = 10.sp,
+                    fontSize = DeskTextSize.xs,
                     color = Slate500,
-                    fontFamily = FontFamily.Monospace
+                    fontFamily = com.example.ui.theme.JetBrainsMono
                 )
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -651,15 +652,15 @@ fun VideoGalleryCard(
                     // Watch button
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
+                            .clip(DeskShapes.small)
                             .background(Slate900)
-                            .border(1.dp, Slate700, RoundedCornerShape(6.dp))
+                            .border(1.dp, Slate700, DeskShapes.small)
                             .clickable { onPlay() }
                             .padding(horizontal = 9.dp, vertical = 5.dp)
                     ) {
                         Text(
                             text = "▶ Watch",
-                            fontSize = 11.sp,
+                            fontSize = DeskTextSize.xs,
                             fontWeight = FontWeight.Bold,
                             color = ElectricCyan
                         )
@@ -668,15 +669,15 @@ fun VideoGalleryCard(
                     // 🚀 Direct TikTok Publish Button
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
+                            .clip(DeskShapes.small)
                             .background(ElectricCyanGlow.copy(alpha = 0.25f))
-                            .border(1.dp, ElectricCyanGlow.copy(alpha = 0.5f), RoundedCornerShape(6.dp))
+                            .border(1.dp, ElectricCyanGlow.copy(alpha = 0.5f), DeskShapes.small)
                             .clickable { onPostTikTok() }
                             .padding(horizontal = 9.dp, vertical = 5.dp)
                     ) {
                         Text(
                             text = "🚀 Post TikTok",
-                            fontSize = 11.sp,
+                            fontSize = DeskTextSize.xs,
                             fontWeight = FontWeight.Bold,
                             color = ElectricCyan
                         )
@@ -772,7 +773,7 @@ fun ImageGalleryCard(
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "Preview error",
-                                fontSize = 10.sp,
+                                fontSize = DeskTextSize.xs,
                                 color = Slate500
                             )
                         }
@@ -791,16 +792,16 @@ fun ImageGalleryCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = image.filename,
-                        fontSize = 11.sp,
+                        fontSize = DeskTextSize.xs,
                         fontWeight = FontWeight.Medium,
                         color = Slate100,
                         maxLines = 1
                     )
                     Text(
                         text = "${image.sizeMb} MB",
-                        fontSize = 9.sp,
+                        fontSize = DeskTextSize.xs,
                         color = Slate500,
-                        fontFamily = FontFamily.Monospace
+                        fontFamily = com.example.ui.theme.JetBrainsMono
                     )
                 }
 
@@ -914,9 +915,9 @@ fun VideoPlayerDialog(
             modifier = Modifier
                 .fillMaxWidth(0.94f)
                 .fillMaxHeight(0.85f)
-                .clip(RoundedCornerShape(16.dp))
+                .clip(DeskShapes.card)
                 .background(CodeBlockBackground)
-                .border(1.dp, Slate800, RoundedCornerShape(16.dp))
+                .border(1.dp, Slate800, DeskShapes.card)
                 .padding(14.dp)
         ) {
             Column(
@@ -932,16 +933,16 @@ fun VideoPlayerDialog(
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = video.filename,
-                            fontSize = 14.sp,
+                            fontSize = DeskTextSize.base,
                             fontWeight = FontWeight.Bold,
                             color = Color.White,
                             maxLines = 1
                         )
                         Text(
                             text = "${video.sizeMb} MB • ${video.createdAt}",
-                            fontSize = 11.sp,
+                            fontSize = DeskTextSize.xs,
                             color = Slate400,
-                            fontFamily = FontFamily.Monospace
+                            fontFamily = com.example.ui.theme.JetBrainsMono
                         )
                     }
 
@@ -1029,9 +1030,9 @@ fun VideoPlayerDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(DeskShapes.card)
                         .background(Color.Black)
-                        .border(1.dp, Slate800, RoundedCornerShape(12.dp)),
+                        .border(1.dp, Slate800, DeskShapes.card),
                     contentAlignment = Alignment.Center
                 ) {
                     AndroidView(
@@ -1096,7 +1097,7 @@ fun VideoPlayerDialog(
                             Spacer(modifier = Modifier.height(14.dp))
                             Text(
                                 text = downloadText,
-                                fontSize = 12.sp,
+                                fontSize = DeskTextSize.s,
                                 fontWeight = FontWeight.Medium,
                                 color = Slate100,
                                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -1108,7 +1109,7 @@ fun VideoPlayerDialog(
                                     modifier = Modifier
                                         .fillMaxWidth(0.7f)
                                         .height(4.dp)
-                                        .clip(RoundedCornerShape(2.dp)),
+                                        .clip(DeskShapes.small),
                                     color = ElectricCyan,
                                     trackColor = Slate800
                                 )
@@ -1116,7 +1117,7 @@ fun VideoPlayerDialog(
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = "Buffering directly into app for zero-stutter playback",
-                                fontSize = 10.sp,
+                                fontSize = DeskTextSize.xs,
                                 color = Slate500
                             )
                         }
@@ -1132,11 +1133,11 @@ fun VideoPlayerDialog(
                             contentAlignment = Alignment.Center
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(text = "⚠️", fontSize = 28.sp)
+                                Text(text = "⚠️", fontSize = DeskTextSize.display)
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
                                     text = playbackError!!,
-                                    fontSize = 11.sp,
+                                    fontSize = DeskTextSize.xs,
                                     color = Red400,
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                 )
@@ -1144,23 +1145,23 @@ fun VideoPlayerDialog(
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     Box(
                                         modifier = Modifier
-                                            .clip(RoundedCornerShape(8.dp))
+                                            .clip(DeskShapes.small)
                                             .background(ElectricCyan)
                                             .clickable { startStreamOrDownload() }
                                             .padding(horizontal = 14.dp, vertical = 8.dp)
                                     ) {
                                         Text(
                                             text = "🔄 Retry Buffer",
-                                            fontSize = 12.sp,
+                                            fontSize = DeskTextSize.s,
                                             fontWeight = FontWeight.Bold,
                                             color = Color.Black
                                         )
                                     }
                                     Box(
                                         modifier = Modifier
-                                            .clip(RoundedCornerShape(8.dp))
+                                            .clip(DeskShapes.small)
                                             .background(Slate800)
-                                            .border(1.dp, Slate700, RoundedCornerShape(8.dp))
+                                            .border(1.dp, Slate700, DeskShapes.small)
                                         .clickable {
                                             try {
                                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(video.url))
@@ -1171,7 +1172,7 @@ fun VideoPlayerDialog(
                                     ) {
                                         Text(
                                             text = "Open in Browser",
-                                            fontSize = 12.sp,
+                                            fontSize = DeskTextSize.s,
                                             color = Slate300
                                         )
                                     }
@@ -1193,7 +1194,7 @@ fun VideoPlayerDialog(
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(DeskShapes.small)
                             .background(ElectricCyanGlow)
                             .clickable {
                                 onPostTikTok()
@@ -1204,7 +1205,7 @@ fun VideoPlayerDialog(
                     ) {
                         Text(
                             text = "🚀 Post This to TikTok",
-                            fontSize = 12.sp,
+                            fontSize = DeskTextSize.s,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
@@ -1214,16 +1215,16 @@ fun VideoPlayerDialog(
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(DeskShapes.small)
                             .background(Slate800)
-                            .border(1.dp, Slate700, RoundedCornerShape(8.dp))
+                            .border(1.dp, Slate700, DeskShapes.small)
                             .clickable { onDismiss() }
                             .padding(vertical = 10.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = "Done",
-                            fontSize = 12.sp,
+                            fontSize = DeskTextSize.s,
                             fontWeight = FontWeight.Bold,
                             color = Slate300
                         )

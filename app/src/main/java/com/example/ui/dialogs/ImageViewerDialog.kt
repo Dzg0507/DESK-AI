@@ -216,7 +216,7 @@ fun ImageViewerDialog(
                         text = "Double-tap or pinch to zoom",
                         fontSize = 11.sp,
                         color = Slate400,
-                        fontFamily = FontFamily.Monospace
+                        fontFamily = com.example.ui.theme.JetBrainsMono
                     )
                 }
 
@@ -326,7 +326,7 @@ fun ImageViewerDialog(
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     color = ElectricCyan,
-                    fontFamily = FontFamily.Monospace,
+                    fontFamily = com.example.ui.theme.JetBrainsMono,
                     modifier = Modifier.width(46.dp),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )

@@ -197,7 +197,7 @@ fun ConnectionHubDialog(
                     placeholder = { Text("e.g. http://192.168.1.100:8080 or http://10.0.2.2:8080", color = Slate500, fontSize = 12.sp) },
                     textStyle = androidx.compose.ui.text.TextStyle(
                         color = Color.White,
-                        fontFamily = FontFamily.Monospace,
+                        fontFamily = com.example.ui.theme.JetBrainsMono,
                         fontSize = 13.sp
                     ),
                     modifier = Modifier.fillMaxWidth(),
@@ -247,7 +247,7 @@ fun ConnectionHubDialog(
                     placeholder = { Text("e.g. http://100.x.y.z:8080 or https://tunnel.trycloudflare.com", color = Slate500, fontSize = 12.sp) },
                     textStyle = androidx.compose.ui.text.TextStyle(
                         color = Color.White,
-                        fontFamily = FontFamily.Monospace,
+                        fontFamily = com.example.ui.theme.JetBrainsMono,
                         fontSize = 13.sp
                     ),
                     modifier = Modifier.fillMaxWidth(),
@@ -335,7 +335,7 @@ fun ConnectionHubDialog(
                     placeholder = { Text("Required for phone access. Matches HUD_AUTH_TOKEN in PC .env", color = Slate500, fontSize = 12.sp) },
                     textStyle = androidx.compose.ui.text.TextStyle(
                         color = Color.White,
-                        fontFamily = FontFamily.Monospace,
+                        fontFamily = com.example.ui.theme.JetBrainsMono,
                         fontSize = 13.sp
                     ),
                     modifier = Modifier.fillMaxWidth(),
@@ -379,7 +379,7 @@ fun ConnectionHubDialog(
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = if (isSelected) ElectricCyan else Slate400,
-                                fontFamily = FontFamily.Monospace
+                                fontFamily = com.example.ui.theme.JetBrainsMono
                             )
                         }
                     }
@@ -454,7 +454,7 @@ fun ConnectionHubDialog(
                             text = if (success) "${latency}ms • $details" else details,
                             color = if (success) EmeraldConnected else RoseError,
                             fontSize = 11.sp,
-                            fontFamily = FontFamily.Monospace
+                            fontFamily = com.example.ui.theme.JetBrainsMono
                         )
                     }
                 }

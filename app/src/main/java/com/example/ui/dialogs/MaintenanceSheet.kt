@@ -346,7 +346,7 @@ fun MaintenanceSheet(
                                     text = line,
                                     fontSize = 10.sp,
                                     lineHeight = 14.sp,
-                                    fontFamily = FontFamily.Monospace,
+                                    fontFamily = com.example.ui.theme.JetBrainsMono,
                                     color = Slate300,
                                     modifier = Modifier
                                         .fillMaxWidth()

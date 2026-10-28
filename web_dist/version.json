@@ -1,7 +1,7 @@
 {
-  "versionCode": 88,
-  "versionName": "2.28.1",
-  "changelog": "DeskAI v2.28.1 (Build 88): A video, song or PDF the assistant writes as a picture now shows as a card you tap to play, instead of a blank image.",
+  "versionCode": 89,
+  "versionName": "2.29.0",
+  "changelog": "DeskAI v2.29.0 (Build 89): A cleaner, more polished look. New fonts (Inter and JetBrains Mono), a calmer top bar that says what the agent is working on, fresh chat bubbles, quieter cards and sheets, and videos from the PC now show their thumbnail in chat.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 25738210
+  "fileSizeBytes": 28157752
 }

@@ -459,7 +459,7 @@ fun CredentialsVaultDialog(
                                                     text = cred.username,
                                                     fontSize = 12.sp,
                                                     color = Slate400,
-                                                    fontFamily = FontFamily.Monospace
+                                                    fontFamily = com.example.ui.theme.JetBrainsMono
                                                 )
                                             }
                                         }

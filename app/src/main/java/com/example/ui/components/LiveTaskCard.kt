@@ -1,5 +1,6 @@
 package com.example.ui.components
 
+import com.example.ui.theme.DeskTextSize
 import androidx.compose.animation.animateContentSize
 import androidx.compose.ui.graphics.Brush
 import com.example.ui.theme.DeskShapes
@@ -210,11 +211,11 @@ fun LiveTaskCard(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "TASK #${taskId.take(12)}",
-                        fontSize = 11.sp,
+                        fontSize = DeskTextSize.xs,
                         fontWeight = FontWeight.Bold,
                         color = Slate300,
                         letterSpacing = 0.5.sp,
-                        fontFamily = FontFamily.Monospace
+                        fontFamily = com.example.ui.theme.JetBrainsMono
                     )
                 }
 
@@ -236,7 +237,7 @@ fun LiveTaskCard(
             if (item != null && item.title.isNotBlank()) {
                 Text(
                     text = item.title,
-                    fontSize = 12.sp,
+                    fontSize = DeskTextSize.s,
                     fontWeight = FontWeight.SemiBold,
                     color = Slate200
                 )
@@ -253,7 +254,7 @@ fun LiveTaskCard(
             }
             Text(
                 text = statusDisplay,
-                fontSize = 11.sp,
+                fontSize = DeskTextSize.xs,
                 color = if (isFailed) RoseError else Slate400,
                 lineHeight = 15.sp
             )
@@ -268,7 +269,7 @@ fun LiveTaskCard(
                 androidx.compose.foundation.text.selection.SelectionContainer {
                     Text(
                         text = summary,
-                        fontSize = 12.sp,
+                        fontSize = DeskTextSize.s,
                         color = Slate200,
                         lineHeight = 17.sp,
                         maxLines = if (expanded || !long) Int.MAX_VALUE else 24,
@@ -278,7 +279,7 @@ fun LiveTaskCard(
                 if (long) {
                     Text(
                         text = if (expanded) "Show less" else "Show all",
-                        fontSize = 11.sp,
+                        fontSize = DeskTextSize.xs,
                         fontWeight = FontWeight.SemiBold,
                         color = Sky300,
                         modifier = Modifier.clickable { expanded = !expanded }.padding(top = 4.dp)
@@ -331,23 +332,23 @@ fun LiveTaskCard(
                         ) {
                             Text(
                                 text = prog.label.ifBlank { "Processing" },
-                                fontSize = 11.sp,
+                                fontSize = DeskTextSize.xs,
                                 fontWeight = FontWeight.Bold,
                                 color = AmberPending
                             )
                             Text(
                                 text = "${prog.percent}% • $timeText",
-                                fontSize = 11.sp,
+                                fontSize = DeskTextSize.xs,
                                 fontWeight = FontWeight.SemiBold,
                                 color = AmberPending,
-                                fontFamily = FontFamily.Monospace
+                                fontFamily = com.example.ui.theme.JetBrainsMono
                             )
                         }
 
                         if (prog.detail.isNotBlank()) {
                             Text(
                                 text = prog.detail,
-                                fontSize = 10.sp,
+                                fontSize = DeskTextSize.xs,
                                 color = Slate400
                             )
                         }
@@ -357,7 +358,7 @@ fun LiveTaskCard(
                             animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
                             label = "live_task_progress"
                         )
-                        Box(Modifier.fillMaxWidth().height(5.dp).clip(RoundedCornerShape(2.5.dp)).background(Slate800)) {
+                        Box(Modifier.fillMaxWidth().height(5.dp).clip(DeskShapes.small).background(Slate800)) {
                             Box(Modifier.fillMaxWidth(animatedPercent).height(5.dp)
                                 .background(Brush.horizontalGradient(listOf(com.example.ui.theme.Cerulean, com.example.ui.theme.TaskIndigo))))
                         }
@@ -368,13 +369,13 @@ fun LiveTaskCard(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(4.dp)
-                            .clip(RoundedCornerShape(2.dp)),
+                            .clip(DeskShapes.small),
                         color = com.example.ui.theme.Cerulean,
                         trackColor = com.example.ui.theme.TaskIndigo.copy(alpha = 0.35f)
                     )
                 }
             } else if (isCompleted) {
-                Box(Modifier.fillMaxWidth().height(3.dp).clip(RoundedCornerShape(1.5.dp))
+                Box(Modifier.fillMaxWidth().height(3.dp).clip(DeskShapes.small)
                     .background(Brush.horizontalGradient(listOf(com.example.ui.theme.Cerulean, com.example.ui.theme.TaskIndigo))))
             }
 
@@ -432,7 +433,7 @@ fun LiveTaskCard(
                         ) {
                             Text(
                                 text = act.label,
-                                fontSize = 11.sp,
+                                fontSize = DeskTextSize.xs,
                                 fontWeight = FontWeight.SemiBold,
                                 color = chipTextColor
                             )
@@ -451,7 +452,7 @@ fun LiveTaskCard(
                 if (cancelFeedback != null) {
                     Text(
                         text = cancelFeedback!!,
-                        fontSize = 11.sp,
+                        fontSize = DeskTextSize.xs,
                         color = AmberPending,
                         fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
                     )
@@ -479,7 +480,7 @@ fun LiveTaskCard(
                                     modifier = Modifier.size(13.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(text = "View only", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = ElectricCyan)
+                                Text(text = "View only", fontSize = DeskTextSize.xs, fontWeight = FontWeight.Bold, color = ElectricCyan)
                             }
                         }
                     }
@@ -516,7 +517,7 @@ fun LiveTaskCard(
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = if (isCancelling) "Aborting..." else "Abort Task",
-                                    fontSize = 11.sp,
+                                    fontSize = DeskTextSize.xs,
                                     fontWeight = FontWeight.Bold,
                                     color = RoseError
                                 )
@@ -546,7 +547,7 @@ fun LiveTaskCard(
                                 Spacer(modifier = Modifier.width(5.dp))
                                 Text(
                                     text = "▶ Play Video",
-                                    fontSize = 11.sp,
+                                    fontSize = DeskTextSize.xs,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White
                                 )
@@ -581,7 +582,7 @@ fun LiveTaskCard(
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = "Retry Task",
-                                    fontSize = 11.sp,
+                                    fontSize = DeskTextSize.xs,
                                     fontWeight = FontWeight.Bold,
                                     color = ElectricCyan
                                 )

@@ -15,28 +15,34 @@ object DeskSpace {
     val xxl = 24.dp
 }
 
-/** Corner radii: chips/pills, inputs and buttons, cards, sheets. */
+/**
+ * Corner radii (2026-10-27): three, plus the pill. Small things (chips, controls, inputs) 8, cards 16, sheets 28.
+ * Was 12 different radii from 1.5 to 30 dp. The old names stay so existing screens keep compiling.
+ */
 object DeskRadius {
     val pill = 999.dp
-    val chip = 8.dp
-    val control = 10.dp
-    val card = 12.dp
-    val sheet = 20.dp
+    val small = 8.dp
+    val card = 16.dp
+    val sheet = 28.dp
+    val chip = small
+    val control = small
 }
 
 object DeskShapes {
-    val chip = RoundedCornerShape(DeskRadius.chip)
-    val control = RoundedCornerShape(DeskRadius.control)
+    val small = RoundedCornerShape(DeskRadius.small)
     val card = RoundedCornerShape(DeskRadius.card)
     val sheet = RoundedCornerShape(DeskRadius.sheet)
+    val sheetTop = RoundedCornerShape(topStart = DeskRadius.sheet, topEnd = DeskRadius.sheet)
     val pill = RoundedCornerShape(50)
+    val chip = small
+    val control = small
 }
 
 /** Material shapes, so default components (cards, text fields, dialogs, menus) pick up the same radii. */
 val DeskMaterialShapes = Shapes(
-    extraSmall = RoundedCornerShape(6.dp),
-    small = RoundedCornerShape(DeskRadius.control),
-    medium = RoundedCornerShape(DeskRadius.card),
-    large = RoundedCornerShape(16.dp),
-    extraLarge = RoundedCornerShape(DeskRadius.sheet)
+    extraSmall = DeskShapes.small,
+    small = DeskShapes.small,
+    medium = DeskShapes.card,
+    large = DeskShapes.card,
+    extraLarge = DeskShapes.sheet
 )

@@ -173,7 +173,7 @@ fun CommandPaletteDialog(
                                 color = ElectricCyan,
                                 fontWeight = FontWeight.Black,
                                 fontSize = 14.sp,
-                                fontFamily = FontFamily.Monospace
+                                fontFamily = com.example.ui.theme.JetBrainsMono
                             )
                         }
                         Spacer(modifier = Modifier.width(10.dp))
@@ -196,7 +196,7 @@ fun CommandPaletteDialog(
                                 Text(
                                     text = if (isConnected) "ONLINE: ${serverUrl.removePrefix("http://").take(22)}" else "BRIDGE OFFLINE",
                                     fontSize = 10.sp,
-                                    fontFamily = FontFamily.Monospace,
+                                    fontFamily = com.example.ui.theme.JetBrainsMono,
                                     color = if (isConnected) Slate400 else RoseError
                                 )
                             }
@@ -392,7 +392,7 @@ fun CommandPaletteDialog(
                                 text = "COMMANDS ↗",
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
-                                fontFamily = FontFamily.Monospace,
+                                fontFamily = com.example.ui.theme.JetBrainsMono,
                                 color = ElectricCyan
                             )
                         }
@@ -456,7 +456,7 @@ fun WorkstationCard(
                     maxLines = 1,
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                     modifier = Modifier.padding(start = 6.dp).weight(1f, fill = false),
-                    fontFamily = FontFamily.Monospace,
+                    fontFamily = com.example.ui.theme.JetBrainsMono,
                     fontWeight = FontWeight.Bold,
                     color = accentColor
                 )

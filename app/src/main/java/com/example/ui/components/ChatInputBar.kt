@@ -1,5 +1,8 @@
 package com.example.ui.components
 
+import com.example.ui.theme.DeskColors
+import com.example.ui.theme.DeskTextSize
+import com.example.ui.theme.DeskShapes
 import androidx.compose.ui.graphics.Brush
 import com.example.ui.theme.DeepNavy
 import com.example.ui.theme.ElectricCyanGlow
@@ -163,22 +166,15 @@ fun ChatInputBar(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(if (text.startsWith("/")) ElectricCyan.copy(alpha = 0.2f) else Slate800)
-                    .border(
-                        1.dp,
-                        if (text.startsWith("/")) ElectricCyan else Slate700,
-                        CircleShape
-                    )
+                    .background(if (text.startsWith("/")) DeskColors.Agent.copy(alpha = 0.18f) else Color.Transparent)
             ) {
                 Icon(
                     imageVector = Icons.Default.Apps,
                     contentDescription = "Actions",
-                    tint = if (text.startsWith("/")) ElectricCyan else Slate400,
-                    modifier = Modifier.size(20.dp)
+                    tint = if (text.startsWith("/")) DeskColors.Agent else DeskColors.TextSecondary,
+                    modifier = Modifier.size(22.dp)
                 )
             }
-
-            Spacer(modifier = Modifier.width(6.dp))
 
             // Voice Mic Button
             IconButton(
@@ -197,20 +193,15 @@ fun ChatInputBar(
                         // Ignore if speech recognizer unavailable
                     }
                 },
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(Slate800)
+                modifier = Modifier.size(40.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Mic,
                     contentDescription = "Voice Dictation",
-                    tint = ElectricCyan,
-                    modifier = Modifier.size(20.dp)
+                    tint = DeskColors.TextSecondary,
+                    modifier = Modifier.size(22.dp)
                 )
             }
-
-            Spacer(modifier = Modifier.width(6.dp))
 
             // Attach files
             IconButton(
@@ -226,13 +217,13 @@ fun ChatInputBar(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(if (attachments.isNotEmpty()) ElectricCyan.copy(alpha = 0.2f) else Slate800)
+                    .background(if (attachments.isNotEmpty()) DeskColors.Agent.copy(alpha = 0.18f) else Color.Transparent)
             ) {
                 Icon(
                     imageVector = Icons.Default.AttachFile,
                     contentDescription = "Attach a file",
-                    tint = if (attachments.isNotEmpty()) ElectricCyan else Slate400,
-                    modifier = Modifier.size(20.dp)
+                    tint = if (attachments.isNotEmpty()) DeskColors.Agent else DeskColors.TextSecondary,
+                    modifier = Modifier.size(22.dp)
                 )
             }
 
@@ -242,16 +233,14 @@ fun ChatInputBar(
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(Slate800)
-                    .border(1.dp, Slate700, RoundedCornerShape(20.dp))
+                    .deskCardSurface(DeskShapes.card, fill = DeskColors.Raised2)
                     .padding(horizontal = 14.dp, vertical = 10.dp)
             ) {
                 if (text.isEmpty()) {
                     Text(
                         text = if (attachments.isNotEmpty()) "Ask about the file…" else "Talk to AlwaysOnAgent, or type / for commands",
-                        color = Slate500,
-                        fontSize = 14.sp
+                        color = DeskColors.TextMuted,
+                        fontSize = DeskTextSize.base
                     )
                 }
                 // The cursor goes to the end when the text is set from outside (a slash command picked from the
@@ -265,9 +254,9 @@ fun ChatInputBar(
                     onValueChange = { field = it; if (it.text != text) onTextChange(it.text) },
                     textStyle = TextStyle(
                         color = Slate50,
-                        fontSize = 14.sp
+                        fontSize = DeskTextSize.base
                     ),
-                    cursorBrush = SolidColor(ElectricCyan),
+                    cursorBrush = SolidColor(DeskColors.Signal),
                     maxLines = 5,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -342,15 +331,12 @@ fun ChatInputBar(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(
-                            if (canSend) Brush.linearGradient(listOf(UserBubbleBackground, ElectricCyanGlow))
-                            else Brush.linearGradient(listOf(Slate800, Slate800))
-                        )
+                        .background(if (canSend) UserBubbleBackground else DeskColors.Raised2)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Send,
                         contentDescription = "Send Message",
-                        tint = if (canSend) Color.White else Slate600,
+                        tint = if (canSend) Color.White else DeskColors.TextMuted,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -372,9 +358,9 @@ private fun AttachmentChip(a: ChatAttachment, onRemove: () -> Unit) {
     }
     Row(
         modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
+            .clip(DeskShapes.card)
             .background(Slate800)
-            .border(1.dp, borderColor, RoundedCornerShape(12.dp))
+            .border(1.dp, borderColor, DeskShapes.card)
             .padding(start = 6.dp, end = 4.dp, top = 5.dp, bottom = 5.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -384,9 +370,9 @@ private fun AttachmentChip(a: ChatAttachment, onRemove: () -> Unit) {
             Box(
                 modifier = Modifier
                     .size(28.dp)
-                    .clip(RoundedCornerShape(6.dp))
+                    .clip(DeskShapes.small)
                     .background(Slate900)
-                    .border(1.dp, ElectricCyan.copy(alpha = 0.3f), RoundedCornerShape(6.dp)),
+                    .border(1.dp, ElectricCyan.copy(alpha = 0.3f), DeskShapes.small),
                 contentAlignment = Alignment.Center
             ) {
                 AsyncImage(
@@ -411,7 +397,7 @@ private fun AttachmentChip(a: ChatAttachment, onRemove: () -> Unit) {
         }
         Spacer(modifier = Modifier.width(6.dp))
         Column(modifier = Modifier.width(150.dp)) {
-            Text(a.name, color = Slate50, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+            Text(a.name, color = Slate50, fontSize = DeskTextSize.s, fontWeight = FontWeight.SemiBold, maxLines = 1)
             Text(
                 a.statusLine(),
                 color = when {
@@ -419,7 +405,7 @@ private fun AttachmentChip(a: ChatAttachment, onRemove: () -> Unit) {
                     warn -> Amber300
                     else -> Slate400
                 },
-                fontSize = 10.sp,
+                fontSize = DeskTextSize.xs,
                 maxLines = 2
             )
         }

@@ -1,5 +1,6 @@
 package com.example.ui.dialogs
 
+import com.example.ui.theme.DeskTextSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -195,8 +196,8 @@ fun TasksSheet(
                             .padding(horizontal = 10.dp, vertical = 7.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("🔔 Opened from Notification: ", fontSize = 11.sp, color = Sky300)
-                        Text(initialTaskId, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Text("🔔 Opened from Notification: ", fontSize = DeskTextSize.xs, color = Sky300)
+                        Text(initialTaskId, fontSize = DeskTextSize.xs, fontWeight = FontWeight.Bold, color = Color.White)
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                 }
@@ -221,10 +222,10 @@ fun TasksSheet(
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text(
                                         text = "LIVE ACTIVE TASK",
-                                        fontSize = 11.sp,
+                                        fontSize = DeskTextSize.xs,
                                         fontWeight = FontWeight.Bold,
                                         color = AmberPending,
-                                        fontFamily = FontFamily.Monospace
+                                        fontFamily = com.example.ui.theme.JetBrainsMono
                                     )
                                 }
                                 Box(
@@ -243,17 +244,17 @@ fun TasksSheet(
                                 ) {
                                     Text(
                                         text = "ABORT PROCESS ⏹",
-                                        fontSize = 10.sp,
+                                        fontSize = DeskTextSize.xs,
                                         fontWeight = FontWeight.Bold,
                                         color = RoseError,
-                                        fontFamily = FontFamily.Monospace
+                                        fontFamily = com.example.ui.theme.JetBrainsMono
                                     )
                                 }
                             }
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = runningTask.title,
-                                fontSize = 13.sp,
+                                fontSize = DeskTextSize.m,
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color.White,
                                 maxLines = 2,
@@ -287,7 +288,7 @@ fun TasksSheet(
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = if (isCreating) "Hide Mission Dispatch Form" else "Quick-Dispatch New Mission",
-                            fontSize = 12.sp,
+                            fontSize = DeskTextSize.s,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
@@ -299,8 +300,8 @@ fun TasksSheet(
                     OutlinedTextField(
                         value = taskTitle,
                         onValueChange = { taskTitle = it },
-                        placeholder = { Text("Title (e.g. Audit auth middleware...)", color = Slate500, fontSize = 12.sp) },
-                        textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 13.sp),
+                        placeholder = { Text("Title (e.g. Audit auth middleware...)", color = Slate500, fontSize = DeskTextSize.s) },
+                        textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = DeskTextSize.m),
                         modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedContainerColor = Slate800,
@@ -314,8 +315,8 @@ fun TasksSheet(
                     OutlinedTextField(
                         value = taskPrompt,
                         onValueChange = { taskPrompt = it },
-                        placeholder = { Text("Mission instructions and context...", color = Slate500, fontSize = 12.sp) },
-                        textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 13.sp),
+                        placeholder = { Text("Mission instructions and context...", color = Slate500, fontSize = DeskTextSize.s) },
+                        textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = DeskTextSize.m),
                         modifier = Modifier.fillMaxWidth(),
                         maxLines = 3,
                         colors = OutlinedTextFieldDefaults.colors(
@@ -355,7 +356,7 @@ fun TasksSheet(
                             .padding(vertical = 10.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = "Launch Mission Now 🚀", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Text(text = "Launch Mission Now 🚀", color = Color.White, fontWeight = FontWeight.Bold, fontSize = DeskTextSize.s)
                     }
                 }
 
@@ -438,7 +439,7 @@ fun TaskRowCard(
         ) {
             Text(
                 text = task.title,
-                fontSize = 14.sp,
+                fontSize = DeskTextSize.base,
                 fontWeight = FontWeight.SemiBold,
                 color = Slate100,
                 lineHeight = 19.sp,
@@ -457,7 +458,7 @@ fun TaskRowCard(
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = displayStatus,
-                fontSize = 11.sp,
+                fontSize = DeskTextSize.xs,
                 color = if (failed) RoseError else Slate400,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
@@ -472,7 +473,7 @@ fun TaskRowCard(
             Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = preview,
-                fontSize = 12.sp,
+                fontSize = DeskTextSize.s,
                 color = if (failed) Red300 else Slate300,
                 lineHeight = 17.sp,
                 maxLines = if (expanded) Int.MAX_VALUE else 3,
@@ -496,7 +497,7 @@ fun TaskRowCard(
                 ) {
                     Text(
                         text = if (prog != null && prog.label.isNotBlank()) "⚡ ${prog.label}" else "⚡ Running on host",
-                        fontSize = 10.sp,
+                        fontSize = DeskTextSize.xs,
                         fontWeight = FontWeight.SemiBold,
                         color = AmberPending,
                         maxLines = 1,
@@ -505,16 +506,16 @@ fun TaskRowCard(
                     )
                     Text(
                         text = if (prog != null) "${prog.percent}%" else "in flight",
-                        fontSize = 10.sp,
+                        fontSize = DeskTextSize.xs,
                         fontWeight = FontWeight.Bold,
                         color = AmberPending,
-                        fontFamily = FontFamily.Monospace
+                        fontFamily = com.example.ui.theme.JetBrainsMono
                     )
                 }
                 if (prog != null && prog.detail.isNotBlank()) {
                     Text(
                         text = prog.detail,
-                        fontSize = 10.sp,
+                        fontSize = DeskTextSize.xs,
                         color = Slate400,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -566,9 +567,9 @@ fun TaskRowCard(
                 }
                 Text(
                     text = if (whenText == null && source == null) "#${task.id.take(12)} • ${task.engine}" else task.engine,
-                    fontSize = 10.sp,
+                    fontSize = DeskTextSize.xs,
                     color = Slate500,
-                    fontFamily = FontFamily.Monospace,
+                    fontFamily = com.example.ui.theme.JetBrainsMono,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )

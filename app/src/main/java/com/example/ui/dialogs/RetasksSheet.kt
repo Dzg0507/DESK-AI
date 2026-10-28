@@ -188,7 +188,7 @@ private fun RetaskCard(r: Retask, onDelete: () -> Unit) {
         }
         Spacer(modifier = Modifier.height(4.dp))
         Text("Saved ${shortTime(r.created)} · last used ${shortTime(r.lastUsed)}", fontSize = 10.sp, color = Slate500,
-             fontFamily = FontFamily.Monospace)
+             fontFamily = com.example.ui.theme.JetBrainsMono)
         Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             TextButton(onClick = { if (confirmDelete) onDelete() else confirmDelete = true }) {
                 Icon(Icons.Default.DeleteOutline, contentDescription = null, tint = RoseError, modifier = Modifier.size(14.dp))

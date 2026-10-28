@@ -1,5 +1,20 @@
 package com.example.ui.components
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.Icon
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.example.ui.theme.DeskType
+import com.example.ui.theme.DeskColors
+import com.example.ui.theme.DeskTextSize
+import com.example.ui.theme.DeskShapes
 import android.content.Context
 import android.content.Intent
 import android.webkit.MimeTypeMap
@@ -63,8 +78,7 @@ fun MarkdownMedia(url: String, label: String, serverBaseUrl: String = "", authTo
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Slate900, RoundedCornerShape(12.dp))
-            .border(1.dp, Slate800, RoundedCornerShape(12.dp))
+            .deskCardSurface(DeskShapes.card, fill = DeskColors.Raised2)
             .clickable(enabled = !busy) {
                 busy = true
                 scope.launch {
@@ -86,14 +100,60 @@ fun MarkdownMedia(url: String, label: String, serverBaseUrl: String = "", authTo
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(label.take(2).trim().ifEmpty { "▶" }, fontSize = 22.sp, color = ElectricCyan)
+        // "▶ cabin bear.mp4 (12.3 MB)": a thumbnail (videos) or the icon in a tile, the name on one line, the size
+        // with the status
+        val title = label.drop(2).trim().ifEmpty { fileName }
+        val size = Regex("""\s*\(([0-9.]+ [KMG]?B)\)$""").find(title)
+        // A video from the Mini has a still at <its url>/thumbnail; one in the TikTok folder is the videos hub's own
+        // (2026-10-27, Devin: "That video really really needs a thumbnail")
+        val thumbRequest = remember(fullUrl, authToken) {
+            val isVideo = fileName.substringAfterLast('.', "").lowercase() in VIDEO_EXTENSIONS
+            if (!isVideo || "/api/files/m/" !in fullUrl) null
+            else ImageRequest.Builder(context).data(fullUrl.substringBefore('?') + "/thumbnail").crossfade(true).apply {
+                if (authToken.isNotBlank() && com.example.data.remote.MediaAuth.isOwnServer(fullUrl, serverBaseUrl)) {
+                    addHeader("X-HUD-Token", authToken.trim())
+                }
+            }.build()
+        }
+        var thumbShown by remember(thumbRequest) { mutableStateOf(false) }
+        Box(
+            modifier = Modifier
+                .then(if (thumbRequest != null) Modifier.size(width = 72.dp, height = 128.dp) else Modifier.size(40.dp))
+                .clip(DeskShapes.small)
+                .background(DeskColors.Agent.copy(alpha = 0.16f)),
+            contentAlignment = Alignment.Center
+        ) {
+            if (!thumbShown) Text(label.take(2).trim().ifEmpty { "▶" }, fontSize = DeskTextSize.l, color = DeskColors.Agent)
+            if (thumbRequest != null) {
+                AsyncImage(
+                    model = thumbRequest,
+                    contentDescription = "Video thumbnail",
+                    contentScale = ContentScale.Crop,
+                    onSuccess = { thumbShown = true },
+                    modifier = Modifier.matchParentSize()
+                )
+                if (thumbShown) {
+                    Box(
+                        modifier = Modifier.size(32.dp).clip(CircleShape).background(Color.Black.copy(alpha = 0.55f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.White,
+                            modifier = Modifier.size(20.dp))
+                    }
+                }
+            }
+        }
         Column(modifier = Modifier.weight(1f)) {
-            Text(label.drop(2).trim().ifEmpty { fileName }, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
-                color = androidx.compose.ui.graphics.Color.White, maxLines = 2)
-            Text(status, fontSize = 12.sp, color = Slate400)
+            Text(size?.let { title.removeRange(it.range) } ?: title, style = DeskType.body,
+                fontWeight = FontWeight.SemiBold, color = DeskColors.TextPrimary, maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+            Text(listOfNotNull(size?.groupValues?.get(1), status).joinToString("  ·  "), style = DeskType.mono,
+                color = DeskColors.TextSecondary)
         }
     }
 }
+
+private val VIDEO_EXTENSIONS = setOf("mp4", "mov", "mkv", "webm", "avi", "m4v")
 
 private fun download(
     context: Context, url: String, name: String, serverBaseUrl: String, authToken: String,

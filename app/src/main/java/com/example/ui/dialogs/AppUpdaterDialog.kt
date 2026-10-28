@@ -393,7 +393,7 @@ fun AppUpdaterDialog(
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White,
-                                fontFamily = FontFamily.Monospace
+                                fontFamily = com.example.ui.theme.JetBrainsMono
                             )
                         }
                         Box(
@@ -473,7 +473,7 @@ fun AppUpdaterDialog(
                                     text = "Package size: ~$mb MB",
                                     color = Slate400,
                                     fontSize = 10.sp,
-                                    fontFamily = FontFamily.Monospace
+                                    fontFamily = com.example.ui.theme.JetBrainsMono
                                 )
                             }
                         }
@@ -589,7 +589,7 @@ fun AppUpdaterDialog(
                                 text = "$downMb MB / $totMb MB",
                                 fontSize = 11.sp,
                                 color = Slate400,
-                                fontFamily = FontFamily.Monospace
+                                fontFamily = com.example.ui.theme.JetBrainsMono
                             )
                         }
                     } else {
@@ -641,7 +641,7 @@ fun AppUpdaterDialog(
                             unfocusedTextColor = Color.White
                         ),
                         singleLine = true,
-                        textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, fontSize = 12.sp)
+                        textStyle = androidx.compose.ui.text.TextStyle(fontFamily = com.example.ui.theme.JetBrainsMono, fontSize = 12.sp)
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Row(

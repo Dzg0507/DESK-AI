@@ -1,5 +1,7 @@
 package com.example.ui.components
 
+import com.example.ui.theme.DeskTextSize
+import com.example.ui.theme.DeskShapes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -317,11 +319,11 @@ private fun AnnotatedString.Builder.appendInlines(items: List<RichInline>, base:
             appendInlines(item.children, base)
         }
         is RichInline.Code -> withStyle(
-            SpanStyle(fontFamily = FontFamily.Monospace, color = Cyan, background = Cyan.copy(alpha = 0.14f))
+            SpanStyle(fontFamily = com.example.ui.theme.JetBrainsMono, color = Cyan, background = Cyan.copy(alpha = 0.14f))
         ) { append("\u2009${item.text}\u2009") }
         is RichInline.FileRef -> withStyle(
             SpanStyle(
-                fontFamily = FontFamily.Monospace,
+                fontFamily = com.example.ui.theme.JetBrainsMono,
                 color = com.example.ui.theme.Violet300,
                 background = com.example.ui.theme.NeonPurple.copy(alpha = 0.16f)
             )
@@ -376,7 +378,7 @@ fun RichText(text: String, modifier: Modifier = Modifier, baseColor: Color = Sla
     val blocks = remember(text) { parseRichText(text) }
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(5.dp)) {
         if (blocks.isEmpty()) {
-            Text(text, fontSize = 12.sp, color = baseColor, lineHeight = 17.sp)
+            Text(text, fontSize = DeskTextSize.s, color = baseColor, lineHeight = 17.sp)
         }
         blocks.forEachIndexed { index, block -> RichBlockView(block, baseColor, first = index == 0) }
     }
@@ -398,7 +400,7 @@ private fun RichBlockView(block: RichBlock, base: Color, first: Boolean) {
         }
         is RichBlock.Paragraph -> {
             val str = remember(block, base) { richInlineString(block.text, base) }
-            Text(str, fontSize = 12.sp, color = base, lineHeight = 17.sp)
+            Text(str, fontSize = DeskTextSize.s, color = base, lineHeight = 17.sp)
         }
         is RichBlock.Bullet -> ListRow(marker = "•", markerColor = Cyan, depth = block.depth, text = block.text, base = base)
         is RichBlock.Numbered -> ListRow(
@@ -407,12 +409,12 @@ private fun RichBlockView(block: RichBlock, base: Color, first: Boolean) {
         is RichBlock.Code -> Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(8.dp))
+                .clip(DeskShapes.small)
                 .background(com.example.ui.theme.CodeBlockBackground)
-                .border(1.dp, Slate700, RoundedCornerShape(8.dp))
+                .border(1.dp, Slate700, DeskShapes.small)
                 .padding(8.dp)
         ) {
-            Text(block.code, fontSize = 11.sp, fontFamily = FontFamily.Monospace, color = Slate200, lineHeight = 15.sp)
+            Text(block.code, fontSize = DeskTextSize.xs, fontFamily = com.example.ui.theme.JetBrainsMono, color = Slate200, lineHeight = 15.sp)
         }
         is RichBlock.TagLine -> {
             val str = remember(block) { richInlineString(block.text, Slate400) }
@@ -420,7 +422,7 @@ private fun RichBlockView(block: RichBlock, base: Color, first: Boolean) {
             Row(verticalAlignment = Alignment.Top) {
                 Pill(block.tag, c, fontSize = 9)
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(str, fontSize = 10.sp, color = Slate400, lineHeight = 14.sp, modifier = Modifier.weight(1f))
+                Text(str, fontSize = DeskTextSize.xs, color = Slate400, lineHeight = 14.sp, modifier = Modifier.weight(1f))
             }
         }
         is RichBlock.DiffStatFile -> {
@@ -438,7 +440,7 @@ private fun RichBlockView(block: RichBlock, base: Color, first: Boolean) {
                     }
                 }
             }
-            Text(str, fontSize = 11.sp, fontFamily = FontFamily.Monospace, lineHeight = 15.sp)
+            Text(str, fontSize = DeskTextSize.xs, fontFamily = com.example.ui.theme.JetBrainsMono, lineHeight = 15.sp)
         }
         is RichBlock.DiffStatSummary -> {
             val str = remember(block) {
@@ -458,7 +460,7 @@ private fun RichBlockView(block: RichBlock, base: Color, first: Boolean) {
                     }
                 }
             }
-            Text(str, fontSize = 11.sp, fontFamily = FontFamily.Monospace, lineHeight = 15.sp)
+            Text(str, fontSize = DeskTextSize.xs, fontFamily = com.example.ui.theme.JetBrainsMono, lineHeight = 15.sp)
         }
         is RichBlock.BranchBadge -> {
             val c = when (block.pushed) { true -> Emerald; false -> Amber; null -> Cyan }
@@ -477,9 +479,9 @@ private fun RichBlockView(block: RichBlock, base: Color, first: Boolean) {
 private fun ListRow(marker: String, markerColor: Color, depth: Int, text: String, base: Color) {
     val str = remember(text, base) { richInlineString(text, base) }
     Row(modifier = Modifier.fillMaxWidth().padding(start = (depth * 12).dp), verticalAlignment = Alignment.Top) {
-        Text(marker, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = markerColor, lineHeight = 17.sp)
+        Text(marker, fontSize = DeskTextSize.s, fontWeight = FontWeight.Bold, color = markerColor, lineHeight = 17.sp)
         Spacer(modifier = Modifier.width(6.dp))
-        Text(str, fontSize = 12.sp, color = base, lineHeight = 17.sp, modifier = Modifier.weight(1f))
+        Text(str, fontSize = DeskTextSize.s, color = base, lineHeight = 17.sp, modifier = Modifier.weight(1f))
     }
 }
 
@@ -488,16 +490,16 @@ private fun ListRow(marker: String, markerColor: Color, depth: Int, text: String
 fun Pill(text: String, color: Color, fontSize: Int = 10, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(6.dp))
+            .clip(DeskShapes.small)
             .background(color.copy(alpha = 0.15f))
-            .border(1.dp, color.copy(alpha = 0.40f), RoundedCornerShape(6.dp))
+            .border(1.dp, color.copy(alpha = 0.40f), DeskShapes.small)
             .padding(horizontal = 6.dp, vertical = 1.dp)
     ) {
         Text(
             text,
             fontSize = fontSize.sp,
             fontWeight = FontWeight.Bold,
-            fontFamily = FontFamily.Monospace,
+            fontFamily = com.example.ui.theme.JetBrainsMono,
             color = color,
             lineHeight = (fontSize + 4).sp
         )

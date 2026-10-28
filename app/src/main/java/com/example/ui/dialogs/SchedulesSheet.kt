@@ -316,7 +316,7 @@ private fun ScheduleCard(s: AgentSchedule, onToggle: (Boolean) -> Unit, onRunNow
         }
         if (s.lastRunAt != null) {
             Text("Last: ${formatRun(s.lastRunAt)} · ${s.lastResult ?: ""}", fontSize = 10.sp, color = Faint,
-                fontFamily = FontFamily.Monospace, maxLines = 2)
+                fontFamily = com.example.ui.theme.JetBrainsMono, maxLines = 2)
         }
         Spacer(modifier = Modifier.height(4.dp))
         Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -438,7 +438,7 @@ private fun ScheduleForm(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = String.format(Locale.US, "%02d:%02d", hour, minute),
-                        fontSize = 26.sp, fontWeight = FontWeight.Bold, color = Color.White, fontFamily = FontFamily.Monospace,
+                        fontSize = 26.sp, fontWeight = FontWeight.Bold, color = Color.White, fontFamily = com.example.ui.theme.JetBrainsMono,
                         modifier = Modifier.clip(RoundedCornerShape(10.dp)).background(Card).clickable { showTimePicker = true }
                             .padding(horizontal = 14.dp, vertical = 6.dp)
                     )
@@ -466,7 +466,7 @@ private fun ScheduleForm(
                 OutlinedTextField(
                     value = cronText, onValueChange = { cronText = it }, colors = fieldColors, singleLine = true,
                     placeholder = { Text("minute hour day month weekday, e.g. 0 */3 * * *", color = Faint, fontSize = 12.sp) },
-                    textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, color = Color.White, fontSize = 14.sp),
+                    textStyle = androidx.compose.ui.text.TextStyle(fontFamily = com.example.ui.theme.JetBrainsMono, color = Color.White, fontSize = 14.sp),
                     modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp)
                 )
             }
@@ -489,7 +489,7 @@ private fun ScheduleForm(
                     else -> {
                         Text("Runs ${p.description}", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = EmeraldConnected)
                         Text("Next: " + p.nextRuns.joinToString("  ·  ") { formatRun(it) }, fontSize = 10.sp, color = Muted,
-                            fontFamily = FontFamily.Monospace)
+                            fontFamily = com.example.ui.theme.JetBrainsMono)
                     }
                 }
             }

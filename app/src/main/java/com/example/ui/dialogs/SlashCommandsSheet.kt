@@ -159,7 +159,7 @@ private fun CommandRow(c: SlashCommand, color: Color, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(c.usage, fontSize = 13.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = color)
+            Text(c.usage, fontSize = 13.sp, fontWeight = FontWeight.Bold, fontFamily = com.example.ui.theme.JetBrainsMono, color = color)
             Spacer(modifier = Modifier.height(2.dp))
             Text(c.description, fontSize = 12.sp, color = Slate300)
         }
@@ -171,7 +171,7 @@ private fun CommandRow(c: SlashCommand, color: Color, onClick: () -> Unit) {
                 .border(1.dp, color.copy(alpha = 0.35f), DeskShapes.chip)
                 .padding(horizontal = 8.dp, vertical = 3.dp)
         ) {
-            Text(if (c.run) "RUN" else "USE", fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = color)
+            Text(if (c.run) "RUN" else "USE", fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = com.example.ui.theme.JetBrainsMono, color = color)
         }
     }
 }
@@ -222,7 +222,7 @@ fun SlashSuggestions(
                             modifier = Modifier.fillMaxWidth().clickable { onPick(c) }.padding(horizontal = 12.dp, vertical = 7.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(c.usage, fontSize = 13.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace,
+                            Text(c.usage, fontSize = 13.sp, fontWeight = FontWeight.Bold, fontFamily = com.example.ui.theme.JetBrainsMono,
                                  color = categoryColor(cat))
                             Spacer(modifier = Modifier.width(10.dp))
                             Text(c.description, fontSize = 12.sp, color = Slate300, maxLines = 1,
@@ -265,7 +265,7 @@ private fun RetaskSuggestions(shown: List<com.example.data.model.Retask>, onPick
                          overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(if (r.kind == "info") "reads fresh" else "${r.steps} step${if (r.steps == 1) "" else "s"}",
-                         fontSize = 10.sp, fontFamily = FontFamily.Monospace, color = violet)
+                         fontSize = 10.sp, fontFamily = com.example.ui.theme.JetBrainsMono, color = violet)
                 }
             }
         }

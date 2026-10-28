@@ -29,6 +29,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -38,17 +43,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.ui.theme.AmberPending
 import com.example.ui.theme.CardBorder
-import com.example.ui.theme.CardGradient
+import com.example.ui.theme.DeskColors
+import com.example.ui.theme.DeskType
+import com.example.ui.theme.JetBrainsMono
 import com.example.ui.theme.DeskRadius
 import com.example.ui.theme.DeskShapes
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldConnected
 import com.example.ui.theme.RoseError
-import com.example.ui.theme.SheetBorderGradient
-import com.example.ui.theme.SheetGradient
 import com.example.ui.theme.Slate100
 import com.example.ui.theme.Slate400
 import com.example.ui.theme.Slate500
@@ -65,19 +69,38 @@ import java.util.Locale
 // Surfaces
 // ---------------------------------------------------------------------------------------------------------------
 
-/** The look of every sheet/dialog body: rounded, slate→navy gradient, hairline lit border. */
-fun Modifier.deskSheet(): Modifier = this
-    .clip(DeskShapes.sheet)
-    .circuitTexture(glow = 0.75f)          // the Circuit look (2026-10-11): texture and glows, no lightning
-    .border(1.dp, SheetBorderGradient, DeskShapes.sheet)
+/**
+ * Every card's surface (2026-10-27): the raised near-black with a 1 dp pale-mint hairline that is brighter along the
+ * top edge, like glass catching light. The bright part fades over a fixed [catchlight] (not a share of the height),
+ * so a tall card doesn't get a grey wash down its sides. Shadows don't show on near-black; this edge does.
+ */
+fun Modifier.deskCardSurface(shape: Shape = DeskShapes.card, fill: Color = DeskColors.Raised,
+                             catchlight: Dp = 24.dp): Modifier = this
+    .clip(shape)
+    .background(fill)
+    .drawWithCache {
+        val stroke = 1.dp.toPx()
+        val outline = shape.createOutline(size.copy(width = size.width - stroke, height = size.height - stroke),
+            layoutDirection, this)
+        val brush = Brush.verticalGradient(
+            0f to DeskColors.HairlineTop,
+            (catchlight.toPx() / size.height).coerceIn(0.01f, 1f) to DeskColors.Hairline,
+            1f to DeskColors.Hairline,
+        )
+        onDrawWithContent {
+            drawContent()
+            translate(stroke / 2, stroke / 2) { drawOutline(outline, brush, style = Stroke(stroke)) }
+        }
+    }
 
-/** A standard card: rounded 12, slate gradient fill, slate-700 hairline (or [borderColor]). */
+/** The look of every sheet/dialog body: the card surface at sheet size. The circuit texture stays on the chat. */
+fun Modifier.deskSheet(): Modifier = this.deskCardSurface(DeskShapes.sheet, catchlight = 40.dp)
+
+/** A standard card. A [borderColor] other than the default draws that color instead of the hairline (selected, error). */
 fun Modifier.deskCard(borderColor: Color = CardBorder, radius: Dp = DeskRadius.card): Modifier {
     val shape = RoundedCornerShape(radius)
-    return this
-        .clip(shape)
-        .background(CardGradient)
-        .border(1.dp, borderColor, shape)
+    return if (borderColor == CardBorder) this.deskCardSurface(shape)
+    else this.clip(shape).background(DeskColors.Raised).border(1.dp, borderColor.copy(alpha = 0.55f), shape)
 }
 
 /** A tinted panel (banners, error boxes): [color] at low alpha with a matching border. */
@@ -142,10 +165,9 @@ fun SheetHeader(
         if (icon != null) {
             Box(
                 modifier = Modifier
-                    .size(34.dp)
-                    .clip(CircleShape)
-                    .background(Brush.radialGradient(listOf(accent.copy(alpha = 0.32f), accent.copy(alpha = 0.08f))))
-                    .border(1.dp, accent.copy(alpha = 0.35f), CircleShape),
+                    .size(36.dp)
+                    .clip(DeskShapes.small)
+                    .background(accent.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(imageVector = icon, contentDescription = null, tint = accent, modifier = Modifier.size(18.dp))
@@ -155,20 +177,16 @@ fun SheetHeader(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Bold,
-                color = com.example.ui.theme.PhosphorMint,
-                // lit like a backlit key
-                style = androidx.compose.ui.text.TextStyle(shadow = androidx.compose.ui.graphics.Shadow(
-                    color = com.example.ui.theme.TerminalGreen.copy(alpha = 0.75f), blurRadius = 14f)),
+                style = DeskType.title,
+                color = DeskColors.TextPrimary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             if (!subtitle.isNullOrBlank()) {
                 Text(
                     text = subtitle,
-                    fontSize = 11.sp,
-                    color = Slate400,
+                    style = DeskType.label,
+                    color = DeskColors.TextSecondary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -195,10 +213,8 @@ fun SectionLabel(text: String, modifier: Modifier = Modifier, count: Int? = null
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = text.uppercase(),
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Bold,
-            color = color,
-            letterSpacing = 1.sp
+            style = DeskType.overline,
+            color = color
         )
         if (count != null) {
             Spacer(modifier = Modifier.width(6.dp))
@@ -208,7 +224,7 @@ fun SectionLabel(text: String, modifier: Modifier = Modifier, count: Int? = null
                     .background(Slate800)
                     .padding(horizontal = 6.dp, vertical = 1.dp)
             ) {
-                Text(count.toString(), fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Slate400)
+                Text(count.toString(), style = DeskType.caption, color = Slate400)
             }
         }
     }
@@ -224,9 +240,8 @@ fun StatusPill(text: String, color: Color, modifier: Modifier = Modifier, showDo
     Row(
         modifier = modifier
             .clip(DeskShapes.pill)
-            .background(color.copy(alpha = 0.14f))
-            .border(1.dp, color.copy(alpha = 0.35f), DeskShapes.pill)
-            .padding(horizontal = 8.dp, vertical = 2.dp),
+            .background(color.copy(alpha = 0.12f))
+            .padding(horizontal = 8.dp, vertical = 3.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (showDot) {
@@ -234,11 +249,9 @@ fun StatusPill(text: String, color: Color, modifier: Modifier = Modifier, showDo
             Spacer(modifier = Modifier.width(5.dp))
         }
         Text(
-            text = text.uppercase(),
-            fontSize = 9.sp,
-            fontWeight = FontWeight.Bold,
+            text = text,
+            style = DeskType.caption,
             color = color,
-            letterSpacing = 0.5.sp,
             maxLines = 1
         )
     }
@@ -257,10 +270,10 @@ fun TagChip(
     Row(
         modifier = modifier
             .clip(DeskShapes.chip)
-            .background(color.copy(alpha = if (active) 0.24f else 0.10f))
-            .border(1.dp, color.copy(alpha = if (active) 0.55f else 0.25f), DeskShapes.chip)
+            .background(if (active) color.copy(alpha = 0.18f) else DeskColors.Raised2)
+            .border(1.dp, if (active) color.copy(alpha = 0.45f) else DeskColors.Hairline, DeskShapes.chip)
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
-            .padding(horizontal = 7.dp, vertical = 2.dp),
+            .padding(horizontal = 8.dp, vertical = 3.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (icon != null) {
@@ -269,8 +282,7 @@ fun TagChip(
         }
         Text(
             text = text,
-            fontSize = 10.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = DeskType.label,
             color = color,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -306,10 +318,10 @@ fun EmptyState(
             Icon(imageVector = icon, contentDescription = null, tint = accent, modifier = Modifier.size(26.dp))
         }
         Spacer(modifier = Modifier.height(12.dp))
-        Text(title, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Slate100, textAlign = TextAlign.Center)
+        Text(title, style = DeskType.titleSmall, color = Slate100, textAlign = TextAlign.Center)
         if (!message.isNullOrBlank()) {
             Spacer(modifier = Modifier.height(4.dp))
-            Text(message, fontSize = 12.sp, color = Slate500, textAlign = TextAlign.Center, lineHeight = 17.sp)
+            Text(message, style = DeskType.bodySmall, color = Slate500, textAlign = TextAlign.Center)
         }
     }
 }
@@ -323,7 +335,7 @@ fun LoadingState(label: String, modifier: Modifier = Modifier, color: Color = El
     ) {
         CircularProgressIndicator(modifier = Modifier.size(24.dp), color = color, strokeWidth = 2.dp)
         Spacer(modifier = Modifier.height(10.dp))
-        Text(label, fontSize = 12.sp, color = Slate400)
+        Text(label, style = DeskType.label, color = Slate400)
     }
 }
 
@@ -339,7 +351,7 @@ fun StatusNote(text: String, modifier: Modifier = Modifier, color: Color = Elect
     ) {
         Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(color))
         Spacer(modifier = Modifier.width(8.dp))
-        Text(text, fontSize = 11.sp, color = color, lineHeight = 15.sp)
+        Text(text, style = DeskType.label, color = color)
     }
 }
 
@@ -403,4 +415,4 @@ fun shortSource(source: String?): String? {
 }
 
 /** Monospace style helper for ids and numbers. */
-val MonoFamily: FontFamily = FontFamily.Monospace
+val MonoFamily: FontFamily = JetBrainsMono

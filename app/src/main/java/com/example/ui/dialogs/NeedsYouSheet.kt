@@ -1,5 +1,6 @@
 package com.example.ui.dialogs
 
+import com.example.ui.theme.DeskTextSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.CheckCircle
@@ -159,18 +160,18 @@ private fun RequestCard(
             .border(1.dp, AmberPending.copy(alpha = 0.7f), DeskShapes.card).padding(14.dp)
     ) {
         req.site()?.let {
-            Text("🌐 $it", color = Sky300, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+            Text("🌐 $it", color = Sky300, fontSize = DeskTextSize.m, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(6.dp))
         }
         if (bitmap != null) {
             Image(bitmap = bitmap!!.asImageBitmap(), contentDescription = "What the task sees",
                   contentScale = ContentScale.FillWidth,
-                  modifier = Modifier.fillMaxWidth().heightIn(max = shotMax).clip(RoundedCornerShape(8.dp)))
+                  modifier = Modifier.fillMaxWidth().heightIn(max = shotMax).clip(DeskShapes.small))
             Spacer(Modifier.height(8.dp))
         } else if (req.screenshotPath != null) {
             CircularProgressIndicator(modifier = Modifier.padding(8.dp))
         }
-        Text(req.question, color = Slate50, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+        Text(req.question, color = Slate50, fontSize = DeskTextSize.l, fontWeight = FontWeight.Medium)
         Spacer(Modifier.height(10.dp))
         when (req.kind) {
             "approve" -> Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -194,14 +195,14 @@ private fun RequestCard(
                     trailingIcon = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             androidx.compose.material3.TextButton(onClick = { shown = !shown }) {
-                                Text(if (shown) "Hide" else "Show", color = Slate400, fontSize = 12.sp)
+                                Text(if (shown) "Hide" else "Show", color = Slate400, fontSize = DeskTextSize.s)
                             }
                             if (landscape) SendArrow(!sending && reply.isNotEmpty()) { val v = reply; reply = ""; send(v) }
                         }
                     }
                 )
                 Text("🔒 Typed straight into the outlined box on the Mini. The AI never sees it, and it isn't saved.",
-                     color = Slate400, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
+                     color = Slate400, fontSize = DeskTextSize.s, modifier = Modifier.padding(top = 4.dp))
                 if (!landscape) {
                     Spacer(Modifier.height(6.dp))
                     Button(onClick = { val v = reply; reply = ""; send(v) }, enabled = !sending && reply.isNotEmpty(),
@@ -237,8 +238,8 @@ private fun RequestCard(
         androidx.compose.material3.TextButton(onClick = { onTakeOver(req.id) }, enabled = !sending) {
             Text("🖐 Take over and do it yourself", color = Sky300)
         }
-        if (sending) Text("Sending…", color = Slate400, fontSize = 12.sp)
-        error?.let { Text("Couldn't send: $it", color = Red300, fontSize = 12.sp) }
+        if (sending) Text("Sending…", color = Slate400, fontSize = DeskTextSize.s)
+        error?.let { Text("Couldn't send: $it", color = Red300, fontSize = DeskTextSize.s) }
     }
 }
 

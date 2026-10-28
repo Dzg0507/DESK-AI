@@ -333,7 +333,7 @@ fun ReposScreen(
                             SelectionContainer {
                                 Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState())
                                     .horizontalScroll(rememberScrollState()).padding(12.dp)) {
-                                    Text(text, color = Slate200, fontFamily = FontFamily.Monospace, fontSize = 12.sp)
+                                    Text(text, color = Slate200, fontFamily = com.example.ui.theme.JetBrainsMono, fontSize = 12.sp)
                                 }
                             }
                         }

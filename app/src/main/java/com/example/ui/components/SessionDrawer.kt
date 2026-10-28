@@ -1,5 +1,6 @@
 package com.example.ui.components
 
+import com.example.ui.theme.DeskTextSize
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.border
 import androidx.compose.runtime.remember
@@ -83,21 +84,21 @@ fun SessionDrawerContent(
                     .background(Brush.linearGradient(listOf(ElectricCyan, NeonIndigo))),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = "⚡", fontSize = 18.sp)
+                Text(text = "⚡", fontSize = DeskTextSize.xl)
             }
             Spacer(modifier = Modifier.width(10.dp))
             Column {
                 Text(
                     text = "AlwaysOnAgent",
-                    fontSize = 16.sp,
+                    fontSize = DeskTextSize.l,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
                 Text(
                     text = "DESKTOP BRIDGE",
-                    fontSize = 10.sp,
+                    fontSize = DeskTextSize.xs,
                     color = ElectricCyan,
-                    fontFamily = FontFamily.Monospace,
+                    fontFamily = com.example.ui.theme.JetBrainsMono,
                     letterSpacing = 0.5.sp
                 )
             }
@@ -123,7 +124,7 @@ fun SessionDrawerContent(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "New Conversation",
-                    fontSize = 13.sp,
+                    fontSize = DeskTextSize.m,
                     fontWeight = FontWeight.SemiBold,
                     color = Color.White
                 )
@@ -181,7 +182,7 @@ fun SessionDrawerContent(
                             Column {
                                 Text(
                                     text = session.title,
-                                    fontSize = 13.sp,
+                                    fontSize = DeskTextSize.m,
                                     color = if (isActive) Color.White else Slate300,
                                     fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal,
                                     maxLines = 1,
@@ -189,9 +190,9 @@ fun SessionDrawerContent(
                                 )
                                 Text(
                                     text = timeStr,
-                                    fontSize = 10.sp,
+                                    fontSize = DeskTextSize.xs,
                                     color = Slate500,
-                                    fontFamily = FontFamily.Monospace
+                                    fontFamily = com.example.ui.theme.JetBrainsMono
                                 )
                             }
                         }
@@ -226,13 +227,13 @@ fun SessionDrawerContent(
             Column {
                 Text(
                     text = "AlwaysOnAgent (v2.1)",
-                    fontSize = 11.sp,
+                    fontSize = DeskTextSize.xs,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
                 Text(
                     text = "Autonomous AI Worker & Desktop Bridge",
-                    fontSize = 9.sp,
+                    fontSize = DeskTextSize.xs,
                     color = Slate400
                 )
             }

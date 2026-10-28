@@ -1,5 +1,7 @@
 package com.example.ui.components
 
+import com.example.ui.theme.DeskTextSize
+import com.example.ui.theme.DeskShapes
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -110,7 +112,7 @@ fun MarkdownContent(
                 is MarkdownElement.Paragraph -> {
                     Text(
                         text = buildStyledInlineMarkdown(element.text, textColor),
-                        fontSize = 15.sp,
+                        fontSize = DeskTextSize.l,
                         color = textColor,
                         lineHeight = 22.sp
                     )
@@ -122,14 +124,14 @@ fun MarkdownContent(
                     ) {
                         Text(
                             text = "•",
-                            fontSize = 15.sp,
+                            fontSize = DeskTextSize.l,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.padding(end = 8.dp)
                         )
                         Text(
                             text = buildStyledInlineMarkdown(element.text, textColor),
-                            fontSize = 15.sp,
+                            fontSize = DeskTextSize.l,
                             color = textColor,
                             lineHeight = 22.sp,
                             modifier = Modifier.weight(1f)
@@ -201,9 +203,9 @@ fun MarkdownImage(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(DeskShapes.card)
             .background(Slate900)
-            .border(1.dp, Slate800, RoundedCornerShape(12.dp))
+            .border(1.dp, Slate800, DeskShapes.card)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Box(
@@ -225,13 +227,13 @@ fun MarkdownImage(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(8.dp)
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(DeskShapes.card)
                         .background(Color.Black.copy(alpha = 0.65f))
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Text(
                         text = "🔍 Tap to Zoom",
-                        fontSize = 11.sp,
+                        fontSize = DeskTextSize.xs,
                         fontWeight = FontWeight.SemiBold,
                         color = ElectricCyan
                     )
@@ -246,7 +248,7 @@ fun MarkdownImage(
             ) {
                 Text(
                     text = alt.ifBlank { "Generated Image" },
-                    fontSize = 11.sp,
+                    fontSize = DeskTextSize.xs,
                     color = Slate400,
                     modifier = Modifier.weight(1f),
                     maxLines = 1
@@ -254,7 +256,7 @@ fun MarkdownImage(
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(
                         text = "🔍 Zoom & Pan",
-                        fontSize = 11.sp,
+                        fontSize = DeskTextSize.xs,
                         fontWeight = FontWeight.SemiBold,
                         color = ElectricCyan,
                         modifier = Modifier
@@ -263,7 +265,7 @@ fun MarkdownImage(
                     )
                     Text(
                         text = "🌐 Browser",
-                        fontSize = 11.sp,
+                        fontSize = DeskTextSize.xs,
                         color = Slate300,
                         modifier = Modifier
                             .clickable {
@@ -302,9 +304,9 @@ fun CodeBlockCard(language: String, code: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
+            .clip(DeskShapes.small)
             .background(CodeBlockBackground)
-            .border(1.dp, SlateDarkBorder, RoundedCornerShape(10.dp))
+            .border(1.dp, SlateDarkBorder, DeskShapes.small)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             // Header Bar
@@ -319,9 +321,9 @@ fun CodeBlockCard(language: String, code: String) {
                 Text(
                     text = (if (language.isBlank()) "CODE" else language.uppercase()),
                     color = ElectricCyan,
-                    fontSize = 11.sp,
+                    fontSize = DeskTextSize.xs,
                     fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.Monospace,
+                    fontFamily = com.example.ui.theme.JetBrainsMono,
                     letterSpacing = 1.sp
                 )
                 IconButton(
@@ -356,8 +358,8 @@ fun CodeBlockCard(language: String, code: String) {
             ) {
                 Text(
                     text = code,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 13.sp,
+                    fontFamily = com.example.ui.theme.JetBrainsMono,
+                    fontSize = DeskTextSize.m,
                     color = Slate200,
                     lineHeight = 19.sp
                 )
@@ -543,10 +545,10 @@ fun buildStyledInlineMarkdown(text: String, defaultColor: Color): AnnotatedStrin
                     val codeContent = text.substring(cursor + 1, endCode)
                     withStyle(
                         SpanStyle(
-                            fontFamily = FontFamily.Monospace,
+                            fontFamily = com.example.ui.theme.JetBrainsMono,
                             background = Color(0x3338BDF8),
                             color = ElectricCyan,
-                            fontSize = 13.sp
+                            fontSize = DeskTextSize.m
                         )
                     ) {
                         append(" $codeContent ")

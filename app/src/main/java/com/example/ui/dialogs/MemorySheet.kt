@@ -1,5 +1,6 @@
 package com.example.ui.dialogs
 
+import com.example.ui.theme.DeskTextSize
 import com.example.ui.components.SectionLabel
 import com.example.ui.components.EmptyState
 import com.example.ui.components.LoadingState
@@ -136,8 +137,8 @@ fun MemorySheet(
                     OutlinedTextField(
                         value = newFactText,
                         onValueChange = { newFactText = it },
-                        placeholder = { Text("Remember something (e.g. My preferred editor is VS Code)...", color = Slate500, fontSize = 12.sp) },
-                        textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 12.sp),
+                        placeholder = { Text("Remember something (e.g. My preferred editor is VS Code)...", color = Slate500, fontSize = DeskTextSize.s) },
+                        textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = DeskTextSize.s),
                         modifier = Modifier.weight(1f),
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
@@ -189,7 +190,7 @@ fun MemorySheet(
                             ) {
                                 Text(
                                     text = "🧠 PROFILE",
-                                    fontSize = 11.sp,
+                                    fontSize = DeskTextSize.xs,
                                     fontWeight = FontWeight.Bold,
                                     color = ElectricCyan,
                                     letterSpacing = 0.5.sp
@@ -197,7 +198,7 @@ fun MemorySheet(
                                 Spacer(modifier = Modifier.height(6.dp))
                                 Text(
                                     text = profile,
-                                    fontSize = 13.sp,
+                                    fontSize = DeskTextSize.m,
                                     color = Slate200,
                                     lineHeight = 19.sp
                                 )
@@ -263,21 +264,21 @@ fun MemorySheet(
                                 Column(modifier = Modifier.fillMaxWidth()) {
                                     Text(
                                         text = loop.content,
-                                        fontSize = 13.sp,
+                                        fontSize = DeskTextSize.m,
                                         color = Slate100,
                                         lineHeight = 18.sp
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
                                         text = "Waiting on: ${loop.waitingOn}",
-                                        fontSize = 11.sp,
+                                        fontSize = DeskTextSize.xs,
                                         color = AmberPending,
                                         fontWeight = FontWeight.Medium
                                     )
                                     loop.checkAfter?.let { after ->
                                         Text(
                                             text = "Check after: $after",
-                                            fontSize = 10.sp,
+                                            fontSize = DeskTextSize.xs,
                                             color = Slate400,
                                             modifier = Modifier.padding(top = 2.dp)
                                         )
@@ -294,7 +295,7 @@ fun MemorySheet(
                                 loadFailed -> "COULDN'T REACH THE AGENT — SHOWING WHAT WAS LOADED (${facts.size})"
                                 else -> "STORED FACTS (${facts.size})"
                             },
-                            fontSize = 10.sp,
+                            fontSize = DeskTextSize.xs,
                             fontWeight = FontWeight.Bold,
                             color = if (loadFailed) AmberPending else Slate400,
                             letterSpacing = 1.sp,
@@ -328,7 +329,7 @@ fun MemorySheet(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 if (fact.pinned) {
-                                    Text(text = "📌", fontSize = 12.sp, modifier = Modifier.padding(end = 6.dp))
+                                    Text(text = "📌", fontSize = DeskTextSize.s, modifier = Modifier.padding(end = 6.dp))
                                 } else {
                                     Box(
                                         modifier = Modifier
@@ -341,14 +342,14 @@ fun MemorySheet(
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = fact.content,
-                                        fontSize = 13.sp,
+                                        fontSize = DeskTextSize.m,
                                         color = Slate100,
                                         lineHeight = 18.sp
                                     )
                                     fact.origin()?.let { origin ->
                                         Text(
                                             text = origin,
-                                            fontSize = 11.sp,
+                                            fontSize = DeskTextSize.xs,
                                             color = Slate400,
                                             fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
                                             lineHeight = 15.sp,
@@ -365,9 +366,9 @@ fun MemorySheet(
                                         }
                                         Text(
                                             text = "#${fact.id}",
-                                            fontSize = 10.sp,
+                                            fontSize = DeskTextSize.xs,
                                             color = Slate500,
-                                            fontFamily = FontFamily.Monospace
+                                            fontFamily = com.example.ui.theme.JetBrainsMono
                                         )
                                     }
                                 }
@@ -414,7 +415,7 @@ fun MemorySheet(
                                 Column(modifier = Modifier.fillMaxWidth()) {
                                     Text(
                                         text = fact.content,
-                                        fontSize = 12.sp,
+                                        fontSize = DeskTextSize.s,
                                         color = Slate400,
                                         lineHeight = 17.sp
                                     )
@@ -428,9 +429,9 @@ fun MemorySheet(
                                         }
                                         Text(
                                             text = "#${fact.id} · past version",
-                                            fontSize = 10.sp,
+                                            fontSize = DeskTextSize.xs,
                                             color = Slate500,
-                                            fontFamily = FontFamily.Monospace
+                                            fontFamily = com.example.ui.theme.JetBrainsMono
                                         )
                                     }
                                 }
@@ -455,18 +456,18 @@ private fun RecipeCard(recipe: RecipeItem, onTogglePin: () -> Unit, onRestore: (
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "When ${recipe.whenText.trimEnd('.')}:",
-                    fontSize = 11.sp,
+                    fontSize = DeskTextSize.xs,
                     fontWeight = FontWeight.Bold,
                     color = if (recipe.retired) Slate500 else ElectricCyan
                 )
                 Text(
                     text = recipe.doText,
-                    fontSize = 12.sp,
+                    fontSize = DeskTextSize.s,
                     color = if (recipe.retired) Slate500 else Slate100
                 )
                 Text(
                     text = recipe.origin(),
-                    fontSize = 11.sp,
+                    fontSize = DeskTextSize.xs,
                     color = Slate400,
                     fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
                     lineHeight = 15.sp,
@@ -474,22 +475,22 @@ private fun RecipeCard(recipe: RecipeItem, onTogglePin: () -> Unit, onRestore: (
                 )
                 Text(
                     text = "${recipe.area} • ${recipe.track()}",
-                    fontSize = 10.sp,
+                    fontSize = DeskTextSize.xs,
                     color = Slate500,
-                    fontFamily = FontFamily.Monospace
+                    fontFamily = com.example.ui.theme.JetBrainsMono
                 )
             }
             if (recipe.retired) {
                 Text(
                     text = "↺",
-                    fontSize = 15.sp,
+                    fontSize = DeskTextSize.l,
                     color = Slate400,
                     modifier = Modifier.clickable(onClick = onRestore).padding(6.dp)
                 )
             } else {
                 Text(
                     text = "📌",
-                    fontSize = 13.sp,
+                    fontSize = DeskTextSize.m,
                     color = Color.White.copy(alpha = if (recipe.pinned) 1f else 0.35f),
                     modifier = Modifier.clickable(onClick = onTogglePin).padding(6.dp)
                 )
