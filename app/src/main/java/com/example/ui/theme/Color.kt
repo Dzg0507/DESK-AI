@@ -137,6 +137,16 @@ object DeskColors {
     val Glass = Color(0x14FFFFFF)             // white at 8%
     val GlassStrong = Color(0x24FFFFFF)       // white at 14%: buttons over photos
     val GlassBorder = Color(0x26FFFFFF)       // white at 15%
+    val TodayGlassFill = Color(0xCC0B110E)    // smoked-glass card fill on Today
+    val TodayGlassBorderTop = Color(0x28D8F3DC)    // 1 dp top specular edge on Today cards
+    val TodayGlassBorderBottom = Color(0x0FD8F3DC) // 1 dp bottom edge on Today cards
+    val SegmentActiveTop = Color(0x3838E58B)  // active segmented pill top gradient fill
+    val SegmentActiveBottom = Color(0x18145232) // active segmented pill bottom gradient fill
+    val SegmentActiveRim = Color(0x6680FFBF)  // active segmented pill 1 dp top specular rim
+    val TopNavIcon = Color(0xFF9BA8A1)        // unboxed menu & quick-action icons
+    val BentoLabel = Color(0xFF7A8F85)        // Bento tile header label & icon tint
+    val WeatherTwilightCyan = Color(0x331B4D5C) // upper-right celestial radial glow
+    val WeatherDeepEmerald = Color(0x26113828)  // deep emerald atmospheric glow
     val GlowEmerald = Color(0xFF0D261D)       // the top atmosphere
     val GlowCerulean = Color(0xFF0A1E29)
     val Scrim = Color(0xF2050806)             // the bottom of a photo under its text

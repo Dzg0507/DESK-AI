@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.example.data.model.TodayWeather
+import com.example.ui.theme.DeskColors
 import java.util.Calendar
 import kotlin.math.PI
 import kotlin.math.sin
@@ -33,7 +34,7 @@ import kotlin.random.Random
 /** The sky over Today's header, from the weather now and the time of day. */
 enum class Sky { Rain, Storm, ClearNight, ClearDay, Golden, Cloudy, Fog }
 
-/** The open-meteo summary ("Light rain", "Mostly clear"...) and day/night -> the sky to draw; null without weather. */
+/** The open-meteo summary ("Light rain", "Mostly clear"...) and day/night -> the sky to draw; defaults by hour if null. */
 fun skyFor(weather: TodayWeather?, hour: Int = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)): Sky? {
     weather ?: return null
     val s = weather.summary.lowercase()
@@ -54,26 +55,35 @@ fun skyGlyph(sky: Sky?): String = when (sky) {
     Sky.Cloudy -> "☁"; Sky.Fog -> "🌫"; null -> ""
 }
 
-private val RainTeal = Color(0xFF0F292E)
+private val RainTeal = Color(0xFF13363D)
 private val HorizonAmber = Color(0xFF2B1F14)
-private val NightCerulean = Color(0xFF081C24)
-private val NightEmerald = Color(0xFF0B2219)
+private val TwilightCyan = DeskColors.WeatherTwilightCyan     // #331B4D5C
+private val DeepEmeraldGlow = DeskColors.WeatherDeepEmerald   // #26113828
+private val NightFadeBase = Color(0x00050806)                 // smooth fade into #050806
 private val DaySky = Color(0xFF14404D)
 private val GoldenAmber = Color(0xFF3A2A12)
 private val GoldenEmerald = Color(0xFF12301F)
 private val Mist = Color(0xFF16241F)
-private val StormSlate = Color(0xFF0B1D22)
+private val StormSlate = Color(0xFF0E252C)
+
+private data class StarParticle(
+    val x: Float,
+    val y: Float,
+    val sizeDp: Float,
+    val alpha: Float
+)
 
 /**
- * The weather behind the top of Today (2026-10-28, Devin's spec with a reference image): no box, no border. It sits
- * under the status bar, the agent pill, the Chat | Today switch and the date, about 380 dp tall, and fades into the
- * background through a vertical alpha mask (BlendMode.DstIn). Rain gets slow diagonal streaks at 8% white and mist,
- * a clear night faint stars, a clear day light from the top corner (warm at golden hour), clouds and fog drifting
- * mist. As the cards scroll up it rises a little slower than them and fades out.
+ * Multi-layered weather atmosphere filling the top 380 dp edge-to-edge behind the status bar and top nav.
  */
 @Composable
 fun WeatherAtmosphere(weather: TodayWeather?, listState: LazyListState?, modifier: Modifier = Modifier) {
-    val sky = skyFor(weather) ?: return
+    WeatherAtmosphereCanvas(weather = weather, listState = listState, modifier = modifier)
+}
+
+@Composable
+fun WeatherAtmosphereCanvas(weather: TodayWeather?, listState: LazyListState?, modifier: Modifier = Modifier) {
+    val sky = skyFor(weather) ?: Sky.ClearNight
     val density = LocalDensity.current
     val fadeOver = with(density) { 320.dp.toPx() }
     val rise = with(density) { 120.dp.toPx() }
@@ -91,8 +101,23 @@ fun WeatherAtmosphere(weather: TodayWeather?, listState: LazyListState?, modifie
     val motion = rememberInfiniteTransition(label = "weather")
     val fall by motion.animateFloat(0f, 1f, infiniteRepeatable(tween(1400, easing = LinearEasing)), label = "rain")
     val drift by motion.animateFloat(0f, 1f, infiniteRepeatable(tween(26000, easing = LinearEasing), RepeatMode.Reverse), label = "mist")
-    val streaks = remember { List(70) { Random(it * 7 + 3).let { r -> Triple(r.nextFloat(), r.nextFloat(), 0.6f + r.nextFloat() * 0.8f) } } }
-    val stars = remember { List(55) { Random(it * 13 + 1).let { r -> Triple(r.nextFloat(), r.nextFloat() * 0.75f, r.nextFloat()) } } }
+    val streaks = remember {
+        List(70) {
+            Random(it * 7 + 3).let { r -> Triple(r.nextFloat(), r.nextFloat(), 0.6f + r.nextFloat() * 0.8f) }
+        }
+    }
+    // 35 varied-size star particles (1 dp to 2.5 dp, varying alpha 0.15f..0.75f)
+    val stars = remember {
+        List(35) { i ->
+            val r = Random(i * 13 + 7)
+            StarParticle(
+                x = r.nextFloat(),
+                y = r.nextFloat() * 0.78f,
+                sizeDp = 1.0f + r.nextFloat() * 1.5f,
+                alpha = 0.15f + r.nextFloat() * 0.60f
+            )
+        }
+    }
 
     Canvas(
         modifier
@@ -104,6 +129,37 @@ fun WeatherAtmosphere(weather: TodayWeather?, listState: LazyListState?, modifie
                 compositingStrategy = CompositingStrategy.Offscreen     // the mask below needs its own layer
             }
     ) {
+        // Layer 1: Upper-right celestial radial glow behind the temperature (#331B4D5C twilight cyan -> #26113828 deep emerald -> #050806)
+        drawRect(
+            brush = Brush.radialGradient(
+                0.0f to TwilightCyan,
+                0.48f to DeepEmeraldGlow,
+                1.0f to NightFadeBase,
+                center = Offset(size.width * 0.82f, size.height * 0.18f),
+                radius = size.width * 1.15f
+            )
+        )
+        // Secondary upper-left emerald-cyan canopy glow
+        drawRect(
+            brush = Brush.radialGradient(
+                0.0f to DeepEmeraldGlow,
+                0.52f to TwilightCyan.copy(alpha = 0.12f),
+                1.0f to NightFadeBase,
+                center = Offset(size.width * 0.18f, size.height * 0.08f),
+                radius = size.width * 0.95f
+            )
+        )
+        // Layer 2: Soft diagonal atmospheric light haze from upper-right toward lower-left
+        drawRect(
+            brush = Brush.linearGradient(
+                0.0f to TwilightCyan.copy(alpha = 0.24f),
+                0.45f to DeepEmeraldGlow.copy(alpha = 0.18f),
+                1.0f to Color.Transparent,
+                start = Offset(size.width * 0.95f, 0f),
+                end = Offset(size.width * 0.05f, size.height * 0.85f)
+            )
+        )
+
         when (sky) {
             Sky.Rain, Sky.Storm -> {
                 glow(if (sky == Sky.Storm) StormSlate else RainTeal, Offset(size.width * 0.3f, 0f), size.width * 1.1f)
@@ -113,21 +169,37 @@ fun WeatherAtmosphere(weather: TodayWeather?, listState: LazyListState?, modifie
                 streaks.forEach { (x, y, speed) ->
                     val yy = ((y + fall * speed) % 1f) * size.height
                     val xx = x * size.width * 1.2f - yy * 0.25f
-                    drawLine(Color.White.copy(alpha = if (sky == Sky.Storm) 0.11f else 0.08f),
-                        Offset(xx, yy), Offset(xx - len * 0.3f, yy + len), strokeWidth = 1.2f)
+                    drawLine(
+                        Color.White.copy(alpha = if (sky == Sky.Storm) 0.11f else 0.08f),
+                        Offset(xx, yy),
+                        Offset(xx - len * 0.3f, yy + len),
+                        strokeWidth = 1.2f
+                    )
                 }
             }
             Sky.ClearNight -> {
-                glow(NightCerulean, Offset(size.width * 0.75f, 0f), size.width * 1.1f)
-                glow(NightEmerald, Offset(size.width * 0.15f, size.height * 0.2f), size.width * 0.8f)
-                stars.forEach { (x, y, a) ->
-                    drawCircle(Color.White.copy(alpha = 0.12f + a * 0.35f), radius = 0.8f + a * 1.1f,
-                        center = Offset(x * size.width, y * size.height))
+                mist(drift, 0.32f)
+                stars.forEach { star ->
+                    val diameterPx = star.sizeDp.dp.toPx()
+                    val radiusPx = diameterPx / 2f
+                    val center = Offset(star.x * size.width, star.y * size.height)
+                    if (star.alpha > 0.45f) {
+                        drawCircle(
+                            color = Color(0xFFD8F3DC).copy(alpha = star.alpha * 0.22f),
+                            radius = radiusPx * 2.3f,
+                            center = center
+                        )
+                    }
+                    drawCircle(
+                        color = Color.White.copy(alpha = star.alpha),
+                        radius = radiusPx,
+                        center = center
+                    )
                 }
             }
             Sky.ClearDay -> {
                 glow(DaySky, Offset(size.width, 0f), size.width * 1.3f)
-                glow(NightEmerald, Offset(0f, size.height * 0.3f), size.width * 0.7f)
+                glow(DeepEmeraldGlow, Offset(0f, size.height * 0.3f), size.width * 0.7f)
             }
             Sky.Golden -> {
                 glow(GoldenAmber, Offset(size.width, 0f), size.width * 1.2f)
@@ -139,8 +211,14 @@ fun WeatherAtmosphere(weather: TodayWeather?, listState: LazyListState?, modifie
             }
         }
         // Fade into the page: full at the top, gone at the bottom (no edge anywhere)
-        drawRect(Brush.verticalGradient(0f to Color.Black, 0.55f to Color.Black.copy(alpha = 0.75f), 1f to Color.Transparent),
-            blendMode = BlendMode.DstIn)
+        drawRect(
+            Brush.verticalGradient(
+                0f to Color.Black,
+                0.6f to Color.Black.copy(alpha = 0.78f),
+                1f to Color.Transparent
+            ),
+            blendMode = BlendMode.DstIn
+        )
     }
 }
 
@@ -152,7 +230,10 @@ private fun DrawScope.mist(drift: Float, strength: Float) {
     for (i in 0 until 4) {
         val phase = drift * 2f * PI.toFloat() + i * 1.7f
         val c = Offset(size.width * (0.15f + i * 0.25f) + sin(phase) * size.width * 0.08f, size.height * (0.25f + (i % 2) * 0.25f))
-        drawCircle(Brush.radialGradient(listOf(Mist.copy(alpha = strength), Mist.copy(alpha = 0f)), center = c,
-            radius = size.width * 0.45f), radius = size.width * 0.45f, center = c)
+        drawCircle(
+            Brush.radialGradient(listOf(Mist.copy(alpha = strength), Mist.copy(alpha = 0f)), center = c, radius = size.width * 0.45f),
+            radius = size.width * 0.45f,
+            center = c
+        )
     }
 }

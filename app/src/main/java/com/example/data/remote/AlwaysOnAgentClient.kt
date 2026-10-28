@@ -2490,7 +2490,13 @@ class AlwaysOnAgentClient {
                     it.optBoolean("is_day", true))
             },
             brief = h.optJSONObject("brief")?.optString("text")?.takeIf { it.isNotBlank() },
-            location = h.optString("location")
+            location = h.optString("location"),
+            upNext = h.optJSONObject("brief")?.optJSONArray("up_next")?.let { a ->
+                (0 until a.length()).mapNotNull { a.optJSONObject(it) }.map { it.optString("time") to it.optString("what") }
+            } ?: emptyList(),
+            mail = h.optJSONObject("brief")?.optJSONArray("mail")?.let { a ->
+                (0 until a.length()).mapNotNull { a.optJSONObject(it) }.map { it.optString("from") to it.optString("subject") }
+            } ?: emptyList()
         )
         val ed = json.optJSONObject("edition")
         val edition = ed?.let { e ->

@@ -69,6 +69,8 @@ object DeskType {
         lineHeight = 1.3.em, letterSpacing = 0.08.em)
     val mono = TextStyle(fontFamily = JetBrainsMono, fontWeight = FontWeight.Normal, fontSize = DeskTextSize.s,
         lineHeight = 1.4.em, fontFeatureSettings = TABULAR)
+    val monoSmall = TextStyle(fontFamily = JetBrainsMono, fontWeight = FontWeight.Medium, fontSize = DeskTextSize.xs,
+        lineHeight = 1.35.em, fontFeatureSettings = TABULAR)
 }
 
 val Typography =

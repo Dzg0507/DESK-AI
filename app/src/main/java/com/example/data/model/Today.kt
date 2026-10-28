@@ -14,7 +14,10 @@ data class TodayHeader(
     val date: String,               // yyyy-MM-dd
     val weather: TodayWeather?,
     val brief: String?,             // the day's brief (it comes here, not to the chat)
-    val location: String
+    val location: String,
+    // The facts the brief was written from, for the MAIL and UP NEXT tiles (never read from its wording)
+    val upNext: List<Pair<String, String>> = emptyList(),   // time, what
+    val mail: List<Pair<String, String>> = emptyList()      // from, subject
 )
 
 data class TodayEdition(

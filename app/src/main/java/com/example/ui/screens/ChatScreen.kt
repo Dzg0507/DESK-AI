@@ -54,6 +54,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
@@ -311,102 +312,22 @@ fun ChatScreen(
         Scaffold(
             containerColor = Color.Transparent,
             topBar = {
-                TopAppBar(
-                    title = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            // Connection dot: emerald when the bridge is up, rose when it isn't
-                            Box(
-                                modifier = Modifier
-                                    .size(8.dp)
-                                    .clip(CircleShape)
-                                    .background(if (isConnected) EmeraldConnected else RoseError)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = currentSession?.title ?: "AlwaysOnAgent",
-                                fontSize = DeskTextSize.l,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White,
-                                maxLines = 1,
-                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                            )
-                        }
+                com.example.ui.today.UnifiedTopBar(
+                    showingToday = showToday,
+                    onSelectTab = { today ->
+                        showToday = today
+                        uiPrefs.edit().putBoolean("show_today", today).apply()
                     },
-                    navigationIcon = {
-                        IconButton(
-                            onClick = { scope.launch { drawerState.open() } },
-                            modifier = Modifier.testTag("drawer_menu_button")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Menu,
-                                contentDescription = "Open Sessions",
-                                tint = Color.White
-                            )
-                        }
-                    },
-                    actions = {
-                        // Show or hide task messages in chat (remembered)
-                        com.example.ui.components.TasksToggle(showing = !hideTasks) {
-                            hideTasks = !hideTasks
-                            uiPrefs.edit().putBoolean("hide_tasks", hideTasks).apply()
-                        }
-                        // Start a fresh conversation (the assistant's memory lives on the server, so nothing is forgotten)
-                        IconButton(
-                            onClick = { viewModel.createNewSession() },
-                            modifier = Modifier.testTag("new_chat_button")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.AddComment,
-                                contentDescription = "New chat",
-                                tint = Slate400
-                            )
-                        }
-
-                        // Away shift background activity pulsing indicator
-                        if (activityState?.active == true) {
-                            IconButton(
-                                onClick = { showBackgroundWorkSheet = true },
-                                modifier = Modifier.testTag("background_activity_button")
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.AutoAwesome,
-                                    contentDescription = "Background Activity",
-                                    tint = com.example.ui.theme.PhosphorMint.copy(alpha = pulseAlpha)
-                                )
-                            }
-                        }
-
-                        // In-App OTA Update Button with badge indicator
-                        IconButton(
-                            onClick = { showUpdaterDialog = true },
-                            modifier = Modifier.testTag("update_app_button")
-                        ) {
-                            BadgedBox(
-                                badge = {
-                                    if (hasUpdateAvailable) {
-                                        Badge(
-                                            containerColor = ElectricCyan,
-                                            contentColor = Color.Black
-                                        ) {
-                                            Text("!", fontSize = DeskTextSize.xs, fontWeight = FontWeight.Bold)
-                                        }
-                                    }
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.SystemUpdate,
-                                    contentDescription = "Update App",
-                                    tint = if (hasUpdateAvailable) ElectricCyan else Slate400
-                                )
-                            }
-                        }
-
-                        // (The three-dot button only opened the Connection Hub; it's in the menu now)
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent,
-                        titleContentColor = com.example.ui.theme.PhosphorMint
-                    )
+                    onOpenDrawer = { scope.launch { drawerState.open() } },
+                    tasksInProgress = daemonStats.tasksInProgress,
+                    isRunningTask = daemonStats.daemonStatus == "running_task",
+                    isConnected = isConnected,
+                    onOpenTasks = { showTasksSheet = true },
+                    onOpenQuickActions = { showCommandPalette = true },
+                    modifier = Modifier.windowInsetsPadding(TopAppBarDefaults.windowInsets),
+                    hasUpdate = hasUpdateAvailable,
+                    awayShiftActive = activityState?.active == true,
+                    onOpenBackgroundWork = { showBackgroundWorkSheet = true }
                 )
             },
             modifier = modifier
@@ -437,24 +358,6 @@ fun ChatScreen(
                             Text("Open ›", color = AmberPending, fontSize = DeskTextSize.s, fontWeight = FontWeight.Bold)
                         }
                     }
-                    // AlwaysOnAgent Live Status & Pulse Bar
-                    AgentStatusBar(
-                        stats = daemonStats,
-                        serverUrl = config.serverUrl,
-                        isConnected = isConnected,
-                        onToggleDaemon = { viewModel.toggleDaemon() },
-                        onOpenTasks = { showTasksSheet = true },
-                        onOpenMemory = { showMemorySheet = true },
-                        onOpenMedia = { showMediaSheet = true },
-                        onOpenSettings = { showConnectionDialog = true }
-                    )
-
-                    Box(Modifier.fillMaxWidth().padding(bottom = 4.dp), contentAlignment = Alignment.Center) {
-                        com.example.ui.today.ChatTodaySwitch(showToday, { today ->
-                            showToday = today
-                            uiPrefs.edit().putBoolean("show_today", today).apply()
-                        })
-                    }
 
                     if (showToday) {
                         // Each visit: the agent puts a new edition together first when one is due
@@ -480,7 +383,8 @@ fun ChatScreen(
                             },
                             onSaveRecipe = { text, done -> todayVm.saveRecipe(text, done) },
                             modifier = Modifier.weight(1f),
-                            listState = todayList
+                            listState = todayList,
+                            onPlayEdition = { text -> viewModel.speak(text) }
                         )
                     } else {
 

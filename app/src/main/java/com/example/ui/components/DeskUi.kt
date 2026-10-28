@@ -101,6 +101,22 @@ fun Modifier.glass(shape: Shape = DeskShapes.pill, fill: Color = DeskColors.Glas
     .border(1.dp, DeskColors.GlassBorder, shape)
 
 /**
+ * Smoked-glass card modifier for every Bento tile and card on Today: dark green-black fill (#CC0B110E),
+ * DeskShapes.todayCard radius, and a 1 dp vertical gradient border with a top specular edge.
+ */
+fun Modifier.todayGlassCard(shape: Shape = DeskShapes.todayCard): Modifier = this
+    .clip(shape)
+    .background(DeskColors.TodayGlassFill)
+    .border(
+        width = 1.dp,
+        brush = Brush.verticalGradient(
+            0f to DeskColors.TodayGlassBorderTop,
+            1f to DeskColors.TodayGlassBorderBottom
+        ),
+        shape = shape
+    )
+
+/**
  * The chat's background: near-black with a soft emerald and cerulean glow at the top, like light from above
  * (replaces the circuit texture, 2026-10-27).
  */

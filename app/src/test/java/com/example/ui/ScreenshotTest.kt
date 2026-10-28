@@ -128,9 +128,16 @@ class ScreenshotTest {
             AtmosphereBackground()
             com.example.ui.today.WeatherAtmosphere(SAMPLE_TODAY.header.weather, null)
             Column(Modifier.fillMaxSize()) {
-                Box(Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 4.dp), contentAlignment = androidx.compose.ui.Alignment.Center) {
-                    com.example.ui.today.ChatTodaySwitch(showingToday = true, onChange = {})
-                }
+                com.example.ui.today.UnifiedTopBar(
+                    showingToday = true,
+                    onSelectTab = {},
+                    onOpenDrawer = {},
+                    tasksInProgress = 0,
+                    isRunningTask = false,
+                    isConnected = true,
+                    onOpenTasks = {},
+                    onOpenQuickActions = {}
+                )
                 com.example.ui.today.TodayScreen(
                     state = com.example.ui.today.TodayUiState(page = SAMPLE_TODAY),
                     onRefresh = {}, onReact = { _, _ -> }, onAsk = {}, onAnswer = { _, _ -> true }, onSaveRecipe = { _, _ -> },
@@ -143,9 +150,13 @@ class ScreenshotTest {
     private companion object {
         val SAMPLE_TODAY = com.example.data.model.TodayPage(
             header = com.example.data.model.TodayHeader("2026-10-28",
-                com.example.data.model.TodayWeather(58, "Light rain", "Jonesboro", true),
-                "Hey Devin! 🎯 Still to come: your 12:00 Pinterest pins and the 20:00 TikTok Vibe Check.\n" +
-                    "📩 USPS says your package arrives Thursday.", "Jonesboro, AR"),
+                com.example.data.model.TodayWeather(58, "Clear", "Jonesboro", false),
+                "🌙 It is 03:00 on Wednesday, October 28.\n" +
+                    "📬 Mail: USPS, Arkansas Lottery, $7.99 Google, $20 Anthropic\n" +
+                    "📋 Today's posts: 08:00 Twice Daily TikTok, 12:00 Pinterest Pins", "Jonesboro, AR",
+                upNext = listOf("08:00" to "Twice Daily TikTok", "12:00" to "Pinterest pins"),
+                mail = listOf("USPS" to "Your package arrives Thursday", "Arkansas Lottery" to "Results",
+                    "Cash App" to "You paid $20.00 to Anthropic")),
             edition = com.example.data.model.TodayEdition(1, "2026-10-28T07:57:08-05:00", 5, "2026-10-28T13:57:08-05:00"),
             recipe = com.example.data.model.TodayRecipe(text = "More Arkansas outdoors and golf, no crypto.",
                 more = listOf("Arkansas outdoors", "golf"), never = listOf("crypto"), location = "Jonesboro, AR"),
