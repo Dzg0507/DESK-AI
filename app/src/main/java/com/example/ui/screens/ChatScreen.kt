@@ -207,6 +207,9 @@ fun ChatScreen(
     var hideTasks by remember { mutableStateOf(uiPrefs.getBoolean("hide_tasks", false)) }
     // Chat or Today (2026-10-28): the frosted switch under the status pill; the app reopens where it was left
     var showToday by remember { mutableStateOf(uiPrefs.getBoolean("show_today", false)) }
+    val todayVm: com.example.ui.today.TodayViewModel = viewModel()
+    val todayState by todayVm.state.collectAsStateWithLifecycle()
+    val todayList = androidx.compose.foundation.lazy.rememberLazyListState()
     val taskStates = remember { androidx.compose.runtime.mutableStateMapOf<String, com.example.data.model.AgentTaskItem>() }
     var openStrips by remember { mutableStateOf(setOf<String>()) }
     LaunchedEffect(messages) {
@@ -303,6 +306,8 @@ fun ChatScreen(
       Box(Modifier.fillMaxSize()) {
         // Near-black with a soft glow from the top (2026-10-27 spatial-glass target; was the Circuit texture)
         com.example.ui.components.AtmosphereBackground()
+        // Today: the weather now, unboxed behind the status bar, the switch and the date (2026-10-28, Devin's spec)
+        if (showToday) com.example.ui.today.WeatherAtmosphere(todayState.page?.header?.weather, todayList)
         Scaffold(
             containerColor = Color.Transparent,
             topBar = {
@@ -452,8 +457,6 @@ fun ChatScreen(
                     }
 
                     if (showToday) {
-                        val todayVm: com.example.ui.today.TodayViewModel = viewModel()
-                        val todayState by todayVm.state.collectAsStateWithLifecycle()
                         // Each visit: the agent puts a new edition together first when one is due
                         LaunchedEffect(Unit) { todayVm.load() }
                         com.example.ui.today.TodayScreen(
@@ -475,7 +478,9 @@ fun ChatScreen(
                                 if (sent) todayVm.react(item, "answered")
                                 sent
                             },
-                            modifier = Modifier.weight(1f)
+                            onSaveRecipe = { text, done -> todayVm.saveRecipe(text, done) },
+                            modifier = Modifier.weight(1f),
+                            listState = todayList
                         )
                     } else {
 

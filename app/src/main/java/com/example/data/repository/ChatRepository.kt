@@ -661,6 +661,9 @@ class ChatRepository(
 
     suspend fun reactToday(itemId: Long, action: String): Boolean = agentClient.reactToday(getActiveConfig(), itemId, action)
 
+    suspend fun saveTodayRecipe(text: String): com.example.data.model.TodayRecipe =
+        agentClient.saveTodayRecipe(getActiveConfig(), text)
+
     /** Image bubbles still waiting (the app was closed while the image was made): follow them again. */
     suspend fun imagingMessages(): List<ChatMessage> = withContext(Dispatchers.IO) { chatDao.getImagingMessages() }
 

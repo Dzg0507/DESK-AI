@@ -7,6 +7,8 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -21,6 +23,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
@@ -28,6 +32,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -60,6 +65,9 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.data.model.TodayEdition
+import com.example.data.model.TodayHeader
+import com.example.data.model.TodayPage
+import com.example.data.model.TodayRecipe
 import com.example.data.model.TodayItem
 import com.example.data.remote.MediaAuth
 import com.example.ui.components.deskCardSurface
@@ -85,7 +93,9 @@ fun TodayScreen(
     onReact: (TodayItem, String) -> Unit,
     onAsk: (TodayItem) -> Unit,
     onAnswer: (TodayItem, String) -> Boolean,
-    modifier: Modifier = Modifier
+    onSaveRecipe: (String, () -> Unit) -> Unit,
+    modifier: Modifier = Modifier,
+    listState: LazyListState = rememberLazyListState()      // the weather atmosphere above follows its scroll
 ) {
     val page = state.page
     PullToRefreshBox(isRefreshing = state.loading && page != null, onRefresh = onRefresh, modifier = modifier.fillMaxSize()) {
@@ -98,13 +108,7 @@ fun TodayScreen(
                 body = state.error ?: "Today comes from the agent on your PC.",
                 action = "Try again", onAction = onRefresh
             )
-            page.edition == null -> Notice(
-                title = "Nothing yet",
-                body = "Today fills in as the agent finds things for you while you're away: news on what you follow, " +
-                    "what got settled, what finished.",
-                action = "Check now", onAction = onRefresh
-            )
-            else -> Edition(state, page.edition, page.items, onReact, onAsk, onAnswer)
+            else -> Edition(state, page, onReact, onAsk, onAnswer, onSaveRecipe, onRefresh, listState)
         }
     }
 }
@@ -112,23 +116,43 @@ fun TodayScreen(
 @Composable
 private fun Edition(
     state: TodayUiState,
-    edition: TodayEdition,
-    items: List<TodayItem>,
+    page: TodayPage,
     onReact: (TodayItem, String) -> Unit,
     onAsk: (TodayItem) -> Unit,
-    onAnswer: (TodayItem, String) -> Boolean
+    onAnswer: (TodayItem, String) -> Boolean,
+    onSaveRecipe: (String, () -> Unit) -> Unit,
+    onRefresh: () -> Unit,
+    listState: LazyListState
 ) {
     val base = state.config?.getResolvedUrl() ?: ""
     val token = state.config?.apiKey ?: ""
+    val items = page.items
     val big = items.filter { it.card == "story" || it.card == "video" }
     val tiles = items.filter { it.card == "settled" || it.card == "done" }
     val questions = items.filter { it.card == "question" }
     LazyColumn(
+        state = listState,
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = DeskSpace.l, end = DeskSpace.l, top = DeskSpace.s, bottom = DeskSpace.xxl),
         verticalArrangement = Arrangement.spacedBy(DeskSpace.l)
     ) {
-        item(key = "header") { Header(edition, items.size) }
+        item(key = "recipe") { RecipeBar(page.recipe, state.savingRecipe, state.recipeError, onSaveRecipe) }
+        item(key = "header") { Header(page.header, items.size) }
+        if (page.edition == null || items.isEmpty()) {
+            item(key = "nothing") {
+                Column(Modifier.fillMaxWidth().padding(top = DeskSpace.l), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        if (page.edition == null) "Nothing else yet. Today fills in as the agent finds things for you " +
+                            "while you're away: news on what you follow, what got settled, what finished."
+                        else "Nothing here fits your recipe right now.",
+                        style = DeskType.body, color = DeskColors.TextSecondary, textAlign = TextAlign.Center
+                    )
+                    Spacer(Modifier.height(DeskSpace.l))
+                    GlassPill("Check now", onClick = onRefresh)
+                }
+            }
+            return@LazyColumn
+        }
         items(big, key = { it.id }) { item -> BigCard(item, base, token, onReact, onAsk) }
         items(tiles.chunked(2), key = { row -> "tiles-" + row.joinToString { it.id.toString() } }) { row ->
             // Side by side tiles are the same height, the taller one's
@@ -138,23 +162,99 @@ private fun Edition(
             }
         }
         items(questions, key = { it.id }) { q -> QuestionCard(q, q.id in state.answered || q.state == "answered", onReact, onAnswer) }
-        item(key = "caught-up") { CaughtUp(edition) }
+        page.edition?.let { ed -> item(key = "caught-up") { CaughtUp(ed) } }
     }
 }
 
+/** The date and the weather now, unboxed on the canvas, then the day's brief (it comes here, not to the chat). */
 @Composable
-private fun Header(edition: TodayEdition, shown: Int) {
-    Column(Modifier.fillMaxWidth().padding(top = DeskSpace.s)) {
+private fun Header(header: TodayHeader, shown: Int) {
+    Column(Modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.Bottom) {
-            Text(longDate(edition.date), style = DeskType.display, color = DeskColors.TextPrimary, modifier = Modifier.weight(1f))
-            edition.weather?.let { w ->
-                Text("${w.tempF}°F ${w.summary}".trim(), style = DeskType.titleSmall, color = DeskColors.TextSecondary)
+            Text(longDate(header.date), style = DeskType.display, color = DeskColors.TextPrimary, modifier = Modifier.weight(1f))
+            header.weather?.let { w ->
+                Text("${skyGlyph(skyFor(w))} ${w.tempF}°F ${w.summary}".trim(), style = DeskType.titleSmall,
+                    color = DeskColors.TextPrimary.copy(alpha = 0.85f))
             }
         }
         Spacer(Modifier.height(DeskSpace.xs))
         Text(if (shown == 1) "1 thing today" else "$shown things today", style = DeskType.mono, color = DeskColors.TextMuted)
+        header.brief?.let { brief ->
+            Spacer(Modifier.height(DeskSpace.m))
+            Text(brief.trim(), style = DeskType.body, color = DeskColors.TextSecondary)
+        }
     }
 }
+
+/**
+ * The recipe: Devin's own words for what Today shows. One row while closed (the rules as a line, or an invitation);
+ * open, a text box, and the rules the agent read from it as chips, so nothing about it is hidden.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun RecipeBar(recipe: TodayRecipe, saving: Boolean, error: String?, onSave: (String, () -> Unit) -> Unit) {
+    var open by rememberSaveable { mutableStateOf(false) }
+    var text by rememberSaveable(recipe.text) { mutableStateOf(recipe.text) }
+    val chips = recipeChips(recipe)
+    if (!open) {
+        Row(Modifier.fillMaxWidth().glass().clickable { open = true }.padding(horizontal = 14.dp, vertical = 9.dp),
+            verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Default.Edit, contentDescription = null, tint = DeskColors.TextSecondary, modifier = Modifier.size(14.dp))
+            Spacer(Modifier.width(DeskSpace.s))
+            Text(if (chips.isEmpty()) "Tell Today what you want to see" else "Edit recipe · " + chips.joinToString(", "),
+                style = DeskType.label, color = DeskColors.TextSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+        return
+    }
+    Column(Modifier.fillMaxWidth().deskCardSurface(DeskShapes.card).padding(DeskSpace.l)) {
+        Text("YOUR RECIPE", style = DeskType.overline, color = DeskColors.Emerald)
+        Spacer(Modifier.height(DeskSpace.s))
+        BasicTextField(
+            value = text, onValueChange = { text = it.take(1500) },
+            textStyle = DeskType.body.copy(color = DeskColors.TextPrimary),
+            cursorBrush = SolidColor(DeskColors.Emerald),
+            modifier = Modifier.fillMaxWidth().heightIn(min = 96.dp).glass(DeskShapes.small).padding(DeskSpace.m),
+            decorationBox = { inner ->
+                if (text.isEmpty()) Text("More Arkansas outdoors and golf, no crypto. Weather for Jonesboro, AR. " +
+                    "8 cards max. Hide finished tasks.", style = DeskType.body, color = DeskColors.TextMuted)
+                inner()
+            }
+        )
+        if (chips.isNotEmpty()) {
+            Spacer(Modifier.height(DeskSpace.m))
+            Text("What the agent took from it", style = DeskType.caption, color = DeskColors.TextMuted)
+            Spacer(Modifier.height(DeskSpace.xs))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(DeskSpace.s), verticalArrangement = Arrangement.spacedBy(DeskSpace.s)) {
+                chips.forEach { Text(it, style = DeskType.mono, color = DeskColors.TextPrimary,
+                    modifier = Modifier.glass().padding(horizontal = 10.dp, vertical = 5.dp)) }
+            }
+        }
+        error?.let {
+            Spacer(Modifier.height(DeskSpace.s))
+            Text("Not saved: $it", style = DeskType.bodySmall, color = DeskColors.Error)
+        }
+        Spacer(Modifier.height(DeskSpace.m))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("You can also just tell the agent in Chat.", style = DeskType.caption, color = DeskColors.TextMuted,
+                modifier = Modifier.weight(1f))
+            GlassPill("Close") { open = false; text = recipe.text }
+            Spacer(Modifier.width(DeskSpace.s))
+            if (saving) {
+                CircularProgressIndicator(color = DeskColors.Emerald, strokeWidth = 2.dp, modifier = Modifier.size(22.dp))
+            } else {
+                GlassPill("Save", selected = true) { onSave(text.trim()) { open = false } }
+            }
+        }
+    }
+}
+
+/** The compiled rules as short chips: ↑ more, ↓ less, ✕ never, ▶ channels, the limit, hidden kinds, the town. */
+internal fun recipeChips(r: TodayRecipe): List<String> =
+    r.more.map { "↑ $it" } + r.less.map { "↓ $it" } + r.never.map { "✕ $it" } + r.channels.map { "▶ $it" } +
+        listOfNotNull(r.maxCards?.let { "≤ $it cards" }) +
+        r.hidden.map { "hide " + mapOf("story" to "stories", "video" to "videos", "settled" to "settled",
+            "done" to "finished", "question" to "questions").getValue(it) } +
+        listOfNotNull(r.location.takeIf { it.isNotBlank() }?.let { "☀ $it" })
 
 /** A story or video: full-bleed with its picture; a designed text card without one (none, broken, or too small). */
 @OptIn(ExperimentalFoundationApi::class)

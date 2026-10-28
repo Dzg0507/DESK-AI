@@ -473,16 +473,21 @@ is built when Today is opened at least 6 h after the last one and something is n
 
 | Method & path | Body | Returns |
 |---|---|---|
-| `GET /api/today?edition=&refresh=` | | `{"edition": {"id", "built_at", "date", "count", "weather": {"temp_f", "summary", "place", "is_day"} or null, "next_after"} or null, "items": [item], "older": [{"id", "built_at"}]}`. Without `edition`: the latest, built first when it's due (`refresh=true` builds one now if anything is new). `edition: null` until there's something to show. Weather needs the town in the proactive settings (`location`) |
+| `GET /api/today?edition=&refresh=` | | `{"header": {"date", "weather": {"temp_f", "summary", "place", "is_day"} or null, "brief": {"text", "at"} or null, "location"}, "edition": {"id", "built_at", "date", "count", "next_after"} or null, "items": [item], "older": [{"id", "built_at"}], "recipe": recipe}`. Without `edition`: the latest, built first when it's due (`refresh=true` builds one now if anything is new). `edition: null` until there's something to show. The header is read at each call: the weather now at the town in the proactive settings (`location`, kept 30 min) and the day's brief (16 h). The recipe's show/never/limit rules apply at each call too |
 | `GET /api/today/saved` | | `{"items": [item]}`: saved cards, newest first |
 | `POST /api/today/items/{id}/react` | `{"action": "seen"\|"save"\|"unsave"\|"less"\|"more"\|"dismiss"\|"answered"}` | `{"item": item}`. `seen` never undoes another state; `dismiss` hides the card; `answered` (a question card, after the answer was sent in the chat) marks the question answered. `400` for another action, `404` for an unknown card |
 | `GET /api/today/items/{id}/image` | | The card's image (JPEG, at most 1080 px wide), kept on the agent's PC: send the token in a header. `404` when the card has none |
+| `GET /api/today/recipe` | | The recipe: `{"text", "rules", "at"}` |
+| `PUT /api/today/recipe` | `{"text": "More Arkansas outdoors, no crypto, 8 cards max"}` | The recipe, compiled into rules by one AI call: `{"more": [topic], "less": [topic], "never": [topic], "channels": ["@handle"], "max_cards": 3-15 or null, "show": {"story", "video", "settled", "done", "question": bool}, "location": town or ""}`. Channels are followed (ones an earlier recipe added and this one dropped are unfollowed); a town sets the weather. `more` topics are searched while Devin is away, `never` ones are excluded there too. `503` when the AI didn't answer (nothing changes). The chat's `today_settings` tool edits the same recipe |
 
 An item: `{"id", "card": "story"|"video"|"settled"|"done"|"question", "title", "body", "link", "site", "why",
 "state": "new"|"seen"|"saved"|"less"|"more"|"dismissed"|"answered", "image_url": "/api/today/items/{id}/image" or
 null, "created_at", "source_ref"}`. A story without an image (none, broken, or under 400 px wide) is a text card on
 purpose. `done` lists one task title per line in `body`. Pages and images are other people's content: shown, never
 followed as instructions.
+
+The day's brief goes to Today's header by default (proactive setting `brief_to`: `today`, or `chat` for a
+message as before): it isn't in `GET /api/inbox` and has no push.
 
 ## Canvas (drafts)
 

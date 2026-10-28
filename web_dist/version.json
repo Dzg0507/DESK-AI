@@ -1,7 +1,7 @@
 {
-  "versionCode": 95,
-  "versionName": "2.31.0",
-  "changelog": "DeskAI v2.31.0 (Build 95): Today. A new screen next to Chat (the switch at the top): an edition of things the agent found for you while you were away, with pictures, what got settled, what finished, and a question you can answer right on its card. Pull down to check for more.",
+  "versionCode": 96,
+  "versionName": "2.32.0",
+  "changelog": "DeskAI v2.32.0 (Build 96): Today gets the weather and your words. The sky behind the top of Today follows the real weather (rain, stars at night, sun, fog), today's brief sits under the date instead of in the chat, and the recipe bar lets you say what you want to see (more golf, no crypto, 8 cards max). You can also tell the agent in chat.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 28272598
+  "fileSizeBytes": 28305367
 }

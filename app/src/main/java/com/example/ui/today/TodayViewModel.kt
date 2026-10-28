@@ -20,7 +20,9 @@ data class TodayUiState(
     val loading: Boolean = false,
     val error: String? = null,
     val config: BridgeConfig? = null,      // the image loader needs the agent's address and token
-    val answered: Set<Long> = emptySet()   // question cards answered from here (the reply is in the chat)
+    val answered: Set<Long> = emptySet(),  // question cards answered from here (the reply is in the chat)
+    val savingRecipe: Boolean = false,
+    val recipeError: String? = null
 )
 
 class TodayViewModel(application: Application) : AndroidViewModel(application) {
@@ -43,6 +45,24 @@ class TodayViewModel(application: Application) : AndroidViewModel(application) {
                 throw e
             } catch (e: Exception) {
                 _state.update { it.copy(loading = false, error = e.message ?: "Couldn't reach the PC") }
+            }
+        }
+    }
+
+    /** Devin's words for Today: the agent turns them into rules, then the edition is read again with them. */
+    fun saveRecipe(text: String, onSaved: () -> Unit = {}) {
+        if (_state.value.savingRecipe) return
+        _state.update { it.copy(savingRecipe = true, recipeError = null) }
+        viewModelScope.launch {
+            try {
+                val recipe = repository.saveTodayRecipe(text)
+                _state.update { s -> s.copy(savingRecipe = false, page = s.page?.copy(recipe = recipe)) }
+                onSaved()
+                load()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _state.update { it.copy(savingRecipe = false, recipeError = e.message ?: "Couldn't save it") }
             }
         }
     }

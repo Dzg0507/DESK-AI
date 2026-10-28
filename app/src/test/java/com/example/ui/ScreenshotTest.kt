@@ -126,13 +126,14 @@ class ScreenshotTest {
     fun today() = capture("today") {
         Box(Modifier.fillMaxSize()) {
             AtmosphereBackground()
+            com.example.ui.today.WeatherAtmosphere(SAMPLE_TODAY.header.weather, null)
             Column(Modifier.fillMaxSize()) {
                 Box(Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 4.dp), contentAlignment = androidx.compose.ui.Alignment.Center) {
                     com.example.ui.today.ChatTodaySwitch(showingToday = true, onChange = {})
                 }
                 com.example.ui.today.TodayScreen(
                     state = com.example.ui.today.TodayUiState(page = SAMPLE_TODAY),
-                    onRefresh = {}, onReact = { _, _ -> }, onAsk = {}, onAnswer = { _, _ -> true },
+                    onRefresh = {}, onReact = { _, _ -> }, onAsk = {}, onAnswer = { _, _ -> true }, onSaveRecipe = { _, _ -> },
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -141,8 +142,13 @@ class ScreenshotTest {
 
     private companion object {
         val SAMPLE_TODAY = com.example.data.model.TodayPage(
-            edition = com.example.data.model.TodayEdition(1, "2026-10-28T07:57:08-05:00", "2026-10-28", 5,
-                com.example.data.model.TodayWeather(62, "Clear", "Jonesboro", true), "2026-10-28T13:57:08-05:00"),
+            header = com.example.data.model.TodayHeader("2026-10-28",
+                com.example.data.model.TodayWeather(58, "Light rain", "Jonesboro", true),
+                "Hey Devin! 🎯 Still to come: your 12:00 Pinterest pins and the 20:00 TikTok Vibe Check.\n" +
+                    "📩 USPS says your package arrives Thursday.", "Jonesboro, AR"),
+            edition = com.example.data.model.TodayEdition(1, "2026-10-28T07:57:08-05:00", 5, "2026-10-28T13:57:08-05:00"),
+            recipe = com.example.data.model.TodayRecipe(text = "More Arkansas outdoors and golf, no crypto.",
+                more = listOf("Arkansas outdoors", "golf"), never = listOf("crypto"), location = "Jonesboro, AR"),
             items = listOf(
                 com.example.data.model.TodayItem(1, "story", "Bobcat spotted near Strawberry River",
                     "A bobcat walked past a trail camera on the Strawberry River slope early Tuesday.",

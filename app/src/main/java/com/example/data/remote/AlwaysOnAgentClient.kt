@@ -2449,17 +2449,53 @@ class AlwaysOnAgentClient {
         }
     }
 
+    /** Saves Devin's words for Today; the agent compiles them into rules (one AI call). Throws with the reason. */
+    suspend fun saveTodayRecipe(config: BridgeConfig, text: String): com.example.data.model.TodayRecipe = withContext(Dispatchers.IO) {
+        val client = httpClient.newBuilder().readTimeout(60, TimeUnit.SECONDS).build()
+        executeWithFailover(config) { baseUrl ->
+            val body = JSONObject().put("text", text).toString().toRequestBody(jsonMediaType)
+            val req = addAuth(Request.Builder().url("$baseUrl/api/today/recipe").put(body), config).build()
+            client.newCall(req).execute().use { resp ->
+                val raw = resp.body?.string() ?: ""
+                if (!resp.isSuccessful) {
+                    val detail = try { JSONObject(raw).optString("detail") } catch (_: Exception) { "" }
+                    throw IllegalStateException(detail.ifBlank { "HTTP ${resp.code}" })
+                }
+                parseRecipe(JSONObject(raw))
+            }
+        }
+    }
+
+    private fun parseRecipe(json: JSONObject?): com.example.data.model.TodayRecipe {
+        if (json == null) return com.example.data.model.TodayRecipe()
+        val rules = json.optJSONObject("rules") ?: JSONObject()
+        fun list(key: String) = rules.optJSONArray(key)?.let { a -> (0 until a.length()).map { a.optString(it) } } ?: emptyList()
+        val show = rules.optJSONObject("show")
+        return com.example.data.model.TodayRecipe(
+            text = json.optString("text"), more = list("more"), less = list("less"), never = list("never"),
+            channels = list("channels"),
+            maxCards = if (rules.isNull("max_cards") || !rules.has("max_cards")) null else rules.optInt("max_cards"),
+            hidden = listOf("story", "video", "settled", "done", "question").filter { show?.optBoolean(it, true) == false },
+            location = rules.optString("location")
+        )
+    }
+
     private fun parseToday(json: JSONObject, base: String): com.example.data.model.TodayPage {
+        val h = json.optJSONObject("header") ?: JSONObject()
+        val w = h.optJSONObject("weather")
+        val header = com.example.data.model.TodayHeader(
+            date = h.optString("date"),
+            weather = w?.let {
+                com.example.data.model.TodayWeather(it.optInt("temp_f"), it.optString("summary"), it.optString("place"),
+                    it.optBoolean("is_day", true))
+            },
+            brief = h.optJSONObject("brief")?.optString("text")?.takeIf { it.isNotBlank() },
+            location = h.optString("location")
+        )
         val ed = json.optJSONObject("edition")
         val edition = ed?.let { e ->
-            val w = e.optJSONObject("weather")
             com.example.data.model.TodayEdition(
-                id = e.optLong("id"), builtAt = e.optString("built_at"), date = e.optString("date"),
-                count = e.optInt("count"),
-                weather = w?.let {
-                    com.example.data.model.TodayWeather(it.optInt("temp_f"), it.optString("summary"), it.optString("place"),
-                        it.optBoolean("is_day", true))
-                },
+                id = e.optLong("id"), builtAt = e.optString("built_at"), count = e.optInt("count"),
                 nextAfter = e.optString("next_after").takeIf { it.isNotBlank() && it != "null" }
             )
         }
@@ -2481,7 +2517,7 @@ class AlwaysOnAgentClient {
                 com.example.data.model.TodayEditionRef(o.optLong("id"), o.optString("built_at"))
             }
         } ?: emptyList()
-        return com.example.data.model.TodayPage(edition, items, older)
+        return com.example.data.model.TodayPage(header, edition, items, older, parseRecipe(json.optJSONObject("recipe")))
     }
 
     private suspend fun streamAlwaysOnAgentChat(
