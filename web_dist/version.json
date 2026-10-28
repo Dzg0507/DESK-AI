@@ -1,7 +1,7 @@
 {
-  "versionCode": 92,
-  "versionName": "2.30.2",
-  "changelog": "DeskAI v2.30.2 (Build 92): Image requests no longer show a timeout error while the image is still being made, and a slow reply isn't sent a second time (that started duplicate images).",
+  "versionCode": 93,
+  "versionName": "2.30.3",
+  "changelog": "DeskAI v2.30.3 (Build 93): Images are made in the background. A /image prompt shows a \"Making your image\" bubble that fills in when it's ready, and the chat stays free to use meanwhile.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 28174161
+  "fileSizeBytes": 28218300
 }

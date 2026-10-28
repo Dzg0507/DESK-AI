@@ -47,6 +47,13 @@ interface ChatDao {
     @Update
     suspend fun updateMessage(message: ChatMessage)
 
+    @Query("SELECT * FROM chat_messages WHERE id = :messageId LIMIT 1")
+    suspend fun getMessage(messageId: String): ChatMessage?
+
+    // Images still being made on the agent (the app watches them again when it opens)
+    @Query("SELECT * FROM chat_messages WHERE status = 'imaging' AND imageJobId IS NOT NULL")
+    suspend fun getImagingMessages(): List<ChatMessage>
+
     @Query("DELETE FROM chat_messages WHERE id = :messageId")
     suspend fun deleteMessage(messageId: String)
 

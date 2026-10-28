@@ -29,7 +29,8 @@ data class ChatMessage(
     val why: String? = null,                // proactive engine explanation: why this message was sent
     val inboxKind: String? = null,          // brief, notice, suggestion, question, review, memory
     val inboxId: Long? = null,              // the server-side inbox id
-    val feedback: String? = null            // thumbs_up, thumbs_down, less_like_this
+    val feedback: String? = null,           // thumbs_up, thumbs_down, less_like_this
+    val imageJobId: String? = null          // the image being made for it (status "imaging"): POST /api/images/jobs
 ) {
     fun getAttachments(): List<MessageAttachment> = MessageAttachment.fromJson(attachmentsJson)
 

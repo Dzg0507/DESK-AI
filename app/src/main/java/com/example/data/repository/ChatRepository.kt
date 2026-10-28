@@ -630,6 +630,71 @@ class ChatRepository(
     suspend fun uploadAttachment(localId: String, name: String, bytes: ByteArray): ChatAttachment =
         agentClient.uploadAttachment(getActiveConfig(), localId, name, bytes)
 
+    /**
+     * A /image request (2026-10-27). The agent makes the image in the background; its bubble says so, the chat stays
+     * free, and [followImageJob] fills the bubble in when the image is ready. A chat request held open the ~3 minutes
+     * an image takes was dropped on the way, or kept the chat "thinking" after the image was made.
+     * Returns the bubble to follow, or null if the request couldn't be sent (the bubble says why).
+     */
+    suspend fun startImage(session: ChatSession, userText: String): ChatMessage? = withContext(Dispatchers.IO) {
+        val text = userText.trim()
+        chatDao.insertMessage(ChatMessage(sessionId = session.id, role = "user", content = text, isCommand = text.startsWith("/")))
+        val jobId = UUID.randomUUID().toString()
+        val bubble = ChatMessage(sessionId = session.id, role = "assistant", content = IMAGING_TEXT, status = "imaging",
+            modelUsed = "ImageGen", imageJobId = jobId)
+        chatDao.insertMessage(bubble)
+        chatDao.getSessionById(session.id).firstOrNull()?.let { chatDao.updateSession(it.copy(updatedAt = System.currentTimeMillis())) }
+        try {
+            if (finishImage(bubble, agentClient.startImageJob(getActiveConfig(), text, jobId))) null else bubble
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            chatDao.updateMessage(bubble.copy(status = "error", errorMessage = e.localizedMessage,
+                content = "⚠️ Couldn't ask the PC for the image: ${e.localizedMessage ?: "no connection"}"))
+            null
+        }
+    }
+
+    /** Image bubbles still waiting (the app was closed while the image was made): follow them again. */
+    suspend fun imagingMessages(): List<ChatMessage> = withContext(Dispatchers.IO) { chatDao.getImagingMessages() }
+
+    /** Asks every few seconds how the bubble's image is going, until it's in (or deleted, or given up on). */
+    suspend fun followImageJob(messageId: String) = withContext(Dispatchers.IO) {
+        while (true) {
+            kotlinx.coroutines.delay(IMAGE_POLL_MS)
+            val bubble = chatDao.getMessage(messageId) ?: return@withContext       // deleted meanwhile
+            val jobId = bubble.imageJobId
+            if (bubble.status != "imaging" || jobId == null) return@withContext
+            val job = try {
+                agentClient.getImageJob(getActiveConfig(), jobId)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                null                                                                // offline for now: ask again
+            }
+            if (job != null && finishImage(bubble, job)) return@withContext
+            if (System.currentTimeMillis() - bubble.timestamp > IMAGE_GIVE_UP_MS) {
+                chatDao.updateMessage(bubble.copy(status = "error",
+                    content = "⚠️ Lost touch with the PC while it made this image. If it finished, it's in the image hub."))
+                return@withContext
+            }
+        }
+    }
+
+    /** Puts a finished job's answer in its bubble; false while it's still being made. */
+    private suspend fun finishImage(bubble: ChatMessage, job: AlwaysOnAgentClient.ImageJob): Boolean {
+        val latency = System.currentTimeMillis() - bubble.timestamp
+        val done = when (job.status) {
+            "done" -> bubble.copy(status = "sent", content = job.reply ?: "", latencyMs = latency)
+            "failed" -> bubble.copy(status = "error", content = job.reply ?: "⚠️ Could not generate the image.", latencyMs = latency)
+            "gone" -> bubble.copy(status = "error",
+                content = "⚠️ The agent restarted before this image was done. Send the prompt again if it isn't in the image hub.")
+            else -> return false
+        }
+        chatDao.updateMessage(done)
+        return true
+    }
+
     /** Replies left "sending" by an app that was closed mid-reply; call once when the chat opens. */
     suspend fun markInterruptedReplies(): Int = withContext(Dispatchers.IO) {
         chatDao.markInterruptedReplies(STOPPED_TEXT)
@@ -796,6 +861,16 @@ class ChatRepository(
 
         /** The bubble of a reply that was stopped before any text arrived. */
         const val STOPPED_TEXT = "⏹️ Stopped"
+
+        /** The bubble of an image still being made. */
+        const val IMAGING_TEXT = "🎨 Making your image…"
+        private const val IMAGE_POLL_MS = 3_000L
+        private const val IMAGE_GIVE_UP_MS = 10 * 60_000L    // the agent stops trying after ~4 minutes
+
+        private val IMAGE_PREFIXES = listOf("/image", "/imagine", "/draw", "generate an image of", "create an image of", "draw an image of")
+
+        /** A message the agent answers with an image (the same prefixes it checks). */
+        fun isImageRequest(text: String): Boolean = text.trim().lowercase().let { t -> IMAGE_PREFIXES.any { t.startsWith(it) } }
 
         private val MISSION_NUMBER_TITLE = Regex("""Mission #\d+""")
 

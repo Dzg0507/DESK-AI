@@ -2377,6 +2377,41 @@ class AlwaysOnAgentClient {
         }
     }
 
+    /** An image the agent is making in the background: status running, done, failed, or gone (the agent restarted). */
+    data class ImageJob(val id: String, val status: String, val reply: String?)
+
+    /** Starts making the image [message] (a /image request) asks for; answers at once. Throws if it can't be sent. */
+    suspend fun startImageJob(config: BridgeConfig, message: String, turnId: String): ImageJob = withContext(Dispatchers.IO) {
+        executeWithFailover(config) { baseUrl ->
+            val body = JSONObject().put("message", message).put("turn_id", turnId).toString()
+            val req = addAuth(Request.Builder().url("$baseUrl/api/images/jobs").post(body.toRequestBody(jsonMediaType)), config).build()
+            httpClient.newCall(req).execute().use { resp -> parseImageJob(resp, baseUrl) }
+        }
+    }
+
+    /** How the image job is going. Throws if the agent can't be reached (try again later). */
+    suspend fun getImageJob(config: BridgeConfig, jobId: String): ImageJob = withContext(Dispatchers.IO) {
+        executeWithFailover(config) { baseUrl ->
+            val req = addAuth(Request.Builder().url("$baseUrl/api/images/jobs/$jobId"), config).build()
+            httpClient.newCall(req).execute().use { resp ->
+                if (resp.code == 404) ImageJob(jobId, "gone", null) else parseImageJob(resp, baseUrl)
+            }
+        }
+    }
+
+    private fun parseImageJob(resp: okhttp3.Response, baseUrl: String): ImageJob {
+        val body = resp.body?.string() ?: ""
+        if (!resp.isSuccessful) {
+            val detail = try { JSONObject(body).optString("detail") } catch (_: Exception) { "" }
+            throw IllegalStateException(detail.ifBlank { "HTTP ${resp.code}" })
+        }
+        val json = JSONObject(body)
+        // Saved in the chat history: the image link gets the address, never the token (MarkdownImage sends it)
+        val reply = if (json.isNull("reply")) null
+            else json.optString("reply").replace("](/images/", "](${baseUrl.trimEnd('/')}/images/")
+        return ImageJob(json.optString("job_id"), json.optString("status", "running"), reply)
+    }
+
     private suspend fun streamAlwaysOnAgentChat(
         config: BridgeConfig,
         systemPrompt: String,

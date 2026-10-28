@@ -226,6 +226,16 @@ fun MessageBubble(
                         )
 
                     }
+                    // An image being made in the background: the bubble fills in when it's ready
+                    if (message.status == "imaging") {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        LinearProgressIndicator(
+                            modifier = Modifier.width(180.dp).height(3.dp).clip(CircleShape),
+                            color = DeskColors.Agent,
+                            trackColor = DeskColors.Agent.copy(alpha = 0.16f),
+                            gapSize = 0.dp
+                        )
+                    }
 
                     // Interactive Proposal Cards matching AlwaysOnAgent & Telegram (supports multiple proposals)
                     val proposals = remember(message.content, message.proposalsJson, message.proposalInstruction, message.proposalState) {

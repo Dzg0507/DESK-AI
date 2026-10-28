@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-27 (DeskAI v2.30.2 / Build 92 shipped — chat waits 260 s; a read timeout no longer fails over to the next address)
+**Last Updated:** 2026-10-27 (DeskAI v2.30.3 / Build 93 shipped — /image runs as a background job: POST /api/images/jobs, the bubble fills in when done)
 
 ---
 

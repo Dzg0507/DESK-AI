@@ -117,6 +117,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             // A reply cut off by the app closing must not spin forever (this is the only ChatViewModel, so no
             // reply of this run is in flight yet)
             try { repository.markInterruptedReplies() } catch (_: Exception) {}
+            try { repository.imagingMessages().forEach { followImage(it.id) } } catch (_: Exception) {}
             val session = repository.ensureDefaultSession()
             _currentSession.value = session
             listenToMessages(session.id)
@@ -325,6 +326,12 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         if ((textToSend.isBlank() && ready.isEmpty()) || _isStreaming.value) return false
 
         val session = _currentSession.value ?: return false
+        // An image is made in the background: its bubble fills in when it's ready, and the chat stays free
+        if (ready.isEmpty() && ChatRepository.isImageRequest(textToSend)) {
+            if (textOverride == null) _inputText.value = ""
+            viewModelScope.launch { repository.startImage(session, textToSend)?.let { followImage(it.id) } }
+            return true
+        }
         val turnId = UUID.randomUUID().toString()
         currentTurnId = turnId
         // A tapped answer, chip or command leaves what's being typed alone (it used to wipe the draft)
@@ -371,6 +378,16 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
         return true
+    }
+
+    private val followedImages = mutableSetOf<String>()
+
+    /** Watches one image bubble until its image is in (once per bubble). */
+    private fun followImage(messageId: String) {
+        if (!followedImages.add(messageId)) return
+        viewModelScope.launch {
+            try { repository.followImageJob(messageId) } finally { followedImages.remove(messageId) }
+        }
     }
 
     fun stopStreaming() {
