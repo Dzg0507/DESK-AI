@@ -52,6 +52,22 @@ gradle assembleDebug          # → app/build/outputs/apk/debug/app-debug.apk
 
 A `NullPointerException ... ksp ... AWT-EventQueue` stack trace during the build is harmless noise from KSP.
 
+## Tests
+
+Every test is kept, but they don't all run on every edit (Devin's choice, 2026-10-28):
+
+```powershell
+python scripts\test_changed.py                    # while working: only the tests that use what changed
+gradle testDebugUnitTest --tests 'com.example.ui.DesignTokensTest'   # after a failure: just that class
+gradle testDebugUnitTest assembleDebug            # once, before shipping: everything
+```
+
+`test_changed.py` follows direct references only (a test that names a changed file or its declarations), so a
+screen that uses a changed component can still change a screenshot: that's what the full run before shipping is
+for. The first build of a session warms up the Kotlin compile daemon (~1.5 min); after that a one-file edit
+compiles in ~15 s. Keep the daemon: `kotlin.compiler.execution.strategy=in-process` turns incremental compilation
+off and every edit recompiled the whole app (~90 s).
+
 ## Check before shipping
 
 ```powershell
