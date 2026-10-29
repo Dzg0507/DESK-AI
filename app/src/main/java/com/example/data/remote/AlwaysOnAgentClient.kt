@@ -2487,7 +2487,9 @@ class AlwaysOnAgentClient {
             date = h.optString("date"),
             weather = w?.let {
                 com.example.data.model.TodayWeather(it.optInt("temp_f"), it.optString("summary"), it.optString("place"),
-                    it.optBoolean("is_day", true))
+                    it.optBoolean("is_day", true), it.optInt("code"), it.optInt("cloud_cover"), it.optDouble("rain_mm", 0.0),
+                    it.optDouble("snow_cm", 0.0), it.optDouble("wind_mph", 0.0), it.optInt("wind_dir"),
+                    it.optLong("sunrise"), it.optLong("sunset"))
             },
             brief = h.optJSONObject("brief")?.optString("text")?.takeIf { it.isNotBlank() },
             location = h.optString("location"),

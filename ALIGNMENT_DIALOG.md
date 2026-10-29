@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-28 (DeskAI v2.35.0 / Build 101 shipped — Today's videos show their picture, rounded)
+**Last Updated:** 2026-10-28 (DeskAI v2.35.0 / Build 102 shipped — Today's real sky)
 
 ---
 
@@ -12,6 +12,24 @@
 > ### Inviolable Rules for AlwaysOnAgent & DeskAI Pairing
 > 1. **No Local Android Build Tools:** Never download, install, or run Gradle / Android SDK on this HP EliteDesk Mini PC. This host only runs Python/FastAPI server tasks. DeskAI compilation and debug signing live exclusively on the owner's workstation where `debug.keystore` is stored.
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
+
+## Shipped 2026-10-29: DeskAI v2.36.0 (build 102), Today's real sky (by the laptop Claude session)
+
+Designed with Devin over ADB on his S22+, preview by preview.
+- `WeatherAtmosphere.kt` is rewritten: an AGSL `RuntimeShader` (Android 13+; a plain gradient with the sun/moon
+  before that) draws a black night with stars, the moon in its real phase (`moonPhase`, maria where the real ones
+  are, earthshine), clouds as fbm noise drifting with the real wind and as many as the real cover, the sun as a warm
+  glow on an arc from the real sunrise to sunset (`skyState`), twilight colours, rain, snow, lightning and fog.
+- The moon is always shown at night (Devin's choice), drifting across the open band above the date (`SKY_BAND`,
+  64 dp, where the recipe bar was). The sun never enters the status bar (the S22+'s camera hole).
+- `TodayWeather` has new fields from the agent (AlwaysOnAgent `6b12fe1`): code, cloud_cover, rain_mm, snow_cm,
+  wind_mph, wind_dir, sunrise, sunset (unix s). Old agents send none: defaults apply.
+- Today's top bar is only the Chat/Today switch (menu, Tasks and the hub stay on Chat). The recipe is a floating
+  pencil button at the bottom; its editor slides up over the keyboard. No sky icon by the temperature.
+- Header: `DeskType.todayDate`/`todayTemp` (32/19 sp); `rememberSkyInk` tints the text with the light and deepens its
+  shadow where the sky behind is bright or the sun passes behind it.
+- Testing hook: `adb shell am start -n <app>/com.example.MainActivity --es sky_preview "hour=21.5,phase=0.3,cloud=60,code=61"`
+  (`SkyPreview`; cold start: new-intent delivery didn't apply it).
 
 ## Shipped 2026-10-28: DeskAI v2.35.2 (build 101), Today's videos finally show their picture (by the laptop Claude session)
 

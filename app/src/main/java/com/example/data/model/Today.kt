@@ -27,7 +27,18 @@ data class TodayEdition(
     val nextAfter: String?          // when the next edition can be put together
 )
 
-data class TodayWeather(val tempF: Int, val summary: String, val place: String, val isDay: Boolean)
+data class TodayWeather(
+    val tempF: Int, val summary: String, val place: String, val isDay: Boolean,
+    // What the sky is drawn from (agent 2026-10-28; zeros from an older agent)
+    val code: Int = 0,              // WMO weather code
+    val cloudCover: Int = 0,        // %
+    val rainMm: Double = 0.0,       // rain + showers, the last 15 min
+    val snowCm: Double = 0.0,
+    val windMph: Double = 0.0,
+    val windDir: Int = 0,           // degrees the wind blows from
+    val sunrise: Long = 0,          // today's, unix seconds
+    val sunset: Long = 0
+)
 
 data class TodayEditionRef(val id: Long, val builtAt: String)
 

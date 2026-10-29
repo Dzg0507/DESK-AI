@@ -41,7 +41,9 @@ object DeskTextSize {
     val l = 16.sp         // chat messages, prominent body
     val xl = 18.sp        // card and section titles
     val xxl = 22.sp       // sheet titles, Today's headlines
-    val display = 28.sp   // the edition date, big numbers
+    val display = 28.sp   // big numbers
+    val todayDate = 32.sp // Today's date over the sky (2026-10-29)
+    val todayTemp = 19.sp // the temperature beside it
 }
 
 /** Numbers line up in columns (stats, times, counts): tabular figures. */
@@ -51,6 +53,10 @@ private const val TABULAR = "tnum"
 object DeskType {
     val display = TextStyle(fontFamily = Newsreader, fontWeight = FontWeight.SemiBold, fontSize = DeskTextSize.display,
         lineHeight = 1.15.em, letterSpacing = (-0.02).em)
+    /** Today's header over the sky: the date, and the temperature beside it. */
+    val todayDate = display.copy(fontSize = DeskTextSize.todayDate)
+    val todayTemp = TextStyle(fontFamily = Inter, fontWeight = FontWeight.SemiBold, fontSize = DeskTextSize.todayTemp,
+        lineHeight = 1.35.em)
     val headline = TextStyle(fontFamily = Newsreader, fontWeight = FontWeight.Medium, fontSize = DeskTextSize.xxl,
         lineHeight = 1.2.em, letterSpacing = (-0.02).em)
     val title = TextStyle(fontFamily = Inter, fontWeight = FontWeight.SemiBold, fontSize = DeskTextSize.xl,

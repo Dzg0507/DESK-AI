@@ -1,7 +1,7 @@
 {
-  "versionCode": 101,
-  "versionName": "2.35.2",
-  "changelog": "DeskAI v2.35.2 (Build 101): Today's videos now play with their picture, right in the card, with its rounded corners. Ask, Save and Close float on the video.",
+  "versionCode": 102,
+  "versionName": "2.36.0",
+  "changelog": "DeskAI v2.36.0 (Build 102): Today gets a real sky. A black night with stars and the moon in its real phase, clouds drifting across it with the wind; a sun that rises, crosses the sky and sets at your real sunrise and sunset; sunset colours, overcast, rain, storms with lightning, snow and fog from the weather now. The top is just the Chat/Today switch, the recipe is the pencil button at the bottom, the date is bigger and its colour follows the light, and video thumbnails have no black bars.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 28354523
+  "fileSizeBytes": 28485800
 }

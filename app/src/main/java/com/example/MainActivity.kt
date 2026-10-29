@@ -38,6 +38,7 @@ class MainActivity : FragmentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     openTaskIdState = intent?.getStringExtra("OPEN_TASK_ID")
+    com.example.ui.today.SkyPreview.apply(intent?.getStringExtra("sky_preview"))   // testing the sky over ADB
     openNeedsYouState = intent?.getStringExtra(com.example.service.NeedsYou.EXTRA_OPEN)
     if (intent?.getBooleanExtra(SharedInbox.EXTRA_SHARED, false) == true) sharedTick++
     enableEdgeToEdge()
@@ -110,6 +111,7 @@ class MainActivity : FragmentActivity() {
   override fun onNewIntent(intent: Intent) {
     super.onNewIntent(intent)
     setIntent(intent)
+    com.example.ui.today.SkyPreview.apply(intent.getStringExtra("sky_preview"))
     val taskId = intent.getStringExtra("OPEN_TASK_ID")
     if (!taskId.isNullOrBlank()) {
       openTaskIdState = taskId

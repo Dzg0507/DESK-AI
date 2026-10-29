@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -108,7 +109,11 @@ fun TodayScreen(
     onPlayEdition: (String) -> Unit = {}
 ) {
     val page = state.page
-    PullToRefreshBox(isRefreshing = state.loading && page != null, onRefresh = onRefresh, modifier = modifier.fillMaxSize()) {
+    // The recipe: a floating button at the bottom, its editor sliding up from there (2026-10-29, Devin: the bar at
+    // the top took the sky's open space)
+    var recipeOpen by rememberSaveable { mutableStateOf(false) }
+    Box(modifier.fillMaxSize()) {
+    PullToRefreshBox(isRefreshing = state.loading && page != null, onRefresh = onRefresh, modifier = Modifier.fillMaxSize()) {
         when {
             page == null && state.loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = DeskColors.Emerald, strokeWidth = 2.dp, modifier = Modifier.size(28.dp))
@@ -118,8 +123,22 @@ fun TodayScreen(
                 body = state.error ?: "Today comes from the agent on your PC.",
                 action = "Try again", onAction = onRefresh
             )
-            else -> Edition(state, page, onReact, onAsk, onAnswer, onSaveRecipe, onRefresh, listState, onPlayEdition)
+            else -> Edition(state, page, onReact, onAsk, onAnswer, onRefresh, listState, onPlayEdition)
         }
+    }
+    if (page != null) {
+        if (recipeOpen) {
+            Box(
+                Modifier.fillMaxSize().background(DeskColors.Scrim.copy(alpha = 0.45f))
+                    .clickable(interactionSource = null, indication = null) { recipeOpen = false }
+            )
+            Box(Modifier.align(Alignment.BottomCenter).imePadding().padding(DeskSpace.l)) {
+                RecipeEditor(page.recipe, state.savingRecipe, state.recipeError, onSaveRecipe) { recipeOpen = false }
+            }
+        } else {
+            RecipeButton(page.recipe, Modifier.align(Alignment.BottomEnd).padding(DeskSpace.l)) { recipeOpen = true }
+        }
+    }
     }
 }
 
@@ -130,7 +149,6 @@ private fun Edition(
     onReact: (TodayItem, String) -> Unit,
     onAsk: (TodayItem) -> Unit,
     onAnswer: (TodayItem, String) -> Boolean,
-    onSaveRecipe: (String, () -> Unit) -> Unit,
     onRefresh: () -> Unit,
     listState: LazyListState,
     onPlayEdition: (String) -> Unit
@@ -166,7 +184,8 @@ private fun Edition(
         contentPadding = PaddingValues(start = DeskSpace.l, end = DeskSpace.l, top = DeskSpace.s, bottom = DeskSpace.xxl),
         verticalArrangement = Arrangement.spacedBy(DeskSpace.m)
     ) {
-        item(key = "recipe") { RecipeBar(page.recipe, state.savingRecipe, state.recipeError, onSaveRecipe) }
+        // Open sky between the top bar and the date: where the moon drifts at night (2026-10-29)
+        item(key = "sky") { Spacer(Modifier.height(SKY_BAND)) }
         item(key = "header") {
             Header(
                 header = page.header,
@@ -222,30 +241,30 @@ private fun Edition(
 /** The date, weather, Play edition pill, count, and the 2-column Bento brief row. */
 @Composable
 private fun Header(header: TodayHeader, shown: Int, onPlayEdition: () -> Unit) {
+    // The text takes the sky's light and enough shadow to read over it; changes fade in slowly
+    val ink = rememberSkyInk(header.weather)
+    val inkColor by androidx.compose.animation.animateColorAsState(ink.color, androidx.compose.animation.core.tween(2500), label = "ink")
+    val shadowAlpha by androidx.compose.animation.core.animateFloatAsState(ink.shadowAlpha, androidx.compose.animation.core.tween(2500), label = "shade")
+    val shadow = androidx.compose.ui.graphics.Shadow(Color.Black.copy(alpha = shadowAlpha), blurRadius = 6f + 20f * shadowAlpha)
     Column(Modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.Bottom) {
             Text(
                 text = longDate(header.date),
-                style = DeskType.display,
-                color = DeskColors.TextPrimary,
+                style = DeskType.todayDate.copy(shadow = shadow),
+                color = inkColor,
                 modifier = Modifier.weight(1f)
             )
             header.weather?.let { w ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    skyIcon(skyFor(w))?.let { icon ->
-                        Icon(icon, contentDescription = null, tint = DeskColors.TextPrimary.copy(alpha = 0.85f),
-                            modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(DeskSpace.xs + DeskSpace.xxs))
-                    }
                     Text(
                         text = "${w.tempF}°F ${w.summary}",
-                        style = DeskType.titleSmall,
-                        color = DeskColors.TextPrimary.copy(alpha = 0.92f)
+                        style = DeskType.todayTemp.copy(shadow = shadow),
+                        color = inkColor.copy(alpha = 0.95f)
                     )
                 }
             }
         }
-        Spacer(Modifier.height(DeskSpace.s))
+        Spacer(Modifier.height(DeskSpace.l))
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(DeskSpace.m)
@@ -253,8 +272,8 @@ private fun Header(header: TodayHeader, shown: Int, onPlayEdition: () -> Unit) {
             PlayEditionPill(onClick = onPlayEdition)
             Text(
                 text = if (shown == 1) "1 thing today" else "$shown things today",
-                style = DeskType.mono,
-                color = DeskColors.TextMuted
+                style = DeskType.mono.copy(shadow = shadow),
+                color = inkColor.copy(alpha = 0.72f)
             )
         }
         // The brief as MAIL and UP NEXT tiles, from the facts it was written from. Its text is never shown here
@@ -438,25 +457,31 @@ private fun BriefBentoRow(bento: BriefBento) {
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun RecipeBar(recipe: TodayRecipe, saving: Boolean, error: String?, onSave: (String, () -> Unit) -> Unit) {
-    var open by rememberSaveable { mutableStateOf(false) }
+private fun RecipeButton(recipe: TodayRecipe, modifier: Modifier, onOpen: () -> Unit) {
+    Box(
+        modifier.size(48.dp).glass(CircleShape, DeskColors.GlassStrong).clickable(onClick = onOpen),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            Icons.Default.Edit, contentDescription = if (recipe.isEmpty) "Tell Today what you want to see" else "Edit recipe",
+            tint = DeskColors.TextPrimary, modifier = Modifier.size(20.dp)
+        )
+    }
+}
+
+/** The recipe's editor, over the bottom of Today: the owner's words, what the agent took from them, Save. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun RecipeEditor(
+    recipe: TodayRecipe, saving: Boolean, error: String?, onSave: (String, () -> Unit) -> Unit, onClose: () -> Unit
+) {
     var text by rememberSaveable(recipe.text) { mutableStateOf(recipe.text) }
     val chips = recipeChips(recipe)
-    if (!open) {
-        Row(
-            Modifier.fillMaxWidth().glass().clickable { open = true }.padding(horizontal = 14.dp, vertical = 9.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(Icons.Default.Edit, contentDescription = null, tint = DeskColors.TextSecondary, modifier = Modifier.size(14.dp))
-            Spacer(Modifier.width(DeskSpace.s))
-            Text(
-                if (chips.isEmpty()) "Tell Today what you want to see" else "Edit recipe · " + chips.joinToString(", "),
-                style = DeskType.label, color = DeskColors.TextSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis
-            )
-        }
-        return
-    }
-    Column(Modifier.fillMaxWidth().todayGlassCard().padding(DeskSpace.l)) {
+    Column(
+        Modifier.fillMaxWidth().todayGlassCard().background(DeskColors.Raised2.copy(alpha = 0.92f))
+            .clickable(interactionSource = null, indication = null) {}      // taps inside don't close it
+            .padding(DeskSpace.l)
+    ) {
         Text("YOUR RECIPE", style = DeskType.overline, color = DeskColors.Emerald)
         Spacer(Modifier.height(DeskSpace.s))
         BasicTextField(
@@ -496,12 +521,12 @@ private fun RecipeBar(recipe: TodayRecipe, saving: Boolean, error: String?, onSa
                 "You can also just tell the agent in Chat.", style = DeskType.caption, color = DeskColors.TextMuted,
                 modifier = Modifier.weight(1f)
             )
-            GlassPill("Close") { open = false; text = recipe.text }
+            GlassPill("Close") { text = recipe.text; onClose() }
             Spacer(Modifier.width(DeskSpace.s))
             if (saving) {
                 CircularProgressIndicator(color = DeskColors.Emerald, strokeWidth = 2.dp, modifier = Modifier.size(22.dp))
             } else {
-                GlassPill("Save", selected = true) { onSave(text.trim()) { open = false } }
+                GlassPill("Save", selected = true) { onSave(text.trim()) { onClose() } }
             }
         }
     }
@@ -1018,7 +1043,8 @@ fun UnifiedTopBar(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        Row(Modifier.align(Alignment.CenterStart), verticalAlignment = Alignment.CenterVertically) {
+        // Today is just the switch over the sky; the menu, Tasks and the hub are on Chat (Devin, 2026-10-29)
+        if (!showingToday) Row(Modifier.align(Alignment.CenterStart), verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
                     .testTag("drawer_menu_button")
@@ -1052,7 +1078,7 @@ fun UnifiedTopBar(
             modifier = Modifier.align(Alignment.Center)
         )
 
-        Row(
+        if (!showingToday) Row(
             modifier = Modifier.align(Alignment.CenterEnd),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
