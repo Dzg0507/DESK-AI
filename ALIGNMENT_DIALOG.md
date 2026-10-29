@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-28 (DeskAI v2.34.0 / Build 98 shipped — chat capsule + unboxed replies, vivid WeatherAtmosphere, no brief text on Today)
+**Last Updated:** 2026-10-28 (DeskAI v2.35.0 / Build 99 shipped — Today's videos play in their card)
 
 ---
 
@@ -12,6 +12,20 @@
 > ### Inviolable Rules for AlwaysOnAgent & DeskAI Pairing
 > 1. **No Local Android Build Tools:** Never download, install, or run Gradle / Android SDK on this HP EliteDesk Mini PC. This host only runs Python/FastAPI server tasks. DeskAI compilation and debug signing live exclusively on the owner's workstation where `debug.keystore` is stored.
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
+
+## Shipped 2026-10-28: DeskAI v2.35.0 (build 99), videos play in their Today card (by the laptop Claude session)
+
+- Devin asked for Today's videos to play inside their cards, not in a separate player or the YouTube app. New
+  `ui/today/InlineYouTube.kt`: YouTube's IFrame player in a WebView, loaded with an https origin named after the app
+  (`https://com.aistudio.deskai.kzpwqm`) because YouTube refuses embeds without a referrer (errors 152/153).
+- `BigCard`: tapping a video card swaps its picture for the 16:9 player (autoplay), with the title, channel and a
+  Close pill under it. One video plays at a time (`playing` in `Edition`); scrolling it away or closing it stops the
+  sound (the WebView is destroyed); the app going to the background pauses it.
+- A video whose channel blocks embedding (player errors 101/150, or any error) closes the player and opens the
+  link in YouTube, as before. Taps on the player's title or logo also open YouTube.
+- Fullscreen: the player's own button puts the video over the whole window in landscape; back out restores it.
+- Agent side (AlwaysOnAgent `f520446`): channels are read through YouTube's Data API (`YOUTUBE_API_KEY`), then the
+  RSS feed, then the /videos page; card links are still `https://www.youtube.com/watch?v=<id>`.
 
 ## Shipped 2026-10-27: DeskAI v2.28.0 (build 87), files from the Mini in chat (by the laptop Claude session)
 

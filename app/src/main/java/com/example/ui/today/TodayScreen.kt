@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -141,6 +142,7 @@ private fun Edition(
         it.card == "done" || (it.card == "settled" && it.body.lines().count { l -> l.isNotBlank() } > 3)
     }
     val questions = items.filter { it.card == "question" }
+    var playing by rememberSaveable { mutableStateOf<Long?>(null) }     // the video card playing in place (one at a time)
 
     val spokenSummary = remember(page) {
         buildString {
@@ -183,7 +185,9 @@ private fun Edition(
             }
             return@LazyColumn
         }
-        items(big, key = { it.id }) { item -> BigCard(item, base, token, onReact, onAsk) }
+        items(big, key = { it.id }) { item ->
+            BigCard(item, base, token, onReact, onAsk, playing == item.id, { playing = it?.let { item.id } })
+        }
         // Pair compact 2-3 line cards in a 2-column Row; an unpaired odd card takes full width (never 0.5f orphan)
         items(compactTiles.chunked(2), key = { row -> "tiles-" + row.joinToString { it.id.toString() } }) { row ->
             if (row.size == 2) {
@@ -514,13 +518,37 @@ internal fun recipeChips(r: TodayRecipe): List<String> =
 /** A story or video: full-bleed with its picture; a designed text card without one (none, broken, or too small). */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun BigCard(item: TodayItem, base: String, token: String, onReact: (TodayItem, String) -> Unit, onAsk: (TodayItem) -> Unit) {
+private fun BigCard(
+    item: TodayItem, base: String, token: String, onReact: (TodayItem, String) -> Unit, onAsk: (TodayItem) -> Unit,
+    playing: Boolean = false, onPlaying: (Boolean?) -> Unit = {}
+) {
     val uri = LocalUriHandler.current
     var menu by remember { mutableStateOf(false) }
-    val open = { if (item.link.isNotBlank()) runCatching { uri.openUri(item.link) } }
+    val videoId = remember(item.link) { if (item.card == "video") youTubeId(item.link) else null }
+    val openLink = { if (item.link.isNotBlank()) runCatching { uri.openUri(item.link) } }
+    // A video plays in its own card; anything else (or a video YouTube won't let play here) opens its link
+    val open = { if (videoId != null) onPlaying(true) else openLink() }
     val headline = item.title.ifBlank { item.body }
     Box(Modifier.fillMaxWidth()) {
-        if (item.imageUrl != null) {
+        if (playing && videoId != null) {
+            Column(Modifier.fillMaxWidth().todayGlassCard(DeskShapes.media)) {
+                InlineYouTube(
+                    videoId, Modifier.fillMaxWidth().aspectRatio(16f / 9f),
+                    onCantPlay = { onPlaying(null); openLink() }
+                )
+                Row(
+                    Modifier.fillMaxWidth().combinedClickable(onClick = {}, onLongClick = { menu = true }).padding(DeskSpace.l),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(headline, style = DeskType.label, color = DeskColors.TextPrimary, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        if (item.site.isNotBlank()) Text(item.site, style = DeskType.mono, color = DeskColors.TextSecondary, maxLines = 1)
+                    }
+                    Spacer(Modifier.width(DeskSpace.s))
+                    GlassPill("Close") { onPlaying(null) }
+                }
+            }
+        } else if (item.imageUrl != null) {
             val context = LocalContext.current
             val request = remember(item.imageUrl, token) {
                 ImageRequest.Builder(context).data(item.imageUrl).crossfade(true).apply {

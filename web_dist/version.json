@@ -1,7 +1,7 @@
 {
-  "versionCode": 98,
-  "versionName": "2.34.0",
-  "changelog": "DeskAI v2.34.0 (Build 98): A cleaner Chat and a brighter Today. Chat: one floating input capsule, no avatars or timing labels, your messages as compact bubbles (tap one for its time), and a + for a new chat at the top. Today: a vivid sky that follows the real weather, your mail and what's up next as tiles, and photo story cards.",
+  "versionCode": 99,
+  "versionName": "2.35.0",
+  "changelog": "DeskAI v2.35.0 (Build 99): YouTube videos on Today play right in their card. Tap a video card to play it there; fullscreen turns the phone sideways; Close stops it. Videos a channel won't let play outside YouTube open in the YouTube app.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 28338137
+  "fileSizeBytes": 28354531
 }
