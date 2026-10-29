@@ -1,7 +1,7 @@
 {
-  "versionCode": 102,
-  "versionName": "2.36.0",
-  "changelog": "DeskAI v2.36.0 (Build 102): Today gets a real sky. A black night with stars and the moon in its real phase, clouds drifting across it with the wind; a sun that rises, crosses the sky and sets at your real sunrise and sunset; sunset colours, overcast, rain, storms with lightning, snow and fog from the weather now. The top is just the Chat/Today switch, the recipe is the pencil button at the bottom, the date is bigger and its colour follows the light, and video thumbnails have no black bars.",
+  "versionCode": 103,
+  "versionName": "2.37.0",
+  "changelog": "DeskAI v2.37.0 (Build 103): A roomier Chat. Bigger text with more space, green-dot lists, the agent's name once at the top of a conversation, your messages with their time inside, and feedback in the tap menu. A new input row: round mic, attach and hub buttons and a round send button. YouTube videos in chat are cards that play right there.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 28485800
+  "fileSizeBytes": 28387283
 }

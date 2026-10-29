@@ -137,6 +137,7 @@ fun MessageBubble(
     onFeedback: ((ChatMessage, String) -> Unit)? = null,
     serverBaseUrl: String = "",
     authToken: String = "",
+    showHeader: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val isUser = message.role == "user"
@@ -152,7 +153,7 @@ fun MessageBubble(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = if (isUser) 12.dp else 20.dp, vertical = if (isUser) 4.dp else 8.dp),
+            .padding(horizontal = if (isUser) 14.dp else 20.dp, vertical = if (isUser) 10.dp else 14.dp),
         horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start,
         verticalAlignment = Alignment.Top
     ) {
@@ -160,11 +161,28 @@ fun MessageBubble(
             modifier = if (isUser) Modifier.widthIn(max = 330.dp) else Modifier.weight(1f),
             horizontalAlignment = if (isUser) Alignment.End else Alignment.Start
         ) {
+            // Who's talking, once at the top of a stretch of conversation (the mockup), not on every reply
+            if (!isUser && showHeader) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 10.dp)) {
+                    Box(
+                        Modifier.size(26.dp).glass(CircleShape, DeskColors.GlassStrong),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.SmartToy, contentDescription = null, tint = DeskColors.Agent,
+                            modifier = Modifier.size(15.dp))
+                    }
+                    Spacer(Modifier.width(10.dp))
+                    Text("AlwaysOnAgent", style = DeskType.label, color = DeskColors.TextPrimary)
+                    Spacer(Modifier.width(8.dp))
+                    Text(timeFormatted, style = DeskType.caption, color = DeskColors.TextMuted)
+                }
+            }
             Box(
                 modifier = Modifier
                     .then(if (isUser) Modifier.glass(UserBubbleShape) else Modifier)
                     .clickable { showActions = !showActions }
-                    .padding(horizontal = if (isUser) 14.dp else 0.dp, vertical = if (isUser) 9.dp else 0.dp)
+                    .padding(start = if (isUser) 16.dp else 0.dp, end = if (isUser) 16.dp else 0.dp,
+                        top = if (isUser) 12.dp else 0.dp, bottom = if (isUser) 8.dp else 0.dp)
             ) {
                 Column {
                     val attached = remember(message.attachmentsJson) { message.getAttachments() }
@@ -175,13 +193,27 @@ fun MessageBubble(
                     if (message.status == "sending" && message.content.isEmpty()) {
                         ThinkingIndicator()
                     } else if (message.content.isNotBlank() || attached.isEmpty()) {
-                        MarkdownContent(
-                            content = message.content,
-                            textColor = DeskColors.TextPrimary,
-                            serverBaseUrl = serverBaseUrl,
-                            authToken = authToken
-                        )
-
+                        // A YouTube link becomes a video card that plays in place; the bare link isn't shown
+                        val video = remember(message.content) { if (isUser) null else youTubeLink(message.content) }
+                        val shown = remember(message.content, video) {
+                            video?.let { message.content.replace(it.first, "").trim() } ?: message.content
+                        }
+                        if (shown.isNotBlank()) {
+                            MarkdownContent(
+                                content = shown,
+                                textColor = DeskColors.TextPrimary,
+                                serverBaseUrl = serverBaseUrl,
+                                authToken = authToken
+                            )
+                        }
+                        if (video != null) {
+                            // "Bob Does Sports posted a new video: ..." -> the channel's name on the card
+                            val channel = remember(message.content) {
+                                Regex("^(.{1,60}?) posted a new video").find(message.content)?.groupValues?.get(1) ?: "YouTube"
+                            }
+                            if (shown.isNotBlank()) Spacer(modifier = Modifier.height(12.dp))
+                            ChatVideoCard(videoId = video.second, link = video.first, label = channel)
+                        }
                     }
                     // An image being made in the background: the bubble fills in when it's ready
                     if (message.status == "imaging") {
@@ -287,37 +319,20 @@ fun MessageBubble(
                         )
                     }
 
-                    // Proactive message reaction chips (thumbs up, thumbs down, less like this)
-                    val isProactive = !isUser && (message.inboxId != null || message.modelUsed?.startsWith("AlwaysOnAgent ·") == true)
-                    if (isProactive && onFeedback != null) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            FeedbackChip(
-                                label = "👍",
-                                selected = message.feedback == "thumbs_up",
-                                onClick = { onFeedback(message, "thumbs_up") }
-                            )
-                            FeedbackChip(
-                                label = "👎",
-                                selected = message.feedback == "thumbs_down",
-                                onClick = { onFeedback(message, "thumbs_down") }
-                            )
-                            FeedbackChip(
-                                label = "less like this",
-                                selected = message.feedback == "less_like_this",
-                                onClick = { onFeedback(message, "less_like_this") }
-                            )
-                        }
+                    // The owner's message keeps its time inside the bubble, bottom right (the mockup)
+                    if (isUser) {
+                        Text(
+                            text = timeFormatted,
+                            style = DeskType.caption,
+                            color = DeskColors.TextMuted,
+                            modifier = Modifier.align(Alignment.End).padding(top = 4.dp)
+                        )
                     }
-
                 }
             }
 
-            // The time, only when the message is tapped (with its actions below)
-            if (showActions) {
+            // The agent's time, only when the message is tapped (with its actions below)
+            if (showActions && !isUser) {
                 Text(
                     text = timeFormatted,
                     style = DeskType.caption,
@@ -342,6 +357,17 @@ fun MessageBubble(
                     horizontalArrangement = Arrangement.spacedBy(2.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // Feedback on the agent's own messages (proactive ones), moved here from chips under the
+                    // message (2026-10-29 redesign: nothing under a message but the message)
+                    val isProactive = !isUser && (message.inboxId != null || message.modelUsed?.startsWith("AlwaysOnAgent ·") == true)
+                    if (isProactive && onFeedback != null) {
+                        FeedbackChip(label = "👍", selected = message.feedback == "thumbs_up",
+                            onClick = { onFeedback(message, "thumbs_up"); showActions = false })
+                        FeedbackChip(label = "👎", selected = message.feedback == "thumbs_down",
+                            onClick = { onFeedback(message, "thumbs_down"); showActions = false })
+                        FeedbackChip(label = "less like this", selected = message.feedback == "less_like_this",
+                            onClick = { onFeedback(message, "less_like_this"); showActions = false })
+                    }
                     // Copy
                     IconButton(
                         onClick = {

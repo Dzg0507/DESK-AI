@@ -43,6 +43,7 @@ object DeskTextSize {
     val xxl = 22.sp       // sheet titles, Today's headlines
     val display = 28.sp   // big numbers
     val todayDate = 32.sp // Today's date over the sky (2026-10-29)
+    val chat = 17.sp      // chat messages (2026-10-29 redesign: bigger, more air)
     val todayTemp = 19.sp // the temperature beside it
 }
 

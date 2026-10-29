@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-29 (DeskAI v2.36.0 / Build 102 shipped — Today's real sky)
+**Last Updated:** 2026-10-28 (DeskAI v2.35.0 / Build 103 shipped — Chat redesign, slices 1-2)
 
 ---
 
@@ -12,6 +12,20 @@
 > ### Inviolable Rules for AlwaysOnAgent & DeskAI Pairing
 > 1. **No Local Android Build Tools:** Never download, install, or run Gradle / Android SDK on this HP EliteDesk Mini PC. This host only runs Python/FastAPI server tasks. DeskAI compilation and debug signing live exclusively on the owner's workstation where `debug.keystore` is stored.
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
+
+## Shipped 2026-10-29: DeskAI v2.37.0 (build 103), the Chat redesign, slices 1-2 (by the laptop Claude session)
+
+From Devin's chat mockup, previewed live on his S22+ over ADB.
+- Messages: `DeskTextSize.chat` (17 sp), line height 25, 10 dp between paragraphs, green 7 dp dot bullets
+  (MarkdownText); more space between messages. The agent's header (small avatar, "AlwaysOnAgent", time) shows only
+  on its first message after a 30-minute pause (`headerKeys` in ChatScreen; `showHeader` on MessageBubble). The
+  owner's bubble shows its time inside, bottom right. Proactive 👍/👎/less-like-this moved from chips under the message
+  into the tap menu.
+- Input (ChatInputBar): round 48 dp glass buttons (mic, attach, hub) left of the text capsule, a round send button
+  (green when there's something to send; stop while streaming). The mic hides while typing.
+- `ChatVideoCard`: a YouTube link in an agent message becomes a 16:9 card (hq720 thumbnail, mqdefault fallback, play
+  button, channel pill) that plays in place with Today's `InlineYouTube`; the bare link is removed from the text.
+- Still to come: the live "running" card under the switch, the teal glow, images/documents opening on tap.
 
 ## Shipped 2026-10-29: DeskAI v2.36.0 (build 102), Today's real sky (by the laptop Claude session)
 

@@ -1,5 +1,6 @@
 package com.example.ui.components
 
+import androidx.compose.foundation.layout.heightIn
 import com.example.ui.theme.DeskColors
 import com.example.ui.theme.DeskType
 import com.example.ui.theme.DeskTextSize
@@ -155,70 +156,17 @@ fun ChatInputBar(
             }
         }
 
+        // The 2026-10-29 redesign (Devin's mockup): round glass buttons for the mic, files and the hub on the left, the
+        // text in its own capsule, and a round send button on the right (stop while a reply streams). The mic steps
+        // aside while there's text, so the capsule has room.
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(DeskShapes.sheet)
-                .background(DeskColors.Capsule)
-                .border(1.dp, DeskColors.CapsuleBorder, DeskShapes.sheet)
-                .padding(horizontal = 12.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             val slash = text.startsWith("/")
-            CapsuleIcon(Icons.Default.Apps, "Actions", if (slash) DeskColors.Agent else DeskColors.TextSecondary, onOpenCommandPalette)
-            CapsuleIcon(Icons.Default.Add, "Attach a file", if (attachments.isNotEmpty()) DeskColors.Agent else DeskColors.TextSecondary) {
-                try {
-                    fileLauncher.launch(arrayOf("application/pdf",
-                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                        "text/*", "application/json", "image/*", "video/*"))
-                } catch (_: Exception) {
-                    // No document picker on this device
-                }
-            }
-            Spacer(modifier = Modifier.width(6.dp))
-
-            Box(modifier = Modifier.weight(1f).padding(vertical = 8.dp)) {
-                if (text.isEmpty()) {
-                    Text(
-                        text = if (attachments.isNotEmpty()) "Ask about the file…" else "Message AlwaysOnAgent",
-                        style = DeskType.body,
-                        color = DeskColors.TextMuted,
-                        maxLines = 1
-                    )
-                }
-                // The cursor goes to the end when the text is set from outside (a slash command picked from the
-                // pop-up: "/" becomes "/remember ", and typing carries on after it)
-                var field by remember { mutableStateOf(androidx.compose.ui.text.input.TextFieldValue(text)) }
-                if (field.text != text) {
-                    field = androidx.compose.ui.text.input.TextFieldValue(text, androidx.compose.ui.text.TextRange(text.length))
-                }
-                BasicTextField(
-                    value = field,
-                    onValueChange = { field = it; if (it.text != text) onTextChange(it.text) },
-                    textStyle = DeskType.body.copy(color = DeskColors.TextPrimary),
-                    cursorBrush = SolidColor(DeskColors.Signal),
-                    maxLines = 5,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            // Enhance (while there's text to enhance): sparkle, or undo after enhancing
-            AnimatedVisibility(visible = text.isNotBlank() && !isStreaming, enter = fadeIn(), exit = fadeOut()) {
-                if (isRefining) {
-                    Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = DeskColors.Agent, strokeWidth = 2.dp, modifier = Modifier.size(18.dp))
-                    }
-                } else {
-                    CapsuleIcon(if (canUndoRefine) Icons.AutoMirrored.Filled.Undo else Icons.Default.AutoAwesome,
-                        if (canUndoRefine) "Undo Enhance" else "Enhance Prompt", DeskColors.Agent,
-                        if (canUndoRefine) onUndoRefine else onRefine)
-                }
-            }
-
-            when {
-                isStreaming -> CapsuleIcon(Icons.Default.Stop, "Stop Generating", DeskColors.Error, onStopStreaming)
-                canSend -> CapsuleIcon(Icons.AutoMirrored.Filled.Send, "Send Message", DeskColors.Signal, onSend)
-                else -> CapsuleIcon(Icons.Default.Mic, "Voice Dictation", DeskColors.TextSecondary) {
+            AnimatedVisibility(visible = text.isEmpty() && !isStreaming, enter = fadeIn(), exit = fadeOut()) {
+                RoundButton(Icons.Default.Mic, "Voice Dictation", DeskColors.TextPrimary) {
                     val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                         putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
                         putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
@@ -231,7 +179,94 @@ fun ChatInputBar(
                     }
                 }
             }
+            RoundButton(Icons.Default.AttachFile, "Attach a file",
+                if (attachments.isNotEmpty()) DeskColors.Agent else DeskColors.TextPrimary) {
+                try {
+                    fileLauncher.launch(arrayOf("application/pdf",
+                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        "text/*", "application/json", "image/*", "video/*"))
+                } catch (_: Exception) {
+                    // No document picker on this device
+                }
+            }
+            RoundButton(Icons.Default.Apps, "Actions", if (slash) DeskColors.Agent else DeskColors.TextPrimary,
+                onClick = onOpenCommandPalette)
+
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 48.dp)
+                    .clip(DeskShapes.sheet)
+                    .background(DeskColors.Capsule)
+                    .border(1.dp, DeskColors.CapsuleBorder, DeskShapes.sheet)
+                    .padding(start = 16.dp, end = 6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(modifier = Modifier.weight(1f).padding(vertical = 12.dp)) {
+                    if (text.isEmpty()) {
+                        Text(
+                            text = if (attachments.isNotEmpty()) "Ask about the file…"
+                                   else "Message, or / for commands",
+                            style = DeskType.body,
+                            color = DeskColors.TextMuted,
+                            maxLines = 2
+                        )
+                    }
+                    // The cursor goes to the end when the text is set from outside (a slash command picked from the
+                    // pop-up: "/" becomes "/remember ", and typing carries on after it)
+                    var field by remember { mutableStateOf(androidx.compose.ui.text.input.TextFieldValue(text)) }
+                    if (field.text != text) {
+                        field = androidx.compose.ui.text.input.TextFieldValue(text, androidx.compose.ui.text.TextRange(text.length))
+                    }
+                    BasicTextField(
+                        value = field,
+                        onValueChange = { field = it; if (it.text != text) onTextChange(it.text) },
+                        textStyle = DeskType.body.copy(color = DeskColors.TextPrimary),
+                        cursorBrush = SolidColor(DeskColors.Signal),
+                        maxLines = 5,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                // Enhance (while there's text to enhance): sparkle, or undo after enhancing
+                AnimatedVisibility(visible = text.isNotBlank() && !isStreaming, enter = fadeIn(), exit = fadeOut()) {
+                    if (isRefining) {
+                        Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(color = DeskColors.Agent, strokeWidth = 2.dp, modifier = Modifier.size(18.dp))
+                        }
+                    } else {
+                        CapsuleIcon(if (canUndoRefine) Icons.AutoMirrored.Filled.Undo else Icons.Default.AutoAwesome,
+                            if (canUndoRefine) "Undo Enhance" else "Enhance Prompt", DeskColors.Agent,
+                            if (canUndoRefine) onUndoRefine else onRefine)
+                    }
+                }
+            }
+
+            when {
+                isStreaming -> RoundButton(Icons.Default.Stop, "Stop Generating", DeskColors.Error, onClick = onStopStreaming)
+                else -> RoundButton(Icons.AutoMirrored.Filled.Send, "Send Message",
+                    if (canSend) DeskColors.Signal else DeskColors.TextMuted, emphasised = canSend,
+                    onClick = { if (canSend) onSend() })
+            }
         }
+    }
+}
+
+/** A round frosted-glass button beside the capsule (48 dp: Android's minimum touch target). */
+@Composable
+private fun RoundButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, tint: Color,
+    emphasised: Boolean = false, onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(48.dp)
+            .clip(CircleShape)
+            .background(if (emphasised) DeskColors.Signal.copy(alpha = 0.18f) else DeskColors.Capsule)
+            .border(1.dp, if (emphasised) DeskColors.Signal.copy(alpha = 0.45f) else DeskColors.CapsuleBorder, CircleShape)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(imageVector = icon, contentDescription = label, tint = tint, modifier = Modifier.size(22.dp))
     }
 }
 

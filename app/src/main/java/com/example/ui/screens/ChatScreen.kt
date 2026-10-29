@@ -392,6 +392,20 @@ fun ChatScreen(
 
                     // Messages Scroll Area
                     Box(modifier = Modifier.weight(1f)) {
+                        // The agent's name and time show once per stretch of conversation: on its first message
+                        // after a 30-minute pause (2026-10-29 redesign)
+                        val headerKeys = remember(chatEntries) {
+                            var lastAt = 0L
+                            buildSet {
+                                chatEntries.forEach { e ->
+                                    if (e is com.example.ui.components.ChatEntry.Message) {
+                                        val m = e.message
+                                        if (m.role != "user" && m.timestamp - lastAt > 30 * 60_000L) add(e.key)
+                                        lastAt = m.timestamp
+                                    }
+                                }
+                            }
+                        }
                         LazyColumn(
                             state = listState,
                             modifier = Modifier.fillMaxSize(),
@@ -425,6 +439,7 @@ fun ChatScreen(
                                 val message = entry.message
                                 MessageBubble(
                                     message = message,
+                                    showHeader = entry.key in headerKeys,
                                     onRunProposal = { msg, prop -> viewModel.runProposal(msg, prop) },
                                     // Computer tasks: run it and watch the Mini's screen in View only (no control)
                                     onRunAndWatchProposal = { msg, prop ->

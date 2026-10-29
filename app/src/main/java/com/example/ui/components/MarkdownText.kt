@@ -93,7 +93,7 @@ fun MarkdownContent(
     // Messages saved before 2026-10-07 can hold image links with ?token=: never show it again
     val elements = remember(content) { parseMarkdown(com.example.data.remote.MediaAuth.stripTokensInText(content)) }
 
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
         elements.forEach { element ->
             when (element) {
                 is MarkdownElement.Header -> {
@@ -112,9 +112,9 @@ fun MarkdownContent(
                 is MarkdownElement.Paragraph -> {
                     Text(
                         text = buildStyledInlineMarkdown(element.text, textColor),
-                        fontSize = DeskTextSize.l,
+                        fontSize = DeskTextSize.chat,
                         color = textColor,
-                        lineHeight = 22.sp
+                        lineHeight = 25.sp
                     )
                 }
                 is MarkdownElement.BulletItem -> {
@@ -122,18 +122,16 @@ fun MarkdownContent(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.Top
                     ) {
-                        Text(
-                            text = "•",
-                            fontSize = DeskTextSize.l,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(end = 8.dp)
+                        // A small green dot, centred on the first line (the 2026-10-29 chat redesign)
+                        androidx.compose.foundation.layout.Box(
+                            Modifier.padding(top = 9.dp, end = 12.dp).size(7.dp)
+                                .background(com.example.ui.theme.DeskColors.Signal, androidx.compose.foundation.shape.CircleShape)
                         )
                         Text(
                             text = buildStyledInlineMarkdown(element.text, textColor),
-                            fontSize = DeskTextSize.l,
+                            fontSize = DeskTextSize.chat,
                             color = textColor,
-                            lineHeight = 22.sp,
+                            lineHeight = 25.sp,
                             modifier = Modifier.weight(1f)
                         )
                     }
