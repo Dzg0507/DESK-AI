@@ -141,3 +141,11 @@ drift from their set personality over long conversations, especially emotional o
    Research: provenance and confidence on memories (said / inferred / observed), how many times something must
    recur before it counts, decay for inferences vs statements, keeping curiosity (the get-to-know-you questions)
    from turning into profiling, and how long-term assistants keep a growing memory from hardening into a caricature.
+   **Narrowed (Devin: "this is also the reason we have background memory management"; checked in AlwaysOnAgent's
+   code).** Facts are already guarded: chat saves only what Devin states in his own words (the quote is checked);
+   the weekly review (Saturdays, `core/memory_review.py`) proposes additions and retirements that must quote him or
+   name a fact, and nothing changes until he approves; upkeep merges duplicates, fades trivia after 90 days and
+   rebuilds the profile, which may only restate facts. So inferences reach *facts* only with his approval. The
+   gaps are outside that system: (a) the proactive side's interests and defaults (Styropyro came from there, not
+   from a fact) get no quote check or approval; (b) conversation summaries are the agent's own words, fed back
+   every reply, unchecked. Research those two.
