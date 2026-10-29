@@ -2498,7 +2498,9 @@ class AlwaysOnAgentClient {
             } ?: emptyList(),
             mail = h.optJSONObject("brief")?.optJSONArray("mail")?.let { a ->
                 (0 until a.length()).mapNotNull { a.optJSONObject(it) }.map { it.optString("from") to it.optString("subject") }
-            } ?: emptyList()
+            } ?: emptyList(),
+            triviaRight = h.optJSONObject("trivia")?.optInt("right") ?: 0,
+            triviaAnswered = h.optJSONObject("trivia")?.optInt("answered") ?: 0
         )
         val ed = json.optJSONObject("edition")
         val edition = ed?.let { e ->

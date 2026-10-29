@@ -149,8 +149,8 @@ object DeskColors {
     val BentoLabel = Color(0xFF7A8F85)        // Bento tile header label & icon tint
     val WeatherTwilightCyan = Color(0x331B4D5C) // upper-right celestial radial glow
     val WeatherDeepEmerald = Color(0x26113828)  // deep emerald atmospheric glow
-    val GlowEmerald = Color(0xFF0D261D)       // the top atmosphere
-    val GlowCerulean = Color(0xFF0A1E29)
+    val GlowEmerald = Color(0xFF0B2E2C)       // the top atmosphere: deep teal (the 2026-10-29 chat mockup)
+    val GlowCerulean = Color(0xFF0A2630)
     val Scrim = Color(0xF2050806)             // the bottom of a photo under its text
     val Base = Color(0xFF050806)              // the app background
     val Raised = Color(0xFF0B100D)            // cards, sheets

@@ -164,6 +164,7 @@ private fun Edition(
         it.card == "done" || (it.card == "settled" && it.body.lines().count { l -> l.isNotBlank() } > 3)
     }
     val questions = items.filter { it.card == "question" }
+    val trivia = items.filter { it.card == "trivia" }
     var playing by rememberSaveable { mutableStateOf<Long?>(null) }     // the video card playing in place (one at a time)
 
     val spokenSummary = remember(page) {
@@ -181,7 +182,7 @@ private fun Edition(
     LazyColumn(
         state = listState,
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = DeskSpace.l, end = DeskSpace.l, top = DeskSpace.s, bottom = DeskSpace.xxl),
+        contentPadding = PaddingValues(start = DeskSpace.l, end = DeskSpace.l, top = DeskSpace.s, bottom = 96.dp),   // clear of the ✎ button
         verticalArrangement = Arrangement.spacedBy(DeskSpace.m)
     ) {
         // Open sky between the top bar and the date: where the moon drifts at night (2026-10-29)
@@ -232,6 +233,10 @@ private fun Edition(
             } else {
                 Tile(item, onReact, onAsk, Modifier.fillMaxWidth())
             }
+        }
+        // The daily trivia question (2026-10-29): tap an answer, see right away
+        items(trivia, key = { "trivia-${it.id}" }) { t ->
+            TriviaCard(t, page.header.triviaRight, page.header.triviaAnswered, onReact)
         }
         items(questions, key = { it.id }) { q -> QuestionCard(q, q.id in state.answered || q.state == "answered", onReact, onAnswer) }
         page.edition?.let { ed -> item(key = "caught-up") { CaughtUp(ed) } }
@@ -539,10 +544,13 @@ internal fun recipeChips(r: TodayRecipe): List<String> =
         r.hidden.map {
             "hide " + mapOf(
                 "story" to "stories", "video" to "videos", "settled" to "settled",
-                "done" to "finished", "question" to "questions"
+                "done" to "finished", "question" to "questions", "trivia" to "trivia"
             ).getValue(it)
         } +
         listOfNotNull(r.location.takeIf { it.isNotBlank() }?.let { "☀ $it" })
+
+/** Under text laid over a photo: readable whatever the picture is. */
+private val PhotoTextShadow = androidx.compose.ui.graphics.Shadow(Color.Black.copy(alpha = 0.8f), blurRadius = 12f)
 
 /** A story or video: full-bleed with its picture; a designed text card without one (none, broken, or too small). */
 @OptIn(ExperimentalFoundationApi::class)
@@ -595,12 +603,15 @@ private fun BigCard(
                     .combinedClickable(onClick = { open() }, onLongClick = { menu = true })
             ) {
                 AsyncImage(model = request, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                // Dark enough under the text for any picture (a bright site preview made the Anthropic card's headline
+                // almost unreadable, Oct 29): it starts higher and ends nearly black, and the text has a shadow
                 Box(
                     Modifier.fillMaxSize().background(
                         Brush.verticalGradient(
                             0f to Color.Transparent,
-                            0.38f to Color.Transparent,
-                            1f to DeskColors.Scrim
+                            0.25f to Color.Black.copy(alpha = 0.15f),
+                            0.55f to Color.Black.copy(alpha = 0.6f),
+                            1f to Color.Black.copy(alpha = 0.9f)
                         )
                     )
                 )
@@ -613,11 +624,13 @@ private fun BigCard(
                     }
                 }
                 Column(Modifier.align(Alignment.BottomStart).padding(DeskSpace.l)) {
-                    Text(headline, style = DeskType.headline, color = Color.White, maxLines = 3, overflow = TextOverflow.Ellipsis)
+                    Text(headline, style = DeskType.headline.copy(shadow = PhotoTextShadow), color = Color.White, maxLines = 3,
+                        overflow = TextOverflow.Ellipsis)
                     Spacer(Modifier.height(DeskSpace.s))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            if (item.site.isNotBlank()) Text(item.site, style = DeskType.label, color = DeskColors.TextPrimary, maxLines = 1)
+                            if (item.site.isNotBlank()) Text(item.site, style = DeskType.label.copy(shadow = PhotoTextShadow),
+                                color = DeskColors.TextPrimary, maxLines = 1)
                             if (item.why.isNotBlank()) Text(
                                 item.why, style = DeskType.mono, color = DeskColors.TextSecondary,
                                 maxLines = 1, overflow = TextOverflow.Ellipsis
@@ -854,6 +867,61 @@ private fun DoneCard(item: TodayItem, onReact: (TodayItem, String) -> Unit, onAs
 
 /** A curious question from the agent, answered right here; the answer goes to the chat like any message. */
 @Composable
+private fun TriviaCard(item: TodayItem, right: Int, answered: Int, onReact: (TodayItem, String) -> Unit) {
+    val data = remember(item.body) { runCatching { org.json.JSONObject(item.body) }.getOrNull() }
+    val choices = remember(data) { data?.optJSONArray("choices")?.let { a -> (0 until a.length()).map { a.optString(it) } } ?: emptyList() }
+    val answer = data?.optString("answer").orEmpty()
+    // What was tapped this time; an answer from before (state right/wrong) shows the result without the pick
+    var picked by rememberSaveable(item.id) { mutableStateOf<String?>(null) }
+    val done = picked != null || item.state == "right" || item.state == "wrong"
+    val gotIt = if (picked != null) picked == answer else item.state == "right"
+    Column(Modifier.fillMaxWidth().todayGlassCard().padding(DeskSpace.l)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("TRIVIA", style = DeskType.overline, color = DeskColors.Agent, modifier = Modifier.weight(1f))
+            val total = answered + (if (picked != null && item.state !in listOf("right", "wrong")) 1 else 0)
+            val score = right + (if (picked != null && picked == answer && item.state != "right") 1 else 0)
+            if (total > 0) Text("$score of $total this month", style = DeskType.mono, color = DeskColors.TextSecondary)
+        }
+        val meta = listOf(data?.optString("category").orEmpty(), data?.optString("difficulty").orEmpty()).filter { it.isNotBlank() }
+        if (meta.isNotEmpty()) {
+            Text(meta.joinToString(" · "), style = DeskType.caption, color = DeskColors.TextMuted)
+        }
+        Spacer(Modifier.height(DeskSpace.s))
+        Text(item.title, style = DeskType.headline, color = DeskColors.TextPrimary)
+        Spacer(Modifier.height(DeskSpace.m))
+        Column(verticalArrangement = Arrangement.spacedBy(DeskSpace.s)) {
+            choices.forEach { choice ->
+                val isAnswer = choice == answer
+                val color = when {
+                    done && isAnswer -> DeskColors.Signal
+                    done && choice == picked -> DeskColors.Error
+                    else -> DeskColors.TextPrimary
+                }
+                Row(
+                    Modifier.fillMaxWidth()
+                        .glass(DeskShapes.small, if (done && isAnswer) DeskColors.Signal.copy(alpha = 0.16f) else DeskColors.Glass)
+                        .clickable(enabled = !done) {
+                            picked = choice
+                            onReact(item, if (choice == answer) "right" else "wrong")
+                        }
+                        .padding(horizontal = DeskSpace.m, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(choice, style = DeskType.body, color = color, modifier = Modifier.weight(1f))
+                    if (done && isAnswer) Text("✓", style = DeskType.label, color = DeskColors.Signal)
+                    if (done && choice == picked && !isAnswer) Text("✕", style = DeskType.label, color = DeskColors.Error)
+                }
+            }
+        }
+        if (done) {
+            Spacer(Modifier.height(DeskSpace.m))
+            Text(if (gotIt) "Got it!" else "The answer: $answer", style = DeskType.label,
+                color = if (gotIt) DeskColors.Signal else DeskColors.TextSecondary)
+        }
+    }
+}
+
+@Composable
 private fun QuestionCard(item: TodayItem, answered: Boolean, onReact: (TodayItem, String) -> Unit, onAnswer: (TodayItem, String) -> Boolean) {
     var text by rememberSaveable(item.id) { mutableStateOf("") }
     val send = { if (text.isNotBlank() && onAnswer(item, text.trim())) text = "" }
@@ -950,6 +1018,9 @@ fun ChatTodaySwitch(showingToday: Boolean, onChange: (Boolean) -> Unit, modifier
     Row(
         modifier = modifier
             .height(38.dp)
+            // A dark backing under the glass: readable over Today's brightest sky (white clouds at noon, Oct 29)
+            .clip(DeskShapes.pill)
+            .background(Color.Black.copy(alpha = 0.45f))
             .glass(DeskShapes.pill)
             .padding(3.dp),
         verticalAlignment = Alignment.CenterVertically

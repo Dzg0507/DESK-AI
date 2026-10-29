@@ -17,7 +17,10 @@ data class TodayHeader(
     val location: String,
     // The facts the brief was written from, for the MAIL and UP NEXT tiles (never read from its wording)
     val upNext: List<Pair<String, String>> = emptyList(),   // time, what
-    val mail: List<Pair<String, String>> = emptyList()      // from, subject
+    val mail: List<Pair<String, String>> = emptyList(),     // from, subject
+    // This month's trivia: answered right / answered (agent 2026-10-29)
+    val triviaRight: Int = 0,
+    val triviaAnswered: Int = 0
 )
 
 data class TodayEdition(

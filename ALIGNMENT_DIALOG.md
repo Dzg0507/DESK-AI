@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-29 (DeskAI v2.37.0 / Build 103 shipped — Chat redesign, slices 1-2)
+**Last Updated:** 2026-10-28 (DeskAI v2.35.0 / Build 104 shipped — trivia, running card)
 
 ---
 
@@ -12,6 +12,18 @@
 > ### Inviolable Rules for AlwaysOnAgent & DeskAI Pairing
 > 1. **No Local Android Build Tools:** Never download, install, or run Gradle / Android SDK on this HP EliteDesk Mini PC. This host only runs Python/FastAPI server tasks. DeskAI compilation and debug signing live exclusively on the owner's workstation where `debug.keystore` is stored.
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
+
+## Shipped 2026-10-29: DeskAI v2.38.0 (build 104), trivia, the running card, readable photo cards (by the laptop Claude session)
+
+- Trivia: the agent (AlwaysOnAgent `524de5b`, core/discover.py) adds a daily "trivia" card from Open Trivia DB; its body
+  is JSON (choices, answer, category, difficulty). `TriviaCard` in TodayScreen: tap a choice, the card reacts
+  "right"/"wrong" (new actions), shows the answer and "N of M this month" (header `trivia.right/answered` ->
+  `TodayHeader.triviaRight/triviaAnswered`). "trivia" added to the recipe's hidden-kind names.
+- "On this day" story cards come from the agent too (no app change). Wikipedia's article of the day was dropped.
+- Chat slice 3: `RunningTaskCard` under the switch while tasks run (polls fetchTasks every 4 s only while the agent
+  says something is running); teal top glow (GlowEmerald/GlowCerulean in Color.kt).
+- Readability: photo cards' gradient starts higher and ends at 90% black, with a text shadow (`PhotoTextShadow`); the
+  Chat/Today switch has a 45% black backing under its glass; Today's list keeps 96 dp at the bottom for the pencil.
 
 ## Shipped 2026-10-29: DeskAI v2.37.0 (build 103), the Chat redesign, slices 1-2 (by the laptop Claude session)
 

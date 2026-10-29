@@ -1,7 +1,7 @@
 {
-  "versionCode": 103,
-  "versionName": "2.37.0",
-  "changelog": "DeskAI v2.37.0 (Build 103): A roomier Chat. Bigger text with more space, green-dot lists, the agent's name once at the top of a conversation, your messages with their time inside, and feedback in the tap menu. A new input row: round mic, attach and hub buttons and a round send button. YouTube videos in chat are cards that play right there.",
+  "versionCode": 104,
+  "versionName": "2.38.0",
+  "changelog": "DeskAI v2.38.0 (Build 104): A daily trivia question on Today: tap an answer, see right away, and your score for the month. On this day in history. A live card under the switch while the agent works, and a teal glow in Chat. Photo cards keep their text readable on any picture, and the Chat/Today switch reads over a bright sky.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 28387283
+  "fileSizeBytes": 28403669
 }

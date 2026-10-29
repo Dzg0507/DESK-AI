@@ -312,7 +312,7 @@ fun ChatScreen(
         if (showToday) com.example.ui.today.WeatherAtmosphere(todayState.page?.header?.weather, todayList)
         Scaffold(
             containerColor = Color.Transparent,
-            topBar = {
+            topBar = { Column {
                 com.example.ui.today.UnifiedTopBar(
                     showingToday = showToday,
                     onSelectTab = { today ->
@@ -331,7 +331,27 @@ fun ChatScreen(
                     onOpenBackgroundWork = { showBackgroundWorkSheet = true },
                     onNewChat = { viewModel.createNewSession() }
                 )
-            },
+                // The live card under the switch while the agent works (the chat mockup, 2026-10-29); polled only
+                // while the agent says something is running
+                val working = daemonStats.tasksInProgress > 0 || daemonStats.daemonStatus == "running_task"
+                var running by remember { mutableStateOf<List<com.example.data.model.AgentTaskItem>>(emptyList()) }
+                LaunchedEffect(working, showToday) {
+                    if (!working || showToday) { running = emptyList(); return@LaunchedEffect }
+                    while (true) {
+                        running = runCatching { viewModel.fetchTasks(10) }.getOrDefault(emptyList())
+                            .filter { it.phase == "in_progress" && !it.cancelled }
+                        kotlinx.coroutines.delay(4_000)
+                    }
+                }
+                if (!showToday && running.isNotEmpty()) {
+                    Box(Modifier.fillMaxWidth().padding(top = 2.dp, bottom = 6.dp), contentAlignment = Alignment.Center) {
+                        com.example.ui.components.RunningTaskCard(
+                            tasks = running, base = config.getResolvedUrl(), token = config.apiKey,
+                            onClick = { showTasksSheet = true }
+                        )
+                    }
+                }
+            } },
             modifier = modifier
         ) { innerPadding ->
             Box(
