@@ -111,3 +111,8 @@ drift from their set personality over long conversations, especially emotional o
 4. Do personas or modes help or hurt here? Is a fixed set of owner-chosen personas safer than any adaptive one?
 5. What do the best long-term assistants and companions (Pi, Replika, ChatGPT memory, Gemini) get wrong, by their
    users' own accounts?
+6. AI talking to AI drifts into agreement and repetition ("attractor states"; Devin: "they tend to always just
+   drift towards agreeing with each other and then wind up saying the same things over and over"). What keeps
+   AlwaysOnAgent's own AI-checks-AI loops honest (the memory second opinion, Claude and the DeskAI developer AI
+   via ALIGNMENT_DIALOG.md, Claude/Gemini handovers)? Different models, grounding in evidence, measured
+   disagreement? Start with [arXiv 2606.30571](https://arxiv.org/pdf/2606.30571).
