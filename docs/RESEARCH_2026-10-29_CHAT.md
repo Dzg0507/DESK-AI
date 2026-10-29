@@ -49,3 +49,50 @@ stored facts, so it can be corrected. ([36Kr](https://eu.36kr.com/en/p/389335976
 
 No source documented UI patterns for a single never-ending conversation, or detailed input-bar guidance. DeskAI's
 choices there are our own (the mockup, plus testing on the phone).
+
+# Part 2: the agent's personality, and a watcher that studies Devin (2026-10-29)
+
+## Where the agent is today
+
+- **Personality:** one fixed persona (`ASSISTANT_PERSONA` in AlwaysOnAgent's `core/memory.py`): honesty rules first
+  ("only say what's true"), then how to work. No tone or character beyond that.
+- **What it knows about Devin:** facts from conversations, plus a short "core profile" rebuilt from them. That
+  profile is deliberately strict: "Do not infer traits, motives, priorities or preferences". So today the agent
+  knows *what* about Devin, never *how he is*. A watcher would add exactly that missing layer.
+
+## What the research says
+
+**1. Guessing someone's personality from chat is only moderately accurate.** LLMs inferring Big Five traits from
+chat histories: about r = .44 when the chatbot steers the conversation to find out, but only r = .12 from ordinary
+chats; some traits (extraversion, neuroticism) come out better than others, some (agreeableness) poorly. Mostly
+2025-26 preprints. ([arXiv 2405.13052](https://arxiv.org/pdf/2405.13052), [arXiv 2604.19785](https://arxiv.org/abs/2604.19785), [TechXplore on the ETH study](https://techxplore.com/news/2026-05-ai-personality-traits-chatgpt-history.html), [arXiv 2501.07532](https://arxiv.org/pdf/2501.07532), [arXiv 2507.14355](https://arxiv.org/pdf/2507.14355))
+- *So:* a watcher that labels Devin "high openness, low agreeableness" would be shaky and not very useful.
+
+**2. People are bad at saying what they prefer; behaviour shows it better.** Users mispredict their own
+preferences for AI help; learning from what they actually do works better, but only if it's shown to them, or
+trust erodes. ([arXiv 2601.04461](https://arxiv.org/pdf/2601.04461), [IRIS, arXiv 2607.26473](https://arxiv.org/html/2607.26473), [PrefIx](https://www.alphaxiv.org/abs/2602.06714))
+- *So:* watch behaviour, not personality: which Today cards he saves or skips, which suggestions he takes, when he
+  opens the app, how long the replies he likes are, what he corrects.
+
+**3. What it learns must be visible and editable ("scrutable").** The research consensus for personal agents: the
+user can inspect and change the agent's model of them, and the data stays under their control.
+([arXiv 2503.06729](https://arxiv.org/pdf/2503.06729), [ACM, privacy-aligned agents](https://dl.acm.org/doi/10.1145/3733816.3760752), [OpenAI Model Spec note](https://behaviorlayer.ai/signal/openai-model-spec-2026-08-18))
+
+**4. Studying the user can make an assistant a yes-man.** A 2025 study found user memory profiles raised
+agreement sycophancy the most of anything tested; persona "agreeableness" strongly predicts sycophancy; and models
+drift from their set personality over long conversations, especially emotional or self-reflective ones.
+([Taskade summary](https://www.taskade.com/blog/ai-sycophancy-explained), [ACL 2026](https://aclanthology.org/2026.acl-long.1421.pdf), [Assistant Axis, arXiv 2601.10387](https://arxiv.org/html/2601.10387v1), [Springer 2026](https://link.springer.com/article/10.1007/s00146-026-02993-z))
+- *So:* the agent's personality needs a fixed spine (its honesty rules) that no persona or learned preference can
+  bend: "he likes short answers" may change style, never what's true.
+
+## What this suggests for DeskAI (ideas, not decided)
+
+- **A watcher that writes observations, not a personality score.** In the background (no AI call per message;
+  cheap, like the away shift), it notices patterns and writes them as hypotheses with evidence: "You skip AI-news
+  cards (skipped 9 of 11 this week)", "You reply most between 9 and 11 pm", "You cut long answers short".
+- **"How I think you work":** a section in the app beside the facts profile, each observation with a ✓ / ✗.
+  Only confirmed ones shape how the agent behaves; rejected ones are never guessed again.
+- **Personas as tone over a fixed spine:** if the persona changer happens, a persona changes tone and focus, and the
+  honesty rules stay first in every one.
+- **The agent's own character could come from the watcher:** instead of Devin picking a persona, the agent's
+  default tone settles from what he responds to (and he can still override it).
