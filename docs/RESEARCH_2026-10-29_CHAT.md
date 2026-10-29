@@ -146,6 +146,8 @@ drift from their set personality over long conversations, especially emotional o
    the weekly review (Saturdays, `core/memory_review.py`) proposes additions and retirements that must quote him or
    name a fact, and nothing changes until he approves; upkeep merges duplicates, fades trivia after 90 days and
    rebuilds the profile, which may only restate facts. So inferences reach *facts* only with his approval. The
-   gaps are outside that system: (a) the proactive side's interests and defaults (Styropyro came from there, not
-   from a fact) get no quote check or approval; (b) conversation summaries are the agent's own words, fed back
-   every reply, unchecked. Research those two.
+   gaps are outside that system: ~~(a) the proactive side's interests and defaults~~ (closed: Styropyro was the
+   first version of proactive; interests are now added only through settings, i.e. when Devin asks in chat or in
+   his Today recipe, and the default channel list is empty since 2026-10-28); (b) conversation summaries are the
+   agent's own words, fed back every reply, unchecked. Research (b): how to write and check summaries so they
+   record what happened without carrying the agent's agreement ("we decided", "Devin was right") forward.
