@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-28 (DeskAI v2.35.0 / Build 100 shipped — Today's videos show their picture in the card)
+**Last Updated:** 2026-10-28 (DeskAI v2.35.0 / Build 101 shipped — Today's videos show their picture, rounded)
 
 ---
 
@@ -12,6 +12,17 @@
 > ### Inviolable Rules for AlwaysOnAgent & DeskAI Pairing
 > 1. **No Local Android Build Tools:** Never download, install, or run Gradle / Android SDK on this HP EliteDesk Mini PC. This host only runs Python/FastAPI server tasks. DeskAI compilation and debug signing live exclusively on the owner's workstation where `debug.keystore` is stored.
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
+
+## Shipped 2026-10-28: DeskAI v2.35.2 (build 101), Today's videos finally show their picture (by the laptop Claude session)
+
+- The real cause of builds 99-100's sound-without-picture, found over ADB + WebView DevTools on Devin's S22: Compose's
+  `AndroidView` leaves the WebView at WRAP_CONTENT, and a WebView with a wrap_content height gives the page a 0 px
+  tall viewport. YouTube sized `#movie_player` and the `<video>` 411x0. Fix: the WebView gets MATCH_PARENT layout
+  params. The rounded `clip()` was NOT the cause and is back on the playing card (`DeskShapes.media`).
+- `InlineYouTube` now loads YouTube's own embed page (`youtube.com/embed/ID`, Referer header = the app's https
+  origin, against error 153) once attached, instead of an IFrame-API page of ours; an injected watcher calls
+  `DeskAI.error` when `.ytp-error` shows, and the card opens YouTube instead.
+- Lesson for any WebView in Compose: always set MATCH_PARENT layoutParams in the factory.
 
 ## Shipped 2026-10-28: DeskAI v2.35.1 (build 100), the in-card video shows its picture (by the laptop Claude session)
 

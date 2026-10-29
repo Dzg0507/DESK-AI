@@ -535,10 +535,9 @@ private fun BigCard(
     val headline = item.title.ifBlank { item.body }
     Box(Modifier.fillMaxWidth()) {
         if (playing && videoId != null) {
-            // The whole card is the player; its buttons float on it. No clip here (see InlineYouTube): the page
-            // rounds the video's corners and the card's border is drawn over it
-            Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f)) {
-                InlineYouTube(videoId, Modifier.fillMaxSize(), cornerDp = 24, onCantPlay = { onPlaying(null); openLink() })
+            // The whole card is the player, with the card's rounded corners; its buttons float on it
+            Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f).clip(DeskShapes.media)) {
+                InlineYouTube(videoId, Modifier.fillMaxSize(), onCantPlay = { onPlaying(null); openLink() })
                 Box(
                     Modifier.matchParentSize().border(
                         1.dp, Brush.verticalGradient(0f to DeskColors.TodayGlassBorderTop, 1f to DeskColors.TodayGlassBorderBottom),

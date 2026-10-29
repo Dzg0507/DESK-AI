@@ -1,7 +1,7 @@
 {
-  "versionCode": 100,
-  "versionName": "2.35.1",
-  "changelog": "DeskAI v2.35.1 (Build 100): Today's videos now show their picture, not just sound, and the card is all video: Ask, Save and Close float on its corner.",
+  "versionCode": 101,
+  "versionName": "2.35.2",
+  "changelog": "DeskAI v2.35.2 (Build 101): Today's videos now play with their picture, right in the card, with its rounded corners. Ask, Save and Close float on the video.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 28354530
+  "fileSizeBytes": 28354523
 }

@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.WindowCompat
+import androidx.core.view.doOnAttach
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.Lifecycle
@@ -37,18 +38,17 @@ fun youTubeId(link: String): String? =
         .find(link)?.groupValues?.get(1)
 
 /**
- * YouTube's own embedded player, inside a Today card (2026-10-28: Devin wanted videos to play in their cards, not
- * in a separate player or the YouTube app). The page has an https origin named after the app because YouTube refuses
- * embeds with no referrer (error 152/153). [onCantPlay] runs when the channel doesn't allow embedding (101/150) or
- * the player fails: the card then opens the video in YouTube instead. Fullscreen takes over the window in landscape.
+ * YouTube's own embed page (youtube.com/embed/ID) as the WebView's page, inside a Today card (2026-10-28: Devin
+ * wanted videos to play in their cards, not in a separate player or the YouTube app). The request carries a Referer
+ * named after the app because YouTube refuses embeds with none (error 152/153). [onCantPlay] runs when the player
+ * shows an error (e.g. the channel doesn't allow embedding): the card then opens the video in YouTube instead.
+ * Fullscreen takes over the window in landscape.
  *
- * Never put this inside a Compose clip to a rounded shape: in build 99 the card's clip played the sound over a black
- * picture (a WebView's video can't be composited through a non-rectangular clip). The page rounds its own corners
- * ([cornerDp]) over a transparent WebView instead.
+ * In builds 99-100 only the sound played: the WebView had AndroidView's default WRAP_CONTENT height (see below).
  */
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-fun InlineYouTube(videoId: String, modifier: Modifier = Modifier, cornerDp: Int = 0, onCantPlay: () -> Unit) {
+fun InlineYouTube(videoId: String, modifier: Modifier = Modifier, onCantPlay: () -> Unit) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val cantPlay by rememberUpdatedState(onCantPlay)
@@ -56,7 +56,11 @@ fun InlineYouTube(videoId: String, modifier: Modifier = Modifier, cornerDp: Int 
 
     val webView = remember(videoId) {
         WebView(context).apply {
-            setBackgroundColor(AndroidColor.TRANSPARENT)       // the page's rounded corners show the card behind
+            // MATCH_PARENT, not AndroidView's default WRAP_CONTENT: with a wrap_content height a WebView tells the page
+            // its viewport is 0 px tall, so YouTube sized the player 0 px high and only the sound came through
+            // (builds 99-100; found over DevTools on Devin's S22)
+            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+            setBackgroundColor(AndroidColor.BLACK)
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             settings.mediaPlaybackRequiresUserGesture = false      // the tap on the card was the gesture
@@ -71,18 +75,25 @@ fun InlineYouTube(videoId: String, modifier: Modifier = Modifier, cornerDp: Int 
             webViewClient = object : WebViewClient() {
                 // Taps on the title or the YouTube logo leave the player: open those in YouTube, not in the card
                 override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
-                    if (!request.isForMainFrame) return false
+                    if (!request.isForMainFrame || request.url.path.orEmpty().startsWith("/embed/")) return false
                     runCatching {
                         context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, request.url))
                     }
                     return true
+                }
+
+                // The embed page shows its errors itself (no API to ask): watch for one and let the card open YouTube
+                override fun onPageFinished(view: WebView, url: String) {
+                    if (url.contains("/embed/")) view.evaluateJavascript(WATCH_ERRORS, null)
                 }
             }
             webChromeClient = object : WebChromeClient() {
                 override fun onShowCustomView(view: View, callback: CustomViewCallback) = fullscreen.show(view, callback)
                 override fun onHideCustomView() = fullscreen.hide()
             }
-            loadDataWithBaseURL(ORIGIN, playerPage(videoId, cornerDp), "text/html", "utf-8", null)
+            // Loaded once on screen: a page started while the view is detached (0x0, no hardware drawing yet) played
+            // its sound with nothing drawn in build 100
+            doOnAttach { loadUrl(embedUrl(videoId), mapOf("Referer" to "$ORIGIN/")) }
         }
     }
 
@@ -109,20 +120,15 @@ fun InlineYouTube(videoId: String, modifier: Modifier = Modifier, cornerDp: Int 
 
 private const val ORIGIN = "https://com.aistudio.deskai.kzpwqm"
 
-private fun playerPage(id: String, corner: Int) = """
-<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">
-<style>html,body{margin:0;height:100%;background:transparent;overflow:hidden}
-#w{position:absolute;inset:0;border-radius:${corner}px;overflow:hidden;background:#000;isolation:isolate}
-#p{position:absolute;inset:0;width:100%;height:100%;border:0}</style>
-</head><body><div id="w"><div id="p"></div></div>
-<script src="https://www.youtube.com/iframe_api"></script>
-<script>
-function onYouTubeIframeAPIReady(){
-  new YT.Player('p',{videoId:'$id',host:'https://www.youtube.com',
-    playerVars:{autoplay:1,playsinline:1,rel:0,fs:1,origin:'$ORIGIN'},
-    events:{onReady:function(e){e.target.playVideo();},onError:function(e){DeskAI.error(e.data);}}});
-}
-</script></body></html>
+private fun embedUrl(id: String) =
+    "https://www.youtube.com/embed/$id?autoplay=1&playsinline=1&rel=0&fs=1&origin=" + android.net.Uri.encode(ORIGIN)
+
+private const val WATCH_ERRORS = """
+(function(){var n=0,t=setInterval(function(){
+  var e=document.querySelector('.ytp-error');
+  if(e&&e.offsetParent!==null){clearInterval(t);DeskAI.error(0);}
+  if(++n>40)clearInterval(t);
+},500);})();
 """
 
 /** The player's fullscreen view, over the whole window in landscape; back to the card when it ends. */
