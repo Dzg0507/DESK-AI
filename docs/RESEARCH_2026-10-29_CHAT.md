@@ -131,3 +131,13 @@ drift from their set personality over long conversations, especially emotional o
    which a fixed persona keeps honest but not uniform; (c) the second opinion could deliberately use a *different*
    model from the chain with a fresh context: two independent minds, free. Research: does model rotation
    measurably reduce sycophancy drift, and how to keep one voice across models.
+7. **The written-down layer only grows.** Devin: "facts will not stop gathering either. Inferences are still going
+   to keep happening, and curiousness isn't going to fade." So the picture of him that every model reads gets
+   heavier forever, and more memory can mean more confident misreading (part 2, point 6). His own system has a case:
+   one remark on Oct 4 ("likes DIY YouTube channels such as Styropyro") became a channel followed by default and
+   kept coming back until he said "I said I liked his stuff one time". Existing protections: facts fade, duplicates
+   merge, newer facts supersede older, a second AI checks each memory. Missing: telling **"Devin said this"** apart
+   from **"the agent concluded this"**, and stopping many small inferences from adding up to a confident portrait.
+   Research: provenance and confidence on memories (said / inferred / observed), how many times something must
+   recur before it counts, decay for inferences vs statements, keeping curiosity (the get-to-know-you questions)
+   from turning into profiling, and how long-term assistants keep a growing memory from hardening into a caricature.
