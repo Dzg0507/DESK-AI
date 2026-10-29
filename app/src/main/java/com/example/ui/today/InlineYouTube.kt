@@ -41,10 +41,14 @@ fun youTubeId(link: String): String? =
  * in a separate player or the YouTube app). The page has an https origin named after the app because YouTube refuses
  * embeds with no referrer (error 152/153). [onCantPlay] runs when the channel doesn't allow embedding (101/150) or
  * the player fails: the card then opens the video in YouTube instead. Fullscreen takes over the window in landscape.
+ *
+ * Never put this inside a Compose clip to a rounded shape: in build 99 the card's clip played the sound over a black
+ * picture (a WebView's video can't be composited through a non-rectangular clip). The page rounds its own corners
+ * ([cornerDp]) over a transparent WebView instead.
  */
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-fun InlineYouTube(videoId: String, modifier: Modifier = Modifier, onCantPlay: () -> Unit) {
+fun InlineYouTube(videoId: String, modifier: Modifier = Modifier, cornerDp: Int = 0, onCantPlay: () -> Unit) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val cantPlay by rememberUpdatedState(onCantPlay)
@@ -52,7 +56,7 @@ fun InlineYouTube(videoId: String, modifier: Modifier = Modifier, onCantPlay: ()
 
     val webView = remember(videoId) {
         WebView(context).apply {
-            setBackgroundColor(AndroidColor.BLACK)
+            setBackgroundColor(AndroidColor.TRANSPARENT)       // the page's rounded corners show the card behind
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             settings.mediaPlaybackRequiresUserGesture = false      // the tap on the card was the gesture
@@ -78,7 +82,7 @@ fun InlineYouTube(videoId: String, modifier: Modifier = Modifier, onCantPlay: ()
                 override fun onShowCustomView(view: View, callback: CustomViewCallback) = fullscreen.show(view, callback)
                 override fun onHideCustomView() = fullscreen.hide()
             }
-            loadDataWithBaseURL(ORIGIN, playerPage(videoId), "text/html", "utf-8", null)
+            loadDataWithBaseURL(ORIGIN, playerPage(videoId, cornerDp), "text/html", "utf-8", null)
         }
     }
 
@@ -105,10 +109,12 @@ fun InlineYouTube(videoId: String, modifier: Modifier = Modifier, onCantPlay: ()
 
 private const val ORIGIN = "https://com.aistudio.deskai.kzpwqm"
 
-private fun playerPage(id: String) = """
+private fun playerPage(id: String, corner: Int) = """
 <!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">
-<style>html,body{margin:0;height:100%;background:#000;overflow:hidden}#p{position:absolute;inset:0;width:100%;height:100%}</style>
-</head><body><div id="p"></div>
+<style>html,body{margin:0;height:100%;background:transparent;overflow:hidden}
+#w{position:absolute;inset:0;border-radius:${corner}px;overflow:hidden;background:#000;isolation:isolate}
+#p{position:absolute;inset:0;width:100%;height:100%;border:0}</style>
+</head><body><div id="w"><div id="p"></div></div>
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
 function onYouTubeIframeAPIReady(){

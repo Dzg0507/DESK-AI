@@ -1,7 +1,7 @@
 {
-  "versionCode": 99,
-  "versionName": "2.35.0",
-  "changelog": "DeskAI v2.35.0 (Build 99): YouTube videos on Today play right in their card. Tap a video card to play it there; fullscreen turns the phone sideways; Close stops it. Videos a channel won't let play outside YouTube open in the YouTube app.",
+  "versionCode": 100,
+  "versionName": "2.35.1",
+  "changelog": "DeskAI v2.35.1 (Build 100): Today's videos now show their picture, not just sound, and the card is all video: Ask, Save and Close float on its corner.",
   "downloadUrl": "https://raw.githubusercontent.com/Dzg0507/Desk-ai/main/DeskAI.apk",
-  "fileSizeBytes": 28354531
+  "fileSizeBytes": 28354530
 }

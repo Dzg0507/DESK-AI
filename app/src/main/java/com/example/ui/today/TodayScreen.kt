@@ -34,6 +34,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.ChatBubbleOutline
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
@@ -531,21 +535,25 @@ private fun BigCard(
     val headline = item.title.ifBlank { item.body }
     Box(Modifier.fillMaxWidth()) {
         if (playing && videoId != null) {
-            Column(Modifier.fillMaxWidth().todayGlassCard(DeskShapes.media)) {
-                InlineYouTube(
-                    videoId, Modifier.fillMaxWidth().aspectRatio(16f / 9f),
-                    onCantPlay = { onPlaying(null); openLink() }
+            // The whole card is the player; its buttons float on it. No clip here (see InlineYouTube): the page
+            // rounds the video's corners and the card's border is drawn over it
+            Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f)) {
+                InlineYouTube(videoId, Modifier.fillMaxSize(), cornerDp = 24, onCantPlay = { onPlaying(null); openLink() })
+                Box(
+                    Modifier.matchParentSize().border(
+                        1.dp, Brush.verticalGradient(0f to DeskColors.TodayGlassBorderTop, 1f to DeskColors.TodayGlassBorderBottom),
+                        DeskShapes.media
+                    )
                 )
                 Row(
-                    Modifier.fillMaxWidth().combinedClickable(onClick = {}, onLongClick = { menu = true }).padding(DeskSpace.l),
-                    verticalAlignment = Alignment.CenterVertically
+                    Modifier.align(Alignment.TopEnd).padding(DeskSpace.s),
+                    horizontalArrangement = Arrangement.spacedBy(DeskSpace.xs)
                 ) {
-                    Column(Modifier.weight(1f)) {
-                        Text(headline, style = DeskType.label, color = DeskColors.TextPrimary, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                        if (item.site.isNotBlank()) Text(item.site, style = DeskType.mono, color = DeskColors.TextSecondary, maxLines = 1)
+                    CardIcon(Icons.Default.ChatBubbleOutline, "Ask") { onAsk(item) }
+                    CardIcon(if (item.saved) Icons.Default.Bookmark else Icons.Default.BookmarkBorder, if (item.saved) "Saved" else "Save") {
+                        onReact(item, if (item.saved) "unsave" else "save")
                     }
-                    Spacer(Modifier.width(DeskSpace.s))
-                    GlassPill("Close") { onPlaying(null) }
+                    CardIcon(Icons.Default.Close, "Close") { onPlaying(null) }
                 }
             }
         } else if (item.imageUrl != null) {
@@ -628,6 +636,17 @@ private fun BigCard(
             }
         }
         CardMenu(item, menu, { menu = false }, onReact)
+    }
+}
+
+/** A small frosted round button floating on a playing video. */
+@Composable
+private fun CardIcon(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
+    Box(
+        Modifier.size(34.dp).glass(CircleShape, DeskColors.GlassStrong).clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(icon, contentDescription = label, tint = DeskColors.TextPrimary, modifier = Modifier.size(18.dp))
     }
 }
 

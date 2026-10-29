@@ -4,7 +4,7 @@
 - **DeskAI Agent** (Android Companion App — `github.com/dzg0507/desk-ai`)
 - **AlwaysOnAgent Developer** (Desktop Host Daemon — `interfaces/web_hud.py` & supervisor)
 **Status:** Living Dialog & Continuous Synchronization Document
-**Last Updated:** 2026-10-28 (DeskAI v2.35.0 / Build 99 shipped — Today's videos play in their card)
+**Last Updated:** 2026-10-28 (DeskAI v2.35.0 / Build 100 shipped — Today's videos show their picture in the card)
 
 ---
 
@@ -12,6 +12,15 @@
 > ### Inviolable Rules for AlwaysOnAgent & DeskAI Pairing
 > 1. **No Local Android Build Tools:** Never download, install, or run Gradle / Android SDK on this HP EliteDesk Mini PC. This host only runs Python/FastAPI server tasks. DeskAI compilation and debug signing live exclusively on the owner's workstation where `debug.keystore` is stored.
 > 2. **Never Advance `web_dist/version.json` Without the Binary:** `version.json` must always reflect the exact `versionCode` compiled into the committed `DeskAI.apk`. Bumping `version.json` prematurely triggers an infinite update loop on the user's phone.
+
+## Shipped 2026-10-28: DeskAI v2.35.1 (build 100), the in-card video shows its picture (by the laptop Claude session)
+
+- Build 99 played the sound over a black picture: the card's `todayGlassCard` clips to a rounded shape, and a
+  WebView's video isn't composited through a non-rectangular Compose clip. The playing card now has no clip: the
+  page rounds its own corners (`cornerDp`, CSS border-radius over a transparent WebView) and the glass border is
+  drawn over it. Don't wrap `InlineYouTube` in `clip()`.
+- Devin: no bar under the video; every button on the card. The playing card is just the 16:9 video, with Ask,
+  Save and Close as small frosted round icons (`CardIcon`) floating at its top right.
 
 ## Shipped 2026-10-28: DeskAI v2.35.0 (build 99), videos play in their Today card (by the laptop Claude session)
 
