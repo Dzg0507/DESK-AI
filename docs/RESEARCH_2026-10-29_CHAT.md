@@ -94,5 +94,20 @@ drift from their set personality over long conversations, especially emotional o
   Only confirmed ones shape how the agent behaves; rejected ones are never guessed again.
 - **Personas as tone over a fixed spine:** if the persona changer happens, a persona changes tone and focus, and the
   honesty rules stay first in every one.
-- **The agent's own character could come from the watcher:** instead of Devin picking a persona, the agent's
-  default tone settles from what he responds to (and he can still override it).
+- ~~**The agent's own character could come from the watcher:** its tone settles from what Devin responds to.~~
+  **Rejected (Devin, 2026-10-29):** "if the agent's persona were allowed to change dynamically it would lead it to
+  being much more of a yes man". He's right: a personality tuned on what he responds to is trained on his approval,
+  the same mechanism that made models sycophantic (point 4). The agent's character stays fixed; anything the
+  watcher learns may only change *practical* things (format, timing, what to show), never its opinions or
+  willingness to disagree. Needs deeper research before anything is built (see below).
+
+## Open questions for the deep research
+
+1. How do you give an assistant a stable character that can't drift into a yes-man over months of one
+   conversation, with memory of the owner in every prompt? (Prompt design, checks, measuring drift.)
+2. How can it learn the owner's practical preferences without that leaking into agreeing with him? Where's the
+   line between "adapts to me" and "tells me what I want to hear"?
+3. How do you test for sycophancy in a personal assistant (evals that fit AlwaysOnAgent's existing eval setup)?
+4. Do personas or modes help or hurt here? Is a fixed set of owner-chosen personas safer than any adaptive one?
+5. What do the best long-term assistants and companions (Pi, Replika, ChatGPT memory, Gemini) get wrong, by their
+   users' own accounts?
