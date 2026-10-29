@@ -123,3 +123,11 @@ drift from their set personality over long conversations, especially emotional o
    memories and the profile, the agent's own words fed back every reply. Research: how to keep those neutral, and
    whether a **fresh-context second opinion** (no profile or summaries, just the question and facts) on advice and
    decisions catches drift, showing Devin both answers when they differ.
+   Devin's second point: "I'm not talking to the same AI every time, even if it has my memory. Sometimes calls
+   fail." The chat goes to the first model in a free fallback chain that answers (3.5 Flash-Lite, 3.8, 3.6,
+   3.1-lite, Gemma), so the model itself rotates: a new one is close to a fresh session, with none of the last
+   one's leanings. That means (a) the agent's real, lasting personality is only what's written down (persona
+   prompt, memories, profile, summaries), so that's where to look for drift; (b) tone can wobble between models,
+   which a fixed persona keeps honest but not uniform; (c) the second opinion could deliberately use a *different*
+   model from the chain with a fresh context: two independent minds, free. Research: does model rotation
+   measurably reduce sycophancy drift, and how to keep one voice across models.
