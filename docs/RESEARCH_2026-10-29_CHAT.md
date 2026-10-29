@@ -116,3 +116,10 @@ drift from their set personality over long conversations, especially emotional o
    AlwaysOnAgent's own AI-checks-AI loops honest (the memory second opinion, Claude and the DeskAI developer AI
    via ALIGNMENT_DIALOG.md, Claude/Gemini handovers)? Different models, grounding in evidence, measured
    disagreement? Start with [arXiv 2606.30571](https://arxiv.org/pdf/2606.30571).
+   Devin's correction: AI-with-AI drift he can already control, because a fresh session resets it at once. The
+   only place with no reset is his one continuous conversation with the agent. There each reply is already built
+   fresh (fixed persona, profile, memories, summaries, only the last few exchanges verbatim), so drift can't snowball
+   through a long log; the risk is that it **leaks into what carries over**: summaries ("we agreed X"), saved
+   memories and the profile, the agent's own words fed back every reply. Research: how to keep those neutral, and
+   whether a **fresh-context second opinion** (no profile or summaries, just the question and facts) on advice and
+   decisions catches drift, showing Devin both answers when they differ.
